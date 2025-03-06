@@ -1,4 +1,5 @@
 import math
+import arena
 
 TICK_TIME = 1/60 #tps
 TILES_PER_MIN = 1/3600
@@ -26,66 +27,15 @@ class Vector:
 def distance(vec1, vec2):
     return math.sqrt((vec2.x - vec1.x) ** 2 + (vec2.y - vec1.y) ** 2)
 
-class Arena:
-    def __init__(self):
-        self.troops = []
-        self.active_attacks = []
-        self.spells = []
-        self.towers = [KingTower(True), PrincessTower(True), PrincessTower(True), KingTower(False), PrincessTower(False), PrincessTower(False) ]
-    
-    def tick(self):
-        for troop in self.troops:
-            troop.tick(self)
-        for attack in self.active_attacks:
-            attack.tick(self)
-        for spell in self.spells:
-            spell.tick(self)
-        for troop in self.troops:
-            troop.cleanup(self)
-        for attack in self.active_attacks:
-            attack.cleanup(self)
-        for spell in self.spells:
-            spell.cleanup(self)
-
-class AttackEntity:
-    def __init__(self, s, d, v, l, i_p):
-        self.side = s
-        self.damage = d
-        self.velocity = v
-        self.lifespan = l
-        self.position = i_p
-        
-        self.duration = l
-        self.has_hit = []
-        
-    def tick(self, arena):
-        self.position.add(self.velocity)
-        hits = self.detect_hits(arena)
-        for each in hits:
-            new = True
-            for h in self.has_hit:
-                if each is h:
-                    new = False
-                    break
-            if (new):
-                each.hp -= self.damage;
-                self.has_hit.append(each)
-        self.duration -= TICK_TIME
-        
-    def cleanup(self, arena): #also delete self if single target here in derived classes
-        if self.duration <= 0:
-            arena.active_attacks.remove(self)
-        
-    def detect_hits(self, arena): # to be overriden in derived
-        return []
 
 class Troop:
-    def __init__(self, s, h_p, h_d, h_s, f_h, h_r, g, t_g_o, t_o, m_s, d_t, p):
+    def __init__(self, s, h_p, h_d, h_s, f_h, h_r, s_r, g, t_g_o, t_o, m_s, d_t, p):
         self.side = s
         self.hit_points = h_p
         self.hit_damage = h_d
         self.hit_speed = h_s
         self.hit_range = h_r
+        self.sight_range = s_r
         self.ground = g
         self.ground_only = t_g_o
         self.tower_only = t_o
@@ -100,28 +50,68 @@ class Troop:
     def attack(self): #override
         return None #return the correct attackentity object
         
-    def update_target(self, arena):
-        if self.tower_only:
-            min_dist = float('inf')
-            for tower in arena.towers:
-                if tower.side != self.side:
-                    if distance(tower.position, self.position) < min_dist:
-                        self.target = tower
-                        min_dist = distance(tower.position, self.position)
-        else:
+    def update_target(self, arena): #note: need to change code such that cannot lock onto tower when in sight range, only in attack range
+        self.target = None #i.e. target may change (self.target = None) while towers are only targets, except when distance to tower < attack range
+        
+        if not self.tower_only:
             min_dist = float('inf')
             for each in arena.troops:
                 if each.side != self.side and (not self.ground_only or (self.ground_only and each.ground)):
-                    if distance(each.position, self.position) < min_dist:
+                    dist = distance(each.position, self.position)
+                    if  dist < min_dist and dist < self.sight_range:
                         self.target = each
                         min_dist = distance(each.position, self.position)
-                    
+        else:
+            min_dist = float('inf')
+            for each in arena.buildings:
+                if each.side != self.side:
+                    dist = distance(each.position, self.position)
+                    if  dist < min_dist and dist < self.sight_range:
+                        self.target = each
+                        min_dist = distance(each.position, self.position)
+        
+        for tower in arena.towers: #check if any tower is closer/within range
+            if tower.side != self.side:
+                dist = distance(tower.position, self.position)
+                if dist <= self.hit_range and dist < min_dist: #if in hit range and closer, target becoems tower
+                    self.target = tower
+                    min_dist = distance(tower.position, self.position)
     
     def move(self):
         direction_x = 0
         direction_y = 0
-        if self.target is None:
-                return False # No target to move towards (error?)
+        if self.target is None: #target tower, sees nobody else
+            min_dist = float('inf')
+            tower_target = None
+            for tower in arena.towers:
+                if tower.side != self.side:
+                    if distance(tower.position, self.position) < min_dist:
+                        tower_target = tower
+                        min_dist = distance(tower.position, self.position)
+
+            if self.ground and not same_sign(tower_target.position.y, self.position.y): # if behind bridge and cant cross
+            
+                r_bridge = distance(Vector(5.5, 0), self.target.position)
+                l_bridge = distance(Vector(-5.5, 0), self.target.position)
+                
+                tar_bridge = None
+                
+                if (r_bridge < l_bridge): #find closest bridge
+                    tar_bridge = Vector(5.5, 0)
+                else:
+                    tar_bridge = Vector(-5.5, 0)
+            
+                direction_x = tar_bridge.position.x - self.position.x #set movement
+                direction_y = tar_bridge.position.y - self.position.y
+                distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
+            else:
+                direction_x = tower_target.position.x - self.position.x #set to directly move to tower
+                direction_y = tower_target.position.y - self.position.y
+                distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
+
+            if min_dist <= self.hit_range:
+                return True
+
         if self.ground and not same_sign(self.target.position.y, self.position.y):
             
             r_bridge = distance(Vector(5.5, 0), self.target.position)
@@ -142,7 +132,7 @@ class Troop:
             direction_y = self.target.position.y - self.position.y
             distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
         
-        if distance_to_target <= hit_range:
+        if distance_to_target <= self.hit_range:
             return True
         # Normalize direction
         direction_x /= distance_to_target
@@ -168,7 +158,10 @@ class Troop:
         if self.deploy_time > 0: #if deploying, timer
             self.deploy_time -= TICK_TIME
         else:
-            self.attack_cooldown -= TICK_TIME
+            if not distance(self.target.position, self.position) < self.hit_range and (self.attack_cooldown <= self.hit_speed - self.load_time):
+                self.attack_cooldown = self.hit_speed - self.load_time #if not currently attacking but cooldown is less than first hit delay
+            else: #otherwise
+                self.attack_cooldown -= TICK_TIME #decrement time if either close enough to attack, cooldown greater than min cooldown, or both
         
 class Spell:
     def __init__(self, s, d, w, t, kb, v, tar):
@@ -182,7 +175,7 @@ class Spell:
         
         self.damage_cd = t
         king_pos = (Vector(0, -12) if s else Vector(0, 12))
-        self.spawn_timer = v == 0 ? 0 : distance(tar, king_pos) / v
+        self.spawn_timer = 0 if v == 0 else distance(tar, king_pos) / v
         self.should_delete = False
         
     def detect_hits(self, arena): #override
@@ -200,8 +193,8 @@ class Spell:
                 if distance_to_target != 0:
                     displacement.x /= distance_to_target
                     displacement.y /= distance_to_target
-                each.position.x += displacement.x * kb
-                each.position.y += displacement.y * kb#end kb code
+                each.position.x += displacement.x * self.kb
+                each.position.y += displacement.y * self.kb#end kb code
             self.waves -= 1 #decrease waves
             self.damage_cd = self.time_between #reset cooldown
         elif self.damage_cd > 0:
