@@ -103,10 +103,6 @@ class KingTowerAttackEntity(AttackEntity):
             movement = direction.scaled(self.velocity)
             self.position.add(movement)
 
-    def cleanup(self, arena):
-        if self.should_delete:
-            arena.active_attacks.remove(self)
-
 
 class KingTower(Tower):
     def __init__(self, side, level):

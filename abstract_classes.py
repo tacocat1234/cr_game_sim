@@ -69,7 +69,7 @@ class Troop:
         min_dist = float('inf')
         if not self.tower_only: #if not tower targeting
             for each in arena.troops: #for each troop
-                if each.side != self.side and (not self.ground_only or (self.ground_only and each.ground)):
+                if each.side != self.side and (not self.ground_only or (self.ground_only and each.ground)): #targets air or is ground only and each is ground troup
                     dist = vector.distance(each.position, self.position)
                     if  dist < min_dist and dist < self.sight_range:
                         self.target = each
@@ -120,6 +120,13 @@ class Troop:
                 direction_y = tower_target.position.y - self.position.y
                 distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
 
+            # Normalize direction
+            direction_x /= distance_to_target
+            direction_y /= distance_to_target
+            # Move in the direction of the target
+            self.position.x += direction_x * self.move_speed
+            self.position.y += direction_y * self.move_speed
+
             if min_dist <= self.hit_range: #within hit range, locks on
                 self.target = tower_target
                 return True
@@ -138,8 +145,8 @@ class Troop:
             else:
                 tar_bridge = vector.Vector(-5.5, 0)
             
-            direction_x = tar_bridge.position.x - self.position.x
-            direction_y = tar_bridge.position.y - self.position.y
+            direction_x = tar_bridge.x - self.position.x
+            direction_y = tar_bridge.y - self.position.y
             distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
         else:
             direction_x = self.target.position.x - self.position.x
