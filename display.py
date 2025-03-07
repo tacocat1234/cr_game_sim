@@ -1,14 +1,15 @@
 import pygame
 import training_camp_cards
 import arena
-from abstract_classes import Vector
+import towers
+import vector
 
 #height comp screen ~ 800
-#16x16 per tile
+#20x20 per tile
 # 18 x 32
-WIDTH, HEIGHT = 288 + 128, 512 + 256
+WIDTH, HEIGHT = 360 + 128, 640 + 128
 
-SCALE = 16  # Scale factor to map game coordinates to screen
+SCALE = 20  # Scale factor to map game coordinates to screen
 
 # Colors
 WHITE = (255, 255, 255)
@@ -22,20 +23,28 @@ YELLOW = (255, 255, 0)
 BG_TEMP = (0, 154, 23)
 
 def convert_to_pygame(coordinate):
-    pygame_x = int(WIDTH / 2 + coordinate.x * 16)
-    pygame_y = int(HEIGHT / 2 - coordinate.y * 16)  # Invert Y-axis
+    pygame_x = int(WIDTH / 2 + coordinate.x * SCALE)
+    pygame_y = int(HEIGHT / 2 - 80 - coordinate.y * SCALE)  # Invert Y-axis
     return pygame_x, pygame_y
 
 
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Crash Royale Arena")
+pygame.display.set_caption("Crash Royale Arena")    
 
 game_arena = arena.Arena()
 
+game_arena.towers = [towers.KingTower(True, 1), 
+                       towers.PrincessTower(True, 1, True), 
+                       towers.PrincessTower(True, 1, False), 
+                       towers.KingTower(False, 1), 
+                       towers.PrincessTower(False, 1, True), 
+                       towers.PrincessTower(False, 1, False)
+                       ]
+
 #temp
-game_arena.troops.append(training_camp_cards.Knight(True, Vector(-2, -5), 1))
-game_arena.troops.append(training_camp_cards.Giant(False, Vector(-3, 6), 1))
+game_arena.troops.append(training_camp_cards.Knight(True, vector.Vector(-2, -5), 1))
+game_arena.troops.append(training_camp_cards.Giant(False, vector.Vector(-3, 6), 1))
 #temp
 
 def draw():
@@ -43,7 +52,7 @@ def draw():
 
     # Draw Towers
     for tower in game_arena.towers:
-        tower_x, tower_y = convert_to_pygame(troop.position)
+        tower_x, tower_y = convert_to_pygame(tower.position)
         pygame.draw.rect(screen, GRAY, (tower_x, tower_y, 20, 20))  # Tower square
 
         # Health bar
@@ -52,9 +61,11 @@ def draw():
 
     # Draw Troops
     for troop in game_arena.troops:
-        troop_x = int((troop.position.x + 9) * SCALE)
-        troop_y = int((troop.position.y + 16) * SCALE)
-        pygame.draw.circle(screen, BLUE, (troop_x, troop_y), 8)  # Troop circle
+        troop_x, troop_y = convert_to_pygame(troop.position)
+
+        troop_color = BLUE if troop.side else RED
+
+        pygame.draw.circle(screen, troop_color, (troop_x, troop_y), 8)  # Troop circle
 
         # Health bar
         pygame.draw.rect(screen, RED, (troop_x - 10, troop_y - 12, 20, 3))

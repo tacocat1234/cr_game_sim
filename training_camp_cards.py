@@ -1,6 +1,7 @@
-import abstract_classes
 from abstract_classes import AttackEntity
 from abstract_classes import Troop
+from abstract_classes import TILES_PER_MIN
+import vector
 
 class KnightAttackEntity(AttackEntity):
     KNIGHT_HIT_RANGE = 1.2
@@ -10,14 +11,14 @@ class KnightAttackEntity(AttackEntity):
             d=damage,
             v=0,
             l=float('inf'),
-            i_p=position,
+            i_p=position
             )
         self.target = target
         self.should_delete = False
     
     def detect_hits(self, arena):
         
-        if (distance(self.target.position, self.position) < KNIGHT_HIT_RANGE) #within hitrange of knight
+        if (vector.distance(self.target.position, self.position) < KnightAttackEntity.KNIGHT_HIT_RANGE): #within hitrange of knight
             return [self.target]
         else:
             return [] #theoretically should never trigger, when attack, should always be in range unless very strange circumstances
@@ -48,7 +49,7 @@ class Knight(Troop):
             t_o=False,        # Not tower-only
             m_s=60*TILES_PER_MIN,          # Movement speed 
             d_t=1,            # Deploy time
-            p=position               # Position (Vector object)
+            p=position               # Position (vector.Vector object)
         )
     def attack(self):
         return KnightAttackEntity(self.side, self.hit_damage, self.position, self.target)
@@ -68,7 +69,7 @@ class GiantAttackEntity(AttackEntity): #essentially same as Knight
     
     def detect_hits(self, arena):
         
-        if (distance(self.target.position, self.position) < GIANT_HIT_RANGE) #within hitrange of knight
+        if (vector.distance(self.target.position, self.position) < GiantAttackEntity.GIANT_HIT_RANGE): #within hitrange of knight
             return [self.target]
         else:
             return [] #theoretically should never trigger, when attack, should always be in range unless very strange circumstances
@@ -95,9 +96,9 @@ class Giant(Troop):
             s_r=7.5,
             g=True,
             t_g_o=True,
-            t_o=True
-            m_s=45*TILES_PER_MIN
-            d_t=1
+            t_o=True,
+            m_s=45*TILES_PER_MIN,
+            d_t=1,
             p=position
         )
     

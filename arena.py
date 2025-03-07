@@ -4,7 +4,7 @@ class Arena:
         self.active_attacks = []
         self.spells = []
         self.buildings = []
-        self.towers = [KingTower(True), PrincessTower(True), PrincessTower(True), KingTower(False), PrincessTower(False), PrincessTower(False) ]
+        self.towers = []
     
     def tick(self):
         for spell in self.spells:
