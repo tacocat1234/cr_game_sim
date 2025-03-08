@@ -43,8 +43,8 @@ game_arena.towers = [towers.KingTower(True, 1),
                        ]
 
 #temp
-game_arena.troops.append(training_camp_cards.Knight(True, vector.Vector(-2, -5), 1))
-game_arena.troops.append(training_camp_cards.Giant(False, vector.Vector(-3, 6), 1))
+game_arena.troops.append(training_camp_cards.Knight(True, vector.Vector(-2, -3), 1))
+game_arena.troops.append(training_camp_cards.Giant(False, vector.Vector(-3, 3), 1))
 #temp
 
 def draw():
@@ -63,7 +63,7 @@ def draw():
         pygame.draw.rect(screen, GRAY, (tower_x, tower_y, tower_rect_width, tower_rect_height))  # Tower square
 
         # Health bar
-        pygame.draw.rect(screen, RED, (tower_x, tower_y - 5, tower_rect_width, 3))
+        pygame.draw.rect(screen, BLACK, (tower_x, tower_y - 5, tower_rect_width, 3))
         pygame.draw.rect(screen, GREEN, (tower_x, tower_y - 5, int(tower_rect_width * (tower.cur_hp / tower.hit_points)), 3))
 
     # Draw Troops
@@ -76,13 +76,12 @@ def draw():
         pygame.draw.circle(screen, troop_color, (troop_x, troop_y), troop.collision_radius * SCALE)
 
         # Health bar
-        pygame.draw.rect(screen, RED, (troop_x - 10, troop_y - 12, 20, 3))
+        pygame.draw.rect(screen, BLACK, (troop_x - 10, troop_y - 12, 20, 3))
         pygame.draw.rect(screen, GREEN, (troop_x - 10, troop_y - 12, int(20 * (troop.cur_hp / troop.hit_points)), 3))
 
     # Draw Attack Entities (Projectiles)
     for attack in game_arena.active_attacks:
-        attack_x = int((attack.position.x + 9) * SCALE)
-        attack_y = int((attack.position.y + 16) * SCALE)
+        attack_x, attack_y= convert_to_pygame(attack.position)
         pygame.draw.circle(screen, YELLOW, (attack_x, attack_y), 5)  # Attack circle
 
     pygame.display.flip()

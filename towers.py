@@ -1,5 +1,6 @@
 import vector
 import math
+import copy
 from abstract_classes import AttackEntity
 from abstract_classes import Tower
 from abstract_classes import TILES_PER_MIN
@@ -12,13 +13,13 @@ class PrincessTowerAttackEntity(AttackEntity):
             d=damage,
             v=600*TILES_PER_MIN,
             l=float('inf'),
-            i_p=position
+            i_p=copy.deepcopy(position)
         )
         self.target = target
         self.should_delete = False
 
     def detect_hits(self, arena):
-        if (vector.Vector.distance(self.target.position, self.position) < self.target.collision_radius):
+        if (vector.distance(self.target.position, self.position) < self.target.collision_radius):
             return [self.target] # has hit
         else:
             return [] #hasnt hit yet
@@ -66,20 +67,19 @@ class PrincessTower(Tower):
         return PrincessTowerAttackEntity(self.side, self.hit_damage, self.position, self.target)
 
 class KingTowerAttackEntity(AttackEntity):
-    MAX_TOWERS = 3
     def __init__(self, side, damage, position, target):
         super().__init__(
             s=side,
             d=damage,
             v=1000*TILES_PER_MIN,
             l=float('inf'),
-            i_p=position
+            i_p=copy.deepcopy(position)
         )
         self.target = target
         self.should_delete = False
 
     def detect_hits(self, arena):
-        if (vector.Vector.distance(self.target.position, self.position) < self.target.collision_radius):
+        if (vector.distance(self.target.position, self.position) < self.target.collision_radius):
             return [self.target] # has hit
         else:
             return [] #hasnt hit yet
@@ -104,6 +104,7 @@ class KingTowerAttackEntity(AttackEntity):
 
 
 class KingTower(Tower):
+    MAX_TOWERS = 3
     def __init__(self, side, level):
         super().__init__(
             s=side,
@@ -133,7 +134,7 @@ class KingTower(Tower):
         if self.cur_hp <= 0:
             arena.towers.remove(self)
         
-        if vector.Vector.distance(self.target.position, self.position) > self.hit_range and (self.attack_cooldown <= self.hit_speed - self.load_time):
+        if self.target is None or (vector.distance(self.target.position, self.position) > self.hit_range and (self.attack_cooldown <= self.hit_speed - self.load_time)):
                 self.attack_cooldown = self.hit_speed - self.load_time #if not currently attacking but cooldown is less than first hit delay
         else: #otherwise
             self.attack_cooldown -= TICK_TIME

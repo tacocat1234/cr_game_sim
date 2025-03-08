@@ -212,21 +212,23 @@ class Tower:
         min_dist = float('inf')
         for each in arena.troops + arena.buildings:
             dist = vector.distance(each.position, self.position)
-            if  dist < min_dist and dist < self.hit_range:
+            if each.side != self.side and dist < min_dist and dist < self.hit_range + each.collision_radius:
                 self.target = each
                 min_dist = vector.distance(each.position, self.position)
     
     def tick(self, arena):
+        #print(self.target) #temp
         if self.target is None or self.target.cur_hp <= 0:
             self.update_target(arena)
         if not self.target is None and self.attack_cooldown <= 0:
-            self.attack()
+            arena.active_attacks.append(self.attack())
             self.attack_cooldown = self.hit_speed
     
     def cleanup(self, arena):
+        #print(self.cur_hp) #temp
         if self.cur_hp <= 0:
             arena.towers.remove(self)
-        if vector.distance(self.target.position, self.position) > self.hit_range and (self.attack_cooldown <= self.hit_speed - self.load_time):
+        if self.target is None or (vector.distance(self.target.position, self.position) > self.hit_range + self.target.collision_radius and (self.attack_cooldown <= self.hit_speed - self.load_time)):
                 self.attack_cooldown = self.hit_speed - self.load_time #if not currently attacking but cooldown is less than first hit delay
         else: #otherwise
             self.attack_cooldown -= TICK_TIME

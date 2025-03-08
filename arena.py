@@ -14,8 +14,11 @@ class Arena:
             spell.tick(self)
         for troop in self.troops:
             troop.tick(self)
+        for tower in self.towers:
+            tower.tick(self)
         for attack in self.active_attacks:
             attack.tick(self)
+        
         
     
     def cleanup(self):
@@ -25,6 +28,8 @@ class Arena:
             attack.cleanup(self)
         for spell in self.spells:
             spell.cleanup(self)
+        for tower in self.towers:
+            tower.cleanup(self)
 
         #do collision checks
         applyVelocity = {}
