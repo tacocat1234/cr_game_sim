@@ -6,7 +6,6 @@ from abstract_classes import TILES_PER_MIN
 from abstract_classes import TICK_TIME
 
 class PrincessTowerAttackEntity(AttackEntity):
-    PRINCESS_PROJECTILE_CONTACT_RANGE = 0.5 #kinda random, maybe factcheck with wiki later?
     def __init__(self, side, damage, position, target):
         super().__init__(
             s=side,
@@ -19,7 +18,7 @@ class PrincessTowerAttackEntity(AttackEntity):
         self.should_delete = False
 
     def detect_hits(self, arena):
-        if (vector.Vector.distance(self.target.position, self.position) < PrincessTowerAttackEntity.PRINCESS_PROJECTILE_CONTACT_RANGE):
+        if (vector.Vector.distance(self.target.position, self.position) < self.target.collision_radius):
             return [self.target] # has hit
         else:
             return [] #hasnt hit yet
@@ -60,13 +59,13 @@ class PrincessTower(Tower):
             h_s=0.8,
             l_t=0.81, #.01 extra so it stays below 0
             h_p=1400 * pow(1.1, level - 1),
+            c_r=1,
             p=vector.Vector(x, y)
         )
     def attack(self):
-        return PrincessTowerAttackEntity(self.side, self.hit_damage, self.position)
+        return PrincessTowerAttackEntity(self.side, self.hit_damage, self.position, self.target)
 
 class KingTowerAttackEntity(AttackEntity):
-    KING_PROJECTILE_CONTACT_RANGE = 0.5 #kinda random, maybe factcheck with wiki later?
     MAX_TOWERS = 3
     def __init__(self, side, damage, position, target):
         super().__init__(
@@ -80,7 +79,7 @@ class KingTowerAttackEntity(AttackEntity):
         self.should_delete = False
 
     def detect_hits(self, arena):
-        if (vector.Vector.distance(self.target.position, self.position) < KingTowerAttackEntity.KING_PROJECTILE_CONTACT_RANGE):
+        if (vector.Vector.distance(self.target.position, self.position) < self.target.collision_radius):
             return [self.target] # has hit
         else:
             return [] #hasnt hit yet
@@ -113,13 +112,14 @@ class KingTower(Tower):
             h_s=1,
             l_t=0.5,
             h_p=2400 * pow(1.1, level - 1),
+            c_r=1.4,
             p=vector.Vector(0, -13 if side else 13)
         )
         self.activated = False
         self.activation_timer = 4
     
     def attack(self):
-        return KingTowerAttackEntity(self.side, self.hit_damage, self.position)
+        return KingTowerAttackEntity(self.side, self.hit_damage, self.position, self.target)
 
     def tick(self, arena):
         if self.target is None or self.target.cur_hp <= 0:
@@ -140,7 +140,7 @@ class KingTower(Tower):
 
         if not self.activated:
             if self.cur_hp < self.hit_points: # if been hit
-                activated = True #activate
+                self.activated = True #activate
 
             alive_towers = 0
             for each in arena.towers: #count # towers
@@ -148,6 +148,6 @@ class KingTower(Tower):
                     alive_towers += 1
 
             if alive_towers < KingTower.MAX_TOWERS: #if any towers gone
-                activated = True #activate
+                self.activated = True #activate
         elif self.activation_timer > 0:
             self.activation_timer -= TICK_TIME

@@ -24,7 +24,7 @@ BG_TEMP = (0, 154, 23)
 
 def convert_to_pygame(coordinate):
     pygame_x = int(WIDTH / 2 + coordinate.x * SCALE)
-    pygame_y = int(HEIGHT / 2 - 80 - coordinate.y * SCALE)  # Invert Y-axis
+    pygame_y = int(HEIGHT / 2 - 60 - coordinate.y * SCALE)  # Invert Y-axis
     return pygame_x, pygame_y
 
 
@@ -53,11 +53,18 @@ def draw():
     # Draw Towers
     for tower in game_arena.towers:
         tower_x, tower_y = convert_to_pygame(tower.position)
-        pygame.draw.rect(screen, GRAY, (tower_x, tower_y, 20, 20))  # Tower square
+        
+        # Adjust position so that the rectangle is centered at the tower's coordinates
+        tower_rect_width = 3 * SCALE
+        tower_rect_height = 3 * SCALE
+        tower_x -= tower_rect_width // 2
+        tower_y -= tower_rect_height // 2
+        
+        pygame.draw.rect(screen, GRAY, (tower_x, tower_y, tower_rect_width, tower_rect_height))  # Tower square
 
         # Health bar
-        pygame.draw.rect(screen, RED, (tower_x, tower_y - 5, 20, 3))
-        pygame.draw.rect(screen, GREEN, (tower_x, tower_y - 5, int(20 * (tower.cur_hp / tower.hit_points)), 3))
+        pygame.draw.rect(screen, RED, (tower_x, tower_y - 5, tower_rect_width, 3))
+        pygame.draw.rect(screen, GREEN, (tower_x, tower_y - 5, int(tower_rect_width * (tower.cur_hp / tower.hit_points)), 3))
 
     # Draw Troops
     for troop in game_arena.troops:
@@ -65,7 +72,8 @@ def draw():
 
         troop_color = BLUE if troop.side else RED
 
-        pygame.draw.circle(screen, troop_color, (troop_x, troop_y), 8)  # Troop circle
+        # Draw circle with the radius being equal to the troop's collision_radius
+        pygame.draw.circle(screen, troop_color, (troop_x, troop_y), troop.collision_radius * SCALE)
 
         # Health bar
         pygame.draw.rect(screen, RED, (troop_x - 10, troop_y - 12, 20, 3))
@@ -90,6 +98,7 @@ while running:
             running = False
 
     game_arena.tick()  # Update game logic
+    game_arena.cleanup()
     draw()  # Redraw screen
 
 pygame.quit()

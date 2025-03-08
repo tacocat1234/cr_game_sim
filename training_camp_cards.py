@@ -1,16 +1,18 @@
 from abstract_classes import AttackEntity
 from abstract_classes import Troop
 from abstract_classes import TILES_PER_MIN
+from abstract_classes import TICK_TIME
 import vector
 
 class KnightAttackEntity(AttackEntity):
     KNIGHT_HIT_RANGE = 1.2
+    KNIGHT_COLLISION_RADIUS = 0.5
     def __init__(self, side, damage, position, target):
         super().__init__(
             s=side,
             d=damage,
             v=0,
-            l=float('inf'),
+            l=0.5,
             i_p=position
             )
         self.target = target
@@ -18,7 +20,7 @@ class KnightAttackEntity(AttackEntity):
     
     def detect_hits(self, arena):
         
-        if (vector.distance(self.target.position, self.position) < KnightAttackEntity.KNIGHT_HIT_RANGE): #within hitrange of knight
+        if (vector.distance(self.target.position, self.position) <= KnightAttackEntity.KNIGHT_HIT_RANGE + KnightAttackEntity.KNIGHT_COLLISION_RADIUS + self.target.collision_radius): #within hitrange of knight
             return [self.target]
         else:
             return [] #theoretically should never trigger, when attack, should always be in range unless very strange circumstances
@@ -30,6 +32,9 @@ class KnightAttackEntity(AttackEntity):
             self.should_delete = True
 
     def cleanup(self, arena): #also delete self if single target here in derived classes
+        self.duration -= TICK_TIME
+        if self.duration <= 0:
+            arena.active_attacks.remove(self)
         if self.should_delete:
             arena.active_attacks.remove(self)
         
@@ -49,6 +54,8 @@ class Knight(Troop):
             t_o=False,        # Not tower-only
             m_s=60*TILES_PER_MIN,          # Movement speed 
             d_t=1,            # Deploy time
+            m=6,            #mass
+            c_r=0.5,        #collision radius
             p=position               # Position (vector.Vector object)
         )
     def attack(self):
@@ -56,12 +63,13 @@ class Knight(Troop):
 
 class GiantAttackEntity(AttackEntity): #essentially same as Knight
     GIANT_HIT_RANGE = 1.2
+    GIANT_COLLISION_RADIUS = 0.75
     def __init__(self, side, damage, position, target):
         super().__init__(
             s=side,
             d=damage,
             v=0,
-            l=float('inf'),
+            l=0.5,
             i_p=position,
             )
         self.target = target
@@ -69,7 +77,7 @@ class GiantAttackEntity(AttackEntity): #essentially same as Knight
     
     def detect_hits(self, arena):
         
-        if (vector.distance(self.target.position, self.position) < GiantAttackEntity.GIANT_HIT_RANGE): #within hitrange of knight
+        if (vector.distance(self.target.position, self.position) <= GiantAttackEntity.GIANT_HIT_RANGE + GiantAttackEntity.GIANT_COLLISION_RADIUS + self.target.collision_radius): #within hitrange of knight
             return [self.target]
         else:
             return [] #theoretically should never trigger, when attack, should always be in range unless very strange circumstances
@@ -81,6 +89,9 @@ class GiantAttackEntity(AttackEntity): #essentially same as Knight
             self.should_delete = True
 
     def cleanup(self, arena): #also delete self if single target here in derived classes
+        self.duration -= TICK_TIME
+        if self.duration <= 0:
+            arena.active_attacks.remove(self)
         if self.should_delete:
             arena.active_attacks.remove(self)
         
@@ -99,6 +110,8 @@ class Giant(Troop):
             t_o=True,
             m_s=45*TILES_PER_MIN,
             d_t=1,
+            m=18,
+            c_r=0.75,
             p=position
         )
     

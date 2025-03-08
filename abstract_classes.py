@@ -30,9 +30,10 @@ class AttackEntity:
             if (new):
                 each.hp -= self.damage
                 self.has_hit.append(each)
-        self.duration -= TICK_TIME
+        
         
     def cleanup(self, arena): #also delete self if single target here in derived classes
+        self.duration -= TICK_TIME
         if self.duration <= 0:
             arena.active_attacks.remove(self)
         
@@ -41,7 +42,7 @@ class AttackEntity:
 
 
 class Troop:
-    def __init__(self, s, h_p, h_d, h_s, l_t, h_r, s_r, g, t_g_o, t_o, m_s, d_t, p):
+    def __init__(self, s, h_p, h_d, h_s, l_t, h_r, s_r, g, t_g_o, t_o, m_s, d_t, m, c_r, p):
         self.side = s
         self.hit_points = h_p
         self.hit_damage = h_d
@@ -54,6 +55,8 @@ class Troop:
         self.tower_only = t_o
         self.move_speed = m_s
         self.deploy_time = d_t
+        self.mass = m
+        self.collision_radius = c_r
         
         self.cur_hp = h_p
         self.position = p
@@ -121,17 +124,18 @@ class Troop:
                 distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
 
             # Normalize direction
+            
+
+            if min_dist < self.hit_range + self.collision_radius + tower_target.collision_radius: #within hit range, locks on
+                self.target = tower_target
+                return True
+            
             direction_x /= distance_to_target
             direction_y /= distance_to_target
             # Move in the direction of the target
             self.position.x += direction_x * self.move_speed
             self.position.y += direction_y * self.move_speed
-
-            if min_dist <= self.hit_range: #within hit range, locks on
-                self.target = tower_target
-                return True
-            else:
-                return False
+            return False
 
         if self.ground and not same_sign(self.target.position.y, self.position.y):
             
@@ -153,16 +157,15 @@ class Troop:
             direction_y = self.target.position.y - self.position.y
             distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
         
-        # Normalize direction
+        if vector.distance(self.target.position, self.position) < self.hit_range + self.collision_radius + self.target.collision_radius: #within hit range, then dont move just attack
+            return True
+        
         direction_x /= distance_to_target
         direction_y /= distance_to_target
         # Move in the direction of the target
         self.position.x += direction_x * self.move_speed
         self.position.y += direction_y * self.move_speed
-        if distance_to_target <= self.hit_range:
-            return True
-        else:
-            return False
+        return False
             
         
     def tick(self, arena):
@@ -181,19 +184,20 @@ class Troop:
         if self.deploy_time > 0: #if deploying, timer
             self.deploy_time -= TICK_TIME
         else:
-            if not self.target is None and not vector.distance(self.target.position, self.position) < self.hit_range and (self.attack_cooldown <= self.hit_speed - self.load_time):
+            if not self.target is None and not vector.distance(self.target.position, self.position) < self.hit_range + self.target.collision_radius + self.collision_radius and (self.attack_cooldown <= self.hit_speed - self.load_time):
                 self.attack_cooldown = self.hit_speed - self.load_time #if not currently attacking but cooldown is less than first hit delay
             else: #otherwise
                 self.attack_cooldown -= TICK_TIME #decrement time if either close enough to attack, cooldown greater than min cooldown, or both
         
 class Tower:
-    def __init__(self, s, h_d, h_r, h_s, l_t, h_p, p):
+    def __init__(self, s, h_d, h_r, h_s, l_t, h_p, c_r, p):
         self.side = s
         self.hit_damage = h_d
         self.hit_range = h_r
         self.hit_speed = h_s
         self.load_time = l_t
         self.hit_points = h_p
+        self.collision_radius = c_r
 
         self.cur_hp = h_p
         self.target = None
