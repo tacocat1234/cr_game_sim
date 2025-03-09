@@ -1,5 +1,6 @@
 from abstract_classes import AttackEntity
 from abstract_classes import Troop
+from abstract_classes import Spell
 from abstract_classes import TILES_PER_MIN
 from abstract_classes import TICK_TIME
 import vector
@@ -59,6 +60,7 @@ class Knight(Troop):
             c_r=0.5,        #collision radius
             p=position               # Position (vector.Vector object)
         )
+        self.level = level
     def attack(self):
         return KnightAttackEntity(self.side, self.hit_damage, self.position, self.target)
 
@@ -115,7 +117,8 @@ class MiniPekka(Troop):
             m=4,            #mass
             c_r=0.45,        #collision radius
             p=position               # Position (vector.Vector object)
-        )
+        ) 
+        self.level = level
     def attack(self):
         return MiniPekkaAttackEntity(self.side, self.hit_damage, self.position, self.target)
 
@@ -172,10 +175,70 @@ class Giant(Troop):
             m=18,
             c_r=0.75,
             p=position
-        )
+        ) 
+        self.level = level
     
     def attack(self):
         return GiantAttackEntity(self.side, self.hit_damage, self.position, self.target)
+    
+
+class MinionAttackEntity(AttackEntity):
+    MINION_HIT_RANGE = 1.6
+    MINION_COLLISION_RADIUS = 0.5
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            s=side,
+            d=damage,
+            v=0,
+            l=0.5,
+            i_p=position
+            )
+        self.target = target
+        self.should_delete = False
+    
+    def detect_hits(self, arena):
+        
+        if (vector.distance(self.target.position, self.position) <= MinionAttackEntity.MINION_HIT_RANGE + MinionAttackEntity.MINION_COLLISION_RADIUS + self.target.collision_radius): #within hitrange of knight
+            return [self.target]
+        else:
+            return [] #theoretically should never trigger, when attack, should always be in range unless very strange circumstances
+        
+    def tick(self, arena):
+        hits = self.detect_hits(arena)
+        if len(hits) > 0:
+            hits[0].cur_hp -= self.damage
+            self.should_delete = True
+
+    def cleanup(self, arena): #also delete self if single target here in derived classes
+        self.duration -= TICK_TIME
+        if self.duration <= 0:
+            arena.active_attacks.remove(self)
+        if self.should_delete:
+            arena.active_attacks.remove(self)
+        
+            
+class Minion(Troop):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 90 * pow(1.1, level - 1),         # Hit points (Example value)
+            h_d= 46 * pow(1.1, level - 1),          # Hit damage (Example value)
+            h_s=1,          # Hit speed (Seconds per hit)
+            l_t=0.5,            # First hit cooldown
+            h_r=1.6,            # Hit range
+            s_r=5.5,            # Sight Range
+            g=False,           # Ground troop
+            t_g_o=False,       # Targets ground-only
+            t_o=False,        # Not tower-only
+            m_s=90*TILES_PER_MIN,          # Movement speed 
+            d_t=1,            # Deploy time
+            m=2,            #mass
+            c_r=0.5,        #collision radius
+            p=position               # Position (vector.Vector object)
+        ) 
+        self.level = level
+    def attack(self):
+        return MinionAttackEntity(self.side, self.hit_damage, self.position, self.target)
 
 class ArcherAttackEntity(AttackEntity):
     def __init__(self, side, damage, position, target):
@@ -232,7 +295,8 @@ class Archer(Troop):
             m=3,            #mass
             c_r=0.5,        #collision radius
             p=position               # Position (vector.Vector object)
-        )
+        ) 
+        self.level = level
     
     def attack(self):
         return ArcherAttackEntity(self.side, self.hit_damage, self.position, self.target)
@@ -293,7 +357,38 @@ class Musketeer(Troop):
             m=5,            #mass
             c_r=0.5,        #collision radius
             p=position               # Position (vector.Vector object)
-        )
+        ) 
+        self.level = level
     
     def attack(self):
         return MusketeerAttackEntity(self.side, self.hit_damage, self.position, self.target)
+    
+
+
+class Fireball(Spell):
+    def __init__(self, side, target, level):
+        super().__init__(
+            s=side,
+            d=325*pow(1.1, level - 1),
+            c_t_d=98*pow(1.1, level - 1),
+            w=1,
+            t=0,
+            kb=1,
+            r=2.5,
+            v=600*TILES_PER_MIN,
+            tar=target
+        )
+
+class Arrow(Spell):
+    def __init__(self, side, target, level):
+        super().__init__(
+            s=side,
+            d=48*pow(1.1, level - 1),
+            c_t_d=15*pow(1.1, level - 1),
+            w=3,
+            t=0.2,
+            kb=0,
+            r=4,
+            v=1100*TILES_PER_MIN,
+            tar=target
+        )

@@ -174,7 +174,11 @@ class Troop:
             if self.target is None or self.target.cur_hp <= 0:
                 self.update_target(arena)
             if self.move(arena) and self.attack_cooldown <= 0: #move, then if within range, attack
-                arena.active_attacks.append(self.attack())
+                atk = self.attack()
+                if isinstance(atk, list):
+                    arena.active_attacks.extend(atk)
+                else:
+                    arena.active_attacks.append(self.attack())
                 self.attack_cooldown = self.hit_speed
     
     def cleanup(self, arena): # each troop runs this after ALL ticks are finished
@@ -236,37 +240,46 @@ class Tower:
 
 
 class Spell:
-    def __init__(self, s, d, w, t, kb, v, tar):
+    def __init__(self, s, d, c_t_d, w, t, kb, r, v, tar):
         self.side = s
         self.damage = d
+        self.crown_tower_damage = c_t_d,
         self.waves = w
         self.time_between = t
         self.knock_back = kb
+        self.radius = r
         self.velocity = v
         self.target_pos = tar
         
         self.damage_cd = t
-        king_pos = (vector.Vector(0, -12) if s else vector.Vector(0, 12))
-        self.spawn_timer = 0 if v == 0 else vector.distance(tar, king_pos) / v
+        self.king_pos = (vector.Vector(0, -12) if s else vector.Vector(0, 12))
+        self.spawn_timer = 0 if v == 0 else vector.distance(tar, self.king_pos) / v #number of ticks
         self.should_delete = False
+
+        self.total_time = self.spawn_timer #number of ticks
         
+        self.position = self.king_pos
+
     def detect_hits(self, arena): #override
-        return []
+        out = []
+        for each in arena.troops + arena.buildings + arena.towers:
+            if each.side != self.side and (vector.distance(each.position, self.position) <= self.radius + each.collision_radius):
+                out.append(each)
+        return out
         
     def tick(self, arena):
         if self.spawn_timer >= 0:
-            self.spawn_timer -= TICK_TIME #spawn in
+            self.position.add(self.target_pos.subtracted(self.king_pos).scaled(1 / self.total_time))
+            self.spawn_timer -= 1 #spawn in
         elif self.waves > 0 and self.damage_cd <= 0:
             hits = self.detect_hits(arena)
             for each in hits:
-                each.hp -= self.damage; #end damage, start kb
-                displacement = vector.Vector(each.position.x - self.target_pos.x, each.position.y - self.target_pos.y)
-                distance_to_target = math.sqrt(displacement.x ** 2 + displacement.y ** 2)
-                if distance_to_target != 0:
-                    displacement.x /= distance_to_target
-                    displacement.y /= distance_to_target
-                each.position.x += displacement.x * self.kb
-                each.position.y += displacement.y * self.kb#end kb code
+                each.cur_hp -= self.damage; #end damage, start kb
+                if (isinstance(each, Troop)):
+                    displacement = each.position.subtracted(self.position)
+                    displacement.normalize()
+                    each.position.x += displacement.x * self.knock_back
+                    each.position.y += displacement.y * self.knock_back#end kb code
             self.waves -= 1 #decrease waves
             self.damage_cd = self.time_between #reset cooldown
         elif self.damage_cd > 0:
