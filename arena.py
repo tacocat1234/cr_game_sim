@@ -39,7 +39,8 @@ class Arena:
             dist = vector.distance(c_troop.position, troop.position)
             if dist < (c_troop.collision_radius + troop.collision_radius):
                 vec = c_troop.position.subtracted(troop.position)  # troop to ctroop vector
-                vec.scale(((c_troop.collision_radius + troop.collision_radius) / vec.magnitude()) - 1)  # scale to avoid collision
+                if vec.magnitude() > 0:
+                    vec.scale(((c_troop.collision_radius + troop.collision_radius) / vec.magnitude()) - 1)  # scale to avoid collision
                 
                 mass_ratio_troop = troop.mass / (c_troop.mass + troop.mass)
                 mass_ratio_ctroop = c_troop.mass / (c_troop.mass + troop.mass)

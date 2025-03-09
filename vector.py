@@ -30,8 +30,9 @@ class Vector:
         return math.sqrt(self.x*self.x + self.y*self.y)
     
     def normalize(self):
-        mg = self.magnitude
-        self.scale(1/mg)
+        mg = self.magnitude()
+        if (mg > 0):
+            self.scale(1/mg)
 
 def distance(vec1, vec2):
     return math.sqrt((vec2.x - vec1.x) ** 2 + (vec2.y - vec1.y) ** 2)

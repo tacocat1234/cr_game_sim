@@ -21,6 +21,8 @@ GRAY = (200, 200, 200)
 YELLOW = (255, 255, 0)
 
 BG_TEMP = (0, 154, 23)
+RIVER_TEMP = (79, 66, 181)
+BRIDGE_TEMP = (193, 154, 107)
 
 def convert_to_pygame(coordinate):
     pygame_x = int(WIDTH / 2 + coordinate.x * SCALE)
@@ -43,12 +45,23 @@ game_arena.towers = [towers.KingTower(True, 1),
                        ]
 
 #temp
-game_arena.troops.append(training_camp_cards.Knight(True, vector.Vector(-2, -3), 1))
+game_arena.troops.append(training_camp_cards.Knight(False, vector.Vector(-2, 3), 1))
+game_arena.troops.append(training_camp_cards.Archer(True, vector.Vector(-2, -4), 1))
+game_arena.troops.append(training_camp_cards.Archer(True, vector.Vector(-3, -4), 1))
 game_arena.troops.append(training_camp_cards.Giant(False, vector.Vector(-3, 3), 1))
+game_arena.troops.append(training_camp_cards.MiniPekka(True, vector.Vector(-3, -4), 1))
+game_arena.troops.append(training_camp_cards.Musketeer(False, vector.Vector(0, 4), 1))
 #temp
 
 def draw():
     screen.fill(BG_TEMP)
+
+    # Draw river
+    pygame.draw.rect(screen, RIVER_TEMP, (0, HEIGHT/2 - 60 - SCALE, WIDTH, SCALE * 2)) 
+    #Draw bridges
+
+    pygame.draw.rect(screen, BRIDGE_TEMP, (64 + 2.5 * SCALE, HEIGHT/2 - 60 - 1.5 * SCALE, SCALE * 2, SCALE * 3)) 
+    pygame.draw.rect(screen, BRIDGE_TEMP, (WIDTH - (64 + 4.5 * SCALE), HEIGHT/2 - 60 - 1.5 *SCALE, SCALE * 2, SCALE * 3)) 
 
     # Draw Towers
     for tower in game_arena.towers:

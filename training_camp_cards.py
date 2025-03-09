@@ -3,6 +3,7 @@ from abstract_classes import Troop
 from abstract_classes import TILES_PER_MIN
 from abstract_classes import TICK_TIME
 import vector
+import copy
 
 class KnightAttackEntity(AttackEntity):
     KNIGHT_HIT_RANGE = 1.2
@@ -61,6 +62,64 @@ class Knight(Troop):
     def attack(self):
         return KnightAttackEntity(self.side, self.hit_damage, self.position, self.target)
 
+class MiniPekkaAttackEntity(AttackEntity):
+    MP_HIT_RANGE = 1.2
+    MP_COLLISION_RADIUS = 0.45
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            s=side,
+            d=damage,
+            v=0,
+            l=0.5,
+            i_p=position
+            )
+        self.target = target
+        self.should_delete = False
+    
+    def detect_hits(self, arena):
+        
+        if (vector.distance(self.target.position, self.position) <= MiniPekkaAttackEntity.MP_HIT_RANGE + MiniPekkaAttackEntity.MP_COLLISION_RADIUS + self.target.collision_radius): #within hitrange of knight
+            return [self.target]
+        else:
+            return [] #theoretically should never trigger, when attack, should always be in range unless very strange circumstances
+        
+    def tick(self, arena):
+        hits = self.detect_hits(arena)
+        if len(hits) > 0:
+            hits[0].cur_hp -= self.damage
+            self.should_delete = True
+
+    def cleanup(self, arena): #also delete self if single target here in derived classes
+        self.duration -= TICK_TIME
+        if self.duration <= 0:
+            arena.active_attacks.remove(self)
+        if self.should_delete:
+            arena.active_attacks.remove(self)
+        
+            
+class MiniPekka(Troop):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 642 * pow(1.1, level - 1),         # Hit points (Example value)
+            h_d= 356 * pow(1.1, level - 1),          # Hit damage (Example value)
+            h_s=1.6,          # Hit speed (Seconds per hit)
+            l_t=1.1,            # First hit cooldown
+            h_r=0.8,            # Hit range
+            s_r=5.5,            # Sight Range
+            g=True,           # Ground troop
+            t_g_o=True,       # Targets ground-only
+            t_o=False,        # Not tower-only
+            m_s=90*TILES_PER_MIN,          # Movement speed 
+            d_t=1,            # Deploy time
+            m=4,            #mass
+            c_r=0.45,        #collision radius
+            p=position               # Position (vector.Vector object)
+        )
+    def attack(self):
+        return MiniPekkaAttackEntity(self.side, self.hit_damage, self.position, self.target)
+
+
 class GiantAttackEntity(AttackEntity): #essentially same as Knight
     GIANT_HIT_RANGE = 1.2
     GIANT_COLLISION_RADIUS = 0.75
@@ -117,3 +176,124 @@ class Giant(Troop):
     
     def attack(self):
         return GiantAttackEntity(self.side, self.hit_damage, self.position, self.target)
+
+class ArcherAttackEntity(AttackEntity):
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            s=side,
+            d=damage,
+            v=600*TILES_PER_MIN,
+            l=float('inf'),
+            i_p=copy.deepcopy(position)
+        )
+        self.target = target
+        self.should_delete = False
+
+    def detect_hits(self, arena):
+        if (vector.distance(self.target.position, self.position) < self.target.collision_radius):
+            return [self.target] # has hit
+        else:
+            return [] #hasnt hit yet
+            
+    def tick(self, arena):
+        hits = self.detect_hits(arena)
+        if len(hits) > 0:
+            hits[0].cur_hp -= self.damage
+            self.should_delete = True
+        else:
+            direction = vector.Vector(
+                self.target.position.x - self.position.x, 
+                self.target.position.y - self.position.y
+            )
+            direction.normalize()
+
+            movement = direction.scaled(self.velocity)
+            self.position.add(movement)
+
+    def cleanup(self, arena):
+        if self.should_delete:
+            arena.active_attacks.remove(self)
+    
+class Archer(Troop):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 119 * pow(1.1, level - 1),         # Hit points (Example value)
+            h_d= 42 * pow(1.1, level - 1),          # Hit damage (Example value)
+            h_s=0.9,          # Hit speed (Seconds per hit)
+            l_t=0.4,            # First hit cooldown
+            h_r=5,            # Hit range
+            s_r=5.5,            # Sight Range
+            g=True,           # Ground troop
+            t_g_o=False,       # Targets ground-only
+            t_o=False,        # Not tower-only
+            m_s=60*TILES_PER_MIN,          # Movement speed 
+            d_t=1,            # Deploy time
+            m=3,            #mass
+            c_r=0.5,        #collision radius
+            p=position               # Position (vector.Vector object)
+        )
+    
+    def attack(self):
+        return ArcherAttackEntity(self.side, self.hit_damage, self.position, self.target)
+    
+
+class MusketeerAttackEntity(AttackEntity):
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            s=side,
+            d=damage,
+            v=1000*TILES_PER_MIN,
+            l=float('inf'),
+            i_p=copy.deepcopy(position)
+        )
+        self.target = target
+        self.should_delete = False
+
+    def detect_hits(self, arena):
+        if (vector.distance(self.target.position, self.position) < self.target.collision_radius):
+            return [self.target] # has hit
+        else:
+            return [] #hasnt hit yet
+            
+    def tick(self, arena):
+        hits = self.detect_hits(arena)
+        if len(hits) > 0:
+            hits[0].cur_hp -= self.damage
+            self.should_delete = True
+        else:
+            direction = vector.Vector(
+                self.target.position.x - self.position.x, 
+                self.target.position.y - self.position.y
+            )
+            direction.normalize()
+
+            movement = direction.scaled(self.velocity)
+            self.position.add(movement)
+
+    def cleanup(self, arena):
+        if self.should_delete:
+            arena.active_attacks.remove(self)
+    
+class Musketeer(Troop):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 340 * pow(1.1, level - 1),         # Hit points (Example value)
+            h_d= 103 * pow(1.1, level - 1),          # Hit damage (Example value)
+            h_s=1,          # Hit speed (Seconds per hit)
+            l_t=0.2,            # First hit cooldown
+            h_r=6,            # Hit range
+            s_r=6,            # Sight Range
+            g=True,           # Ground troop
+            t_g_o=False,       # Targets ground-only
+            t_o=False,        # Not tower-only
+            m_s=60*TILES_PER_MIN,          # Movement speed 
+            d_t=1,            # Deploy time
+            m=5,            #mass
+            c_r=0.5,        #collision radius
+            p=position               # Position (vector.Vector object)
+        )
+    
+    def attack(self):
+        return MusketeerAttackEntity(self.side, self.hit_damage, self.position, self.target)
