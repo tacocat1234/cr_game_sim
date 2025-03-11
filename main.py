@@ -1,5 +1,7 @@
 import pygame
 import training_camp_cards
+import random
+import cards
 import arena
 import towers
 import vector
@@ -30,6 +32,11 @@ def convert_to_pygame(coordinate):
     pygame_y = int(HEIGHT / 2 - 60 - coordinate.y * SCALE)  # Invert Y-axis 
     return pygame_x, pygame_y
 
+def convert_from_pygame(pygame_x, pygame_y):
+    x = (pygame_x - WIDTH / 2) // SCALE
+    y = (HEIGHT / 2 - 60 - pygame_y) // SCALE  # Invert Y-axis back
+    return vector.Vector(x, y)
+
 
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -53,17 +60,20 @@ game_arena.troops.append(training_camp_cards.Giant(True, vector.Vector(-2, -3), 
 game_arena.troops.append(training_camp_cards.MiniPekka(True, vector.Vector(-3, -4), 1))
 #temp
 
-
+def cycle(hand, index, queue):
+    queue.append(hand[index])
+    hand[index] = queue.pop(0)
 
 def draw():
     screen.fill(BG_TEMP)
 
     # Draw river
     pygame.draw.rect(screen, RIVER_TEMP, (0, HEIGHT/2 - 60 - SCALE, WIDTH, SCALE * 2)) 
-    #Draw bridges
-
+   
+    #draw card area
     pygame.draw.rect(screen, GRAY, (0, HEIGHT - 128, WIDTH, 128))
 
+    #Draw bridges
     pygame.draw.rect(screen, BRIDGE_TEMP, (64 + 2.5 * SCALE, HEIGHT/2 - 60 - 1.5 * SCALE, SCALE * 2, SCALE * 3)) 
     pygame.draw.rect(screen, BRIDGE_TEMP, (WIDTH - (64 + 4.5 * SCALE), HEIGHT/2 - 60 - 1.5 *SCALE, SCALE * 2, SCALE * 3)) 
 
@@ -120,10 +130,27 @@ def draw():
         spell_x, spell_y = convert_to_pygame(spell.position)
         size = spell.radius * SCALE if spell.spawn_timer <= 0 else 1 * SCALE
         pygame.draw.circle(screen, PURPLE, (spell_x, spell_y), size)  # Attack circle
+    
+    card_name_font = pygame.font.Font(None, 24)  # Use a larger font for card names
+
+    for i, card in enumerate(hand):
+        card_name_text = card_name_font.render(card.name, True, WHITE)
+        card_name_x = (WIDTH * (i + 1)) // 5  # Positions: WIDTH/5, WIDTH*2/5, WIDTH*3/5, WIDTH*4/5
+        card_name_y = HEIGHT - 64  # Vertical position at the bottom
+        text_rect = card_name_text.get_rect(center=(card_name_x, card_name_y))
+        screen.blit(card_name_text, text_rect)
 
     pygame.display.flip()
 
 #count = 0
+
+cards = [Card(True, "minipekka", 1), Card(True, "giant", 1), Card(True, "archers", 1), Card(True, "knight", 1), 
+        Card(True, "minions", 1), Card(True, "goblinhut", 1), Card(True, "fireball", 1), Card(True, "arrows", 1)]
+
+random.shuffle(cards)
+
+hand = [0, 1, 2, 3]
+cycler = [4, 5, 6, 7]
 
 # Main Loop
 running = True
@@ -163,7 +190,7 @@ while running:
         # Detect mouse drag movement
         elif event.type == pygame.MOUSEMOTION:
             if drag_start_pos is not None:
-                # Optionally, you can track the movement visually or for other purposes
+                # add code to animate thign at mouse pos later
                 pass
 
         # Detect when the player releases the mouse button
@@ -173,7 +200,12 @@ while running:
 
                 # Store the ending position of the drag
                 drag_end_pos = (mouse_x, mouse_y)
+
+                hand[click_quarter - 1].summon(convert_from_pygame(mouse_x, mouse_y))
+
                 print(f"Drag started at {drag_start_pos}, ended at {drag_end_pos}")
+
+                cycle(hand, click_quarter - 1, queue)
 
                 # Reset drag start position after the release
                 drag_start_pos = None

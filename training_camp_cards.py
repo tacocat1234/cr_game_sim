@@ -379,7 +379,7 @@ class Fireball(Spell):
             tar=target
         )
 
-class Arrow(Spell):
+class Arrows(Spell):
     def __init__(self, side, target, level):
         super().__init__(
             s=side,

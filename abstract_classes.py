@@ -175,9 +175,9 @@ class Troop:
                 self.update_target(arena)
             if self.move(arena) and self.attack_cooldown <= 0: #move, then if within range, attack
                 atk = self.attack()
-                if isinstance(atk, list):
+                if isinstance(atk, list) and len(atk) > 0:
                     arena.active_attacks.extend(atk)
-                else:
+                elif not atk is None:
                     arena.active_attacks.append(self.attack())
                 self.attack_cooldown = self.hit_speed
     
@@ -225,7 +225,11 @@ class Tower:
         if self.target is None or self.target.cur_hp <= 0:
             self.update_target(arena)
         if not self.target is None and self.attack_cooldown <= 0:
-            arena.active_attacks.append(self.attack())
+            atk = self.attack()
+            if isinstance(atk, list) and len(atk) > 0:
+                arena.active_attacks.extend(atk)
+            elif not atk is None:
+                arena.active_attacks.append(self.attack())
             self.attack_cooldown = self.hit_speed
     
     def cleanup(self, arena):
@@ -291,3 +295,64 @@ class Spell:
         if self.should_delete:
             arena.spells.remove(self) #delete
         
+class Building:
+    def __init__(self, s, h_p, h_d, h_s, l_t, h_r, s_r, g, t_g_o, t_o, l, d_t c_r, d_s_c, d_s: type, p):
+        self.side = s
+        self.hit_points = h_p
+        self.hit_damage = h_d
+        
+        self.hit_speed = h_s
+        self.load_time = l_t
+        self.hit_range = h_r
+        self.sight_range = s_r
+
+        self.ground = g
+        self.ground_only = t_g_o
+        self.tower_only = t_o
+        
+        self.lifespan = l
+        self.deploy_time = d_t
+        self.collision_radius = c_r
+        self.death_spawn_count = d_s_c
+        self.death_spawn = d_s
+
+        self.cur_hp = h_p
+        self.target = None
+        self.attack_cooldown = 0
+        self.position = p
+
+    def attack(self):
+        return None
+
+    def update_target(self, arena):
+        self.target = None
+        min_dist = float('inf')
+        for each in arena.troops + arena.buildings:
+            dist = vector.distance(each.position, self.position)
+            if each.side != self.side and dist < min_dist and dist < self.hit_range + each.collision_radius:
+                self.target = each
+                min_dist = vector.distance(each.position, self.position)
+    
+    def tick(self, arena):
+        #print(self.target) #temp
+        if self.target is None or self.target.cur_hp <= 0:
+            self.update_target(arena)
+        if not self.target is None and self.attack_cooldown <= 0:
+            atk = self.attack()
+            if isinstance(atk, list) and len(atk) > 0:
+                arena.active_attacks.extend(atk)
+            elif not atk is None:
+                arena.active_attacks.append(self.attack())
+            self.attack_cooldown = self.hit_speed
+    
+    def cleanup(self, arena):
+        #print(self.cur_hp) #temp
+        self.cur_hp -= self.hit_points * TICK_TIME / self.lifespan
+        if self.cur_hp <= 0:
+            arena.towers.remove(self)
+            for i in range(self.death_spawn_count):
+                arena.troops.append(death_spawn(self.side, self.position, self.level))
+        if self.target is None or (vector.distance(self.target.position, self.position) > self.hit_range + self.target.collision_radius and (self.attack_cooldown <= self.hit_speed - self.load_time)):
+                self.attack_cooldown = self.hit_speed - self.load_time #if not currently attacking but cooldown is less than first hit delay
+        else: #otherwise
+            self.attack_cooldown -= TICK_TIME
