@@ -14,6 +14,8 @@ class Arena:
             spell.tick(self)
         for troop in self.troops:
             troop.tick(self)
+        for building in self.buildings:
+            building.tick(self)
         for tower in self.towers:
             tower.tick(self)
         for attack in self.active_attacks:
@@ -28,6 +30,8 @@ class Arena:
             attack.cleanup(self)
         for spell in self.spells:
             spell.cleanup(self)
+        for building in self.buildings:
+            building.cleanup(self)
         for tower in self.towers:
             tower.cleanup(self)
 
@@ -36,17 +40,18 @@ class Arena:
 
         # Handle troop-to-troop collisions
         for troop, c_troop in itertools.combinations(self.troops, 2):
-            dist = vector.distance(c_troop.position, troop.position)
-            if dist < (c_troop.collision_radius + troop.collision_radius):
-                vec = c_troop.position.subtracted(troop.position)  # troop to ctroop vector
-                if vec.magnitude() > 0:
-                    vec.scale(((c_troop.collision_radius + troop.collision_radius) / vec.magnitude()) - 1)  # scale to avoid collision
-                
-                mass_ratio_troop = troop.mass / (c_troop.mass + troop.mass)
-                mass_ratio_ctroop = c_troop.mass / (c_troop.mass + troop.mass)
-                
-                applyVelocity[troop] = applyVelocity.get(troop, vector.Vector(0, 0)).added(vec.scaled(-mass_ratio_ctroop))
-                applyVelocity[c_troop] = applyVelocity.get(c_troop, vector.Vector(0, 0)).added(vec.scaled(mass_ratio_troop))
+            if (troop.ground == c_troop.ground):
+                dist = vector.distance(c_troop.position, troop.position)
+                if dist < (c_troop.collision_radius + troop.collision_radius):
+                    vec = c_troop.position.subtracted(troop.position)  # troop to ctroop vector
+                    if vec.magnitude() > 0:
+                        vec.scale(((c_troop.collision_radius + troop.collision_radius) / vec.magnitude()) - 1)  # scale to avoid collision
+                    
+                    mass_ratio_troop = troop.mass / (c_troop.mass + troop.mass)
+                    mass_ratio_ctroop = c_troop.mass / (c_troop.mass + troop.mass)
+                    
+                    applyVelocity[troop] = applyVelocity.get(troop, vector.Vector(0, 0)).added(vec.scaled(-mass_ratio_ctroop))
+                    applyVelocity[c_troop] = applyVelocity.get(c_troop, vector.Vector(0, 0)).added(vec.scaled(mass_ratio_troop))
 
         # Handle troop-to-building and troop-to-tower collisions
         for troop in self.troops:
@@ -54,7 +59,8 @@ class Arena:
                 dist = vector.distance(troop.position, building.position)
                 if dist < (building.collision_radius + troop.collision_radius):
                     vec = troop.position.subtracted(building.position)  # building to troop vector
-                    vec.scale((building.collision_radius + troop.collision_radius) / vec.magnitude())
+                    if vec.magnitude() > 0:
+                        vec.scale(((building.collision_radius + troop.collision_radius) / vec.magnitude()) - 1)
                     
                     applyVelocity[troop] = applyVelocity.get(troop, vector.Vector(0, 0)).added(vec)
 

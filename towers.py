@@ -101,6 +101,10 @@ class KingTowerAttackEntity(AttackEntity):
 
             movement = direction.scaled(self.velocity)
             self.position.add(movement)
+    
+    def cleanup(self, arena):
+        if self.should_delete:
+            arena.active_attacks.remove(self)
 
 
 class KingTower(Tower):
@@ -126,9 +130,9 @@ class KingTower(Tower):
         if self.target is None or self.target.cur_hp <= 0:
             self.update_target(arena)
         if self.activation_timer <= 0 and not self.target is None and self.attack_cooldown <= 0:
-            self.attack()
+            arena.active_attacks.append(self.attack())
             self.attack_cooldown = self.hit_speed
-    
+
 
     def cleanup(self, arena):
         if self.cur_hp <= 0:

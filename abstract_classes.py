@@ -1,4 +1,5 @@
 import math
+import copy
 import vector
 
 TICK_TIME = 1/60 #tps
@@ -207,6 +208,7 @@ class Tower:
         self.target = None
         self.attack_cooldown = 0
         self.position = p
+        self.target = None
 
     def attack(self):
         return None
@@ -247,7 +249,7 @@ class Spell:
     def __init__(self, s, d, c_t_d, w, t, kb, r, v, tar):
         self.side = s
         self.damage = d
-        self.crown_tower_damage = c_t_d,
+        self.crown_tower_damage = c_t_d
         self.waves = w
         self.time_between = t
         self.knock_back = kb
@@ -272,13 +274,17 @@ class Spell:
         return out
         
     def tick(self, arena):
-        if self.spawn_timer >= 0:
-            self.position.add(self.target_pos.subtracted(self.king_pos).scaled(1 / self.total_time))
+        if self.spawn_timer > 0:
+            tower_to_target  = self.target_pos.subtracted(self.king_pos)
+            self.position.add(tower_to_target.scaled(self.velocity / tower_to_target.magnitude()))
             self.spawn_timer -= 1 #spawn in
         elif self.waves > 0 and self.damage_cd <= 0:
             hits = self.detect_hits(arena)
             for each in hits:
-                each.cur_hp -= self.damage; #end damage, start kb
+                if (isinstance(each, Tower)):
+                    each.cur_hp -= self.crown_tower_damage #crown tower damage
+                else:
+                    each.cur_hp -= self.damage; #end damage, start kb
                 if (isinstance(each, Troop)):
                     displacement = each.position.subtracted(self.position)
                     displacement.normalize()
@@ -296,7 +302,7 @@ class Spell:
             arena.spells.remove(self) #delete
         
 class Building:
-    def __init__(self, s, h_p, h_d, h_s, l_t, h_r, s_r, g, t_g_o, t_o, l, d_t c_r, d_s_c, d_s: type, p):
+    def __init__(self, s, h_p, h_d, h_s, l_t, h_r, s_r, g, t_g_o, t_o, l, d_t, c_r, d_s_c, d_s: type, p):
         self.side = s
         self.hit_points = h_p
         self.hit_damage = h_d
@@ -327,9 +333,9 @@ class Building:
     def update_target(self, arena):
         self.target = None
         min_dist = float('inf')
-        for each in arena.troops + arena.buildings:
+        for each in arena.troops + arena.buildings + arena.towers:
             dist = vector.distance(each.position, self.position)
-            if each.side != self.side and dist < min_dist and dist < self.hit_range + each.collision_radius:
+            if each.side != self.side and dist < min_dist and dist < self.hit_range + self.collision_radius + each.collision_radius:
                 self.target = each
                 min_dist = vector.distance(each.position, self.position)
     
@@ -349,9 +355,9 @@ class Building:
         #print(self.cur_hp) #temp
         self.cur_hp -= self.hit_points * TICK_TIME / self.lifespan
         if self.cur_hp <= 0:
-            arena.towers.remove(self)
+            arena.buildings.remove(self)
             for i in range(self.death_spawn_count):
-                arena.troops.append(death_spawn(self.side, self.position, self.level))
+                arena.troops.append(self.death_spawn(self.side, copy.deepcopy(self.position), self.level))
         if self.target is None or (vector.distance(self.target.position, self.position) > self.hit_range + self.target.collision_radius and (self.attack_cooldown <= self.hit_speed - self.load_time)):
                 self.attack_cooldown = self.hit_speed - self.load_time #if not currently attacking but cooldown is less than first hit delay
         else: #otherwise

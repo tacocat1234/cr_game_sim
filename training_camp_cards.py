@@ -369,8 +369,8 @@ class Fireball(Spell):
     def __init__(self, side, target, level):
         super().__init__(
             s=side,
-            d=325*pow(1.1, level - 1),
-            c_t_d=98*pow(1.1, level - 1),
+            d=325 * pow(1.1, level - 1),
+            c_t_d=98 * pow(1.1, level - 1),
             w=1,
             t=0,
             kb=1,
@@ -383,8 +383,8 @@ class Arrows(Spell):
     def __init__(self, side, target, level):
         super().__init__(
             s=side,
-            d=48*pow(1.1, level - 1),
-            c_t_d=15*pow(1.1, level - 1),
+            d=48 * pow(1.1, level - 1),
+            c_t_d=15 * pow(1.1, level - 1),
             w=3,
             t=0.2,
             kb=0,

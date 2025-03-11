@@ -1,11 +1,24 @@
 import pygame
-import training_camp_cards
 import random
-import cards
+from cards import Card
+from abstract_classes import TICK_TIME
+from bot import Bot
+from bot import place
+from card_factory import get_type
 import arena
 import towers
 import vector
 
+
+#player deck
+deck = [Card(True, "minipekka", 1), Card(True, "giant", 1), Card(True, "archers", 1), Card(True, "knight", 1), 
+        Card(True, "minions", 1), Card(True, "goblinhut", 1), Card(True, "fireball", 1), Card(True, "arrows", 1)]
+
+#bot deck (duh)
+bot_deck = [Card(False, "goblincage", 3), Card(False, "giant", 2), Card(False, "speargoblins", 3), Card(False, "knight", 2), 
+        Card(False, "minions", 1), Card(False, "goblinhut", 3), Card(False, "fireball", 3), Card(False, "arrows", 3)]
+
+bot = Bot(bot_deck)
 #height comp screen ~ 800
 #20x20 per tile
 # 18 x 32
@@ -54,10 +67,10 @@ game_arena.towers = [towers.KingTower(True, 1),
                        ]
 
 #temp
-game_arena.troops.append(training_camp_cards.Giant(True, vector.Vector(-2, -3), 1))
+#game_arena.troops.append(training_camp_cards.Giant(True, vector.Vector(-2, -3), 1))
 #game_arena.troops.append(training_camp_cards.Archer(True, vector.Vector(-3, -4), 1))
 #game_arena.troops.append(training_camp_cards.Giant(False, vector.Vector(-3, 3), 1))
-game_arena.troops.append(training_camp_cards.MiniPekka(True, vector.Vector(-3, -4), 1))
+#game_arena.troops.append(training_camp_cards.MiniPekka(True, vector.Vector(-3, -4), 1))
 #temp
 
 def cycle(hand, index, queue):
@@ -110,7 +123,7 @@ def draw():
         pygame.draw.rect(screen, BLACK, (hp_bar_x, hp_bar_y, hp_bar_width, hp_bar_height))
         pygame.draw.rect(screen, GREEN, (hp_bar_x, hp_bar_y, int(hp_bar_width * (troop.cur_hp / troop.hit_points)), hp_bar_height))
 
-        # **NEW: Draw Level Indicator**
+        # Draw Level Indicator
         level_box_size = 10  # Square size for level indicator
         level_box_x = hp_bar_x - level_box_size - 2  # Slight padding to the left
         level_box_y = hp_bar_y - 2  # Align with HP bar
@@ -122,6 +135,36 @@ def draw():
         text_rect = level_text.get_rect(center=(level_box_x + level_box_size / 2, level_box_y + level_box_size / 2))
         screen.blit(level_text, text_rect)
     # Draw Attack Entities (Projectiles)
+
+    for building in game_arena.buildings:
+        building_x, building_y = convert_to_pygame(building.position)
+        building_color = BLUE if building.side else RED
+
+        # Draw building square
+        building_size = building.collision_radius * 2 * SCALE
+        pygame.draw.rect(screen, building_color, (building_x - building_size // 2, building_y - building_size // 2, building_size, building_size))
+
+        # Health bar
+        hp_bar_x = building_x - 10
+        hp_bar_y = building_y - 12 - building_size // 2  # Slightly above the building
+        hp_bar_width = 20
+        hp_bar_height = 3
+
+        pygame.draw.rect(screen, BLACK, (hp_bar_x, hp_bar_y, hp_bar_width, hp_bar_height))
+        pygame.draw.rect(screen, GREEN, (hp_bar_x, hp_bar_y, int(hp_bar_width * (building.cur_hp / building.hit_points)), hp_bar_height))
+
+        # Draw Level Indicator
+        level_box_size = 10  # Square size for level indicator
+        level_box_x = hp_bar_x - level_box_size - 2  # Slight padding to the left
+        level_box_y = hp_bar_y - 2  # Align with HP bar
+
+        pygame.draw.rect(screen, building_color, (level_box_x, level_box_y, level_box_size, level_box_size))
+
+        # Render level number text
+        level_text = font.render(str(building.level), True, WHITE)  # White text
+        text_rect = level_text.get_rect(center=(level_box_x + level_box_size / 2, level_box_y + level_box_size / 2))
+        screen.blit(level_text, text_rect)
+
     for attack in game_arena.active_attacks:
         attack_x, attack_y= convert_to_pygame(attack.position)
         pygame.draw.circle(screen, YELLOW, (attack_x, attack_y), 5)  # Attack circle
@@ -133,24 +176,51 @@ def draw():
     
     card_name_font = pygame.font.Font(None, 24)  # Use a larger font for card names
 
-    for i, card in enumerate(hand):
+    for i, hand_i in enumerate(hand):
+        card = deck[hand_i]
         card_name_text = card_name_font.render(card.name, True, WHITE)
         card_name_x = (WIDTH * (i + 1)) // 5  # Positions: WIDTH/5, WIDTH*2/5, WIDTH*3/5, WIDTH*4/5
         card_name_y = HEIGHT - 64  # Vertical position at the bottom
         text_rect = card_name_text.get_rect(center=(card_name_x, card_name_y))
         screen.blit(card_name_text, text_rect)
 
+        elixir_cost_circle_x = card_name_x + 30  # Position at the end of the elixir bar
+        elixir_cost_circle_y = card_name_y - 30  # Align with the bar
+        elixir_cost_circle_radius = 12  # Size of the circle
+
+        pygame.draw.circle(screen, PURPLE, (elixir_cost_circle_x, elixir_cost_circle_y), elixir_cost_circle_radius)  # Draw elixir circle
+
+        # Render the elixir amount text
+        elixir_text = card_name_font.render(str(card.elixir_cost), True, WHITE)
+        text_rect = elixir_text.get_rect(center=(elixir_cost_circle_x, elixir_cost_circle_y))
+        screen.blit(elixir_text, text_rect)  # Display elixir text
+
+
+    #draw elixir bar
+    elixir_bar_height = 15  
+    elixir_bar_width = int((elixir / 10) * WIDTH)  
+    pygame.draw.rect(screen, PURPLE, (0, HEIGHT - elixir_bar_height - 10, elixir_bar_width, elixir_bar_height))  
+    pygame.draw.rect(screen, WHITE, (0, HEIGHT - elixir_bar_height - 10, WIDTH, elixir_bar_height), 2)  
+
+    elixir_circle_x = elixir_bar_width  # Position at the end of the elixir bar
+    elixir_circle_y = HEIGHT - elixir_bar_height // 2 - 10  # Align with the bar
+    elixir_circle_radius = 12  # Size of the circle
+
+    pygame.draw.circle(screen, PURPLE, (elixir_circle_x, elixir_circle_y), elixir_circle_radius)  # Draw elixir circle
+
+    # Render the elixir amount text
+    elixir_text = card_name_font.render(str(elixir), True, WHITE)
+    text_rect = elixir_text.get_rect(center=(elixir_circle_x, elixir_circle_y))
+    screen.blit(elixir_text, text_rect)  # Display elixir text
+
     pygame.display.flip()
 
-#count = 0
-
-cards = [Card(True, "minipekka", 1), Card(True, "giant", 1), Card(True, "archers", 1), Card(True, "knight", 1), 
-        Card(True, "minions", 1), Card(True, "goblinhut", 1), Card(True, "fireball", 1), Card(True, "arrows", 1)]
-
-random.shuffle(cards)
+random.shuffle(deck)
 
 hand = [0, 1, 2, 3]
 cycler = [4, 5, 6, 7]
+elixir = 5
+bot_elixir = 5 #for bot
 
 # Main Loop
 running = True
@@ -161,8 +231,25 @@ click_quarter = None  # Will store which quarter of the screen the player clicke
 drag_start_pos = None  # Starting position of the drag
 drag_end_pos = None  # Ending position of the drag
 
+elixir_recharge = 2.8
+elixir_timer = elixir_recharge
+
 while running:
     clock.tick(60)  # 60 FPS
+
+    if (elixir_timer < 0):
+        elixir = min(elixir + 1, 10)
+        bot_elixir = min(bot_elixir + 1, 10)
+        elixir_timer = elixir_recharge
+    else:
+        elixir_timer -= TICK_TIME
+
+    bot_card = bot.tick(bot_elixir)
+    if not bot_card is None:
+        bot_elixir -= bot_card.elixir_cost
+        bot_card_type, bot_summon = bot_card.summon(Bot.random_pos(get_type(bot_card.name) == "spell", game_arena.troops + game_arena.buildings))
+        place(bot_card_type, bot_summon, game_arena)
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -182,7 +269,7 @@ while running:
                     click_quarter = 3  # Third quarter
                 else:
                     click_quarter = 4  # Fourth quarter
-                print(f"Clicked in quarter {click_quarter}")
+                #print(f"Clicked in quarter {click_quarter}")
 
                 # Store the starting position of the drag
                 drag_start_pos = (mouse_x, mouse_y)
@@ -200,12 +287,29 @@ while running:
 
                 # Store the ending position of the drag
                 drag_end_pos = (mouse_x, mouse_y)
+                cur_card = deck[hand[click_quarter - 1]]
+                if mouse_y < HEIGHT - 128 and (get_type(cur_card.name) == "spell" or mouse_y > 320):
+                    if (cur_card.elixir_cost <= elixir):
+                        card_type, card = deck[hand[click_quarter - 1]].summon(convert_from_pygame(mouse_x, mouse_y))
 
-                hand[click_quarter - 1].summon(convert_from_pygame(mouse_x, mouse_y))
+                        if card_type == "troop":
+                            if isinstance(card, list):
+                                game_arena.troops.extend(card)
+                            else:
+                                game_arena.troops.append(card)
+                        elif card_type == "spell":
+                            if isinstance(card, list):
+                                game_arena.spells.extend(card)
+                            else:
+                                game_arena.spells.append(card)
+                        elif card_type == "building":
+                            if isinstance(card, list):
+                                game_arena.buildings.extend(card)
+                            else:
+                                game_arena.buildings.append(card)
 
-                print(f"Drag started at {drag_start_pos}, ended at {drag_end_pos}")
-
-                cycle(hand, click_quarter - 1, queue)
+                        cycle(hand, click_quarter - 1, cycler)
+                        elixir -= cur_card.elixir_cost
 
                 # Reset drag start position after the release
                 drag_start_pos = None

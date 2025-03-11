@@ -34,5 +34,8 @@ class Vector:
         if (mg > 0):
             self.scale(1/mg)
 
+    def toString(self):
+        return str(self.x) + ", " + str(self.y)
+
 def distance(vec1, vec2):
     return math.sqrt((vec2.x - vec1.x) ** 2 + (vec2.y - vec1.y) ** 2)

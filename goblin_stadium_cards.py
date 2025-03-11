@@ -1,8 +1,9 @@
 from abstract_classes import AttackEntity
 from abstract_classes import Troop
-from abstract_classes import Spell
+from abstract_classes import Building
 from abstract_classes import TILES_PER_MIN
 from abstract_classes import TICK_TIME
+import random
 import vector
 import copy
 
@@ -187,56 +188,62 @@ class GoblinCage(Building):
     def __init__(self, side, position, level):
         super().__init__(
             s=side,
-            h_p=400 * pow(1.1, level - 3)
-            h_d = 0
-            h_s = float("inf")
-            l_t = 0
-            h_r = 0
-            s_r = 0
-            g = True
-            t_g_o = True
-            t_o = False
-            l=20
-            d_t=1
-            c_r=1
-            d_s_c=1
-            d_s=GoblinBrawler
+            h_p=400 * pow(1.1, level - 3),
+            h_d = 0,
+            h_s = float("inf"),
+            l_t = 0,
+            h_r = 0,
+            s_r = 0,
+            g = True,
+            t_g_o = True,
+            t_o = False,
+            l=20,
+            d_t=1,
+            c_r=1,
+            d_s_c=1,
+            d_s=GoblinBrawler,
             p=position
         )
+        self.level = level
+        print("goblin cage init")
+        print(self.cur_hp)  
 
 class GoblinHut(Building):
     SPAWN_INTERVAL = 0.5
     def __init__(self, side, position, level):
         super().__init__(
             s=side,
-            h_p=400 * pow(1.1, level - 3)
-            h_d = 0
-            h_s = float("inf")
-            l_t = 0
-            h_r = 0
-            s_r = 0
-            g = True
-            t_g_o = True
-            t_o = False
-            l=29
-            d_t=1
-            c_r=1
-            d_s_c=1
-            d_s=SpearGoblin
+            h_p=400 * pow(1.1, level - 3),
+            h_d = 0,
+            h_s = 10,
+            l_t = 0,
+            h_r = 0,
+            s_r = 0,
+            g = True,
+            t_g_o = True,
+            t_o = False,
+            l=29,
+            d_t=1,
+            c_r=1,
+            d_s_c=1,
+            d_s=SpearGoblin,
             p=position
         )
         self.next_spawn = None
         self.remaining_spawn_count = 0
-
+        self.level = level
+    
     def tick(self, arena):
         if self.attack_cooldown <= 0: #attack code
-            arena.troops.append(SpearGoblin(self.side, self.position, self.level))
+            front = vector.Vector(random.uniform(-1.5, 1.5), 1.5) if self.side else vector.Vector(random.uniform(-1.5, 1.5), -1.5)
+            arena.troops.append(SpearGoblin(self.side, self.position.added(front), self.level))
             self.next_spawn = 0.5
             self.remaining_spawn_count = 2
             self.attack_cooldown = self.hit_speed
         
         if self.remaining_spawn_count > 0 and self.next_spawn <= 0: #remaining 2 gobs
-            arena.troops.append(SpearGoblin(self.side, self.position, self.level))
+            front = vector.Vector(random.uniform(-1.5, 1.5), 1.5) if self.side else vector.Vector(random.uniform(-1.5, 1.5), -1.5)
+            arena.troops.append(SpearGoblin(self.side, self.position.added(front), self.level))
             self.remaining_spawn_count -= 1 #one less spawn
             if self.remaining_spawn_count > 0: #if still spawns left
                 self.next_spawn = 0.5 #reset timer
@@ -247,11 +254,11 @@ class GoblinHut(Building):
     def cleanup(self, arena):
         self.cur_hp -= self.hit_points * TICK_TIME / self.lifespan
         if self.cur_hp <= 0:
-            arena.towers.remove(self)
+            arena.buildings.remove(self)
             for i in range(self.death_spawn_count):
-                arena.troops.append(death_spawn(self.side, self.position, self.level))
+                arena.troops.append(self.death_spawn(self.side, self.position, self.level))
 
-        if self.next_spawn > 0:
+        if not self.next_spawn is None and self.next_spawn > 0:
             self.next_spawn -= TICK_TIME
         
         self.attack_cooldown -= TICK_TIME
