@@ -3,15 +3,18 @@ import vector
 import training_camp_cards
 import goblin_stadium_cards
 import bone_pit_cards
+import barbarian_bowl_cards
 
 troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer", 
           "speargoblins", "goblins", 
-          "skeletons", "bomber", "valkyrie"]
+          "skeletons", "bomber", "valkyrie",
+          "barbarians", "megaminion", "battleram"]
 
 spells = ["fireball", "arrows"]
 
 buildings = ["goblinhut", "goblincage", 
-             "tombstone"]
+             "tombstone",
+             "cannon"]
 
 def get_type(name):
     if name in troops:
@@ -80,6 +83,19 @@ def troop_factory(side, position, name, level):
         return bone_pit_cards.Bomber(side, position, level)
     elif name == "valkyrie":
         return bone_pit_cards.Valkyrie(side, position, level)
+    elif name == "megaminion":
+        return barbarian_bowl_cards.MegaMinion(side, position, level)
+    elif name == "barbarians":
+        flip = 1 if side else -1
+        radius = 0.7
+        angles = [(2 * math.pi * k / 5) + (math.pi / 2) for k in range(5)]
+        positions = [vector.Vector(radius * math.cos(a), radius * math.sin(a) * flip) for a in angles]
+        out = []
+        for each in positions:
+            out.append(barbarian_bowl_cards.Barbarian(side, position.added(each), level))
+        return out
+    elif name == "battleram":
+        return barbarian_bowl_cards.BattleRam(side, position, level)
     else:
         raise Exception("Invalid troop name.")
 
@@ -98,6 +114,8 @@ def building_factory(side, position, name, level):
         return goblin_stadium_cards.GoblinHut(side, position, level)
     elif name == "tombstone":
         return bone_pit_cards.Tombstone(side, position, level)
+    elif name == "cannon":
+        return barbarian_bowl_cards.Cannon(side, position, level)
     else:
         raise Exception("Invalid building name")
 
@@ -120,5 +138,9 @@ elixir_map = {
     "skeletons" : 1,
     "bomber" : 2,
     "tombstone" : 3,
-    "valkyrie" : 4
+    "valkyrie" : 4,
+    "megaminion" : 3,
+    "cannon" : 3,
+    "battleram" : 4,
+    "barbarians" : 5
 }

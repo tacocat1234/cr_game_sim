@@ -364,10 +364,11 @@ class Building:
         self.cur_hp -= self.hit_points * TICK_TIME / self.lifespan
         if self.cur_hp <= 0:
             arena.buildings.remove(self)
-            for i in range(self.death_spawn_count):
-                arena.troops.append(self.death_spawn(self.side, 
-                    self.position.added(vector.Vector(random.uniform(-self.collision_radius, self.collision_radius), random.uniform(-self.collision_radius, self.collision_radius))), 
-                    self.level))
+            if not self.death_spawn is None:
+                for i in range(self.death_spawn_count):
+                    arena.troops.append(self.death_spawn(self.side, 
+                        self.position.added(vector.Vector(random.uniform(-self.collision_radius, self.collision_radius), random.uniform(-self.collision_radius, self.collision_radius))), 
+                        self.level))
         
         if self.target is None or (vector.distance(self.target.position, self.position) > self.hit_range + self.target.collision_radius and (self.attack_cooldown <= self.hit_speed - self.load_time)):
                 self.attack_cooldown = self.hit_speed - self.load_time #if not currently attacking but cooldown is less than first hit delay

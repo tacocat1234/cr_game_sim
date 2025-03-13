@@ -6,7 +6,7 @@ from abstract_classes import TICK_TIME
 class Bot:
     def __init__(self, cards):
         self.cards = cards
-        self.internal_timer = random.triangular(0, 14, 5.6)
+        self.internal_timer = random.triangular(0, 16.8, 8.4)
 
         self.min_elixir = 99
         for each in cards:

@@ -19,12 +19,12 @@ game_arena.towers = [towers.KingTower(True, 1),
                        towers.PrincessTower(False, 2, False)
                        ]
 #player deck
-deck = [Card(True, "minipekka", 1), Card(True, "giant", 1), Card(True, "tombstone", 1), Card(True, "bomber", 1), 
+deck = [Card(True, "minipekka", 1), Card(True, "battleram", 1), Card(True, "cannon", 1), Card(True, "bomber", 1), 
         Card(True, "skeletons", 1), Card(True, "valkyrie", 1), Card(True, "fireball", 1), Card(True, "arrows", 1)]
 
 #bot deck (duh)
-bot_deck = [Card(False, "minipekka", 2), Card(False, "giant", 2), Card(False, "speargoblins", 3), Card(False, "valkyrie", 3), 
-        Card(False, "minions", 3), Card(False, "tombstone", 3), Card(False, "fireball", 4), Card(False, "arrows", 4)]
+bot_deck = [Card(False, "barbarians", 2), Card(False, "battleram", 2), Card(False, "speargoblins", 3), Card(False, "valkyrie", 3), 
+        Card(False, "tombstone", 5), Card(False, "megaminion", 3), Card(False, "fireball", 4), Card(False, "arrows", 4)]
 
 bot = Bot(bot_deck)
 #height comp screen ~ 800
@@ -240,7 +240,7 @@ random.shuffle(deck)
 hand = [0, 1, 2, 3]
 cycler = [4, 5, 6, 7]
 elixir = 5
-bot_elixir = 5 #for bot
+bot_elixir = 9 #for bot
 
 # Main Loop
 running = True
@@ -266,6 +266,7 @@ while running:
 
     bot_card = bot.tick(bot_elixir)
     if not bot_card is None:
+        print(bot_card.name)
         bot_elixir -= bot_card.elixir_cost
         bot_card_type, bot_summon = bot_card.summon(Bot.random_pos(get_type(bot_card.name) == "spell", game_arena.troops + game_arena.buildings))
         place(bot_card_type, bot_summon, game_arena)
