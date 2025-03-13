@@ -1,5 +1,6 @@
 import math
 import copy
+import random
 import vector
 
 TICK_TIME = 1/60 #tps
@@ -18,6 +19,7 @@ class AttackEntity:
         
         self.duration = l
         self.has_hit = []
+        self.display_size = 0.25
         
     def tick(self, arena):
         self.position.add(self.velocity)
@@ -105,16 +107,22 @@ class Troop:
                         min_dist = vector.distance(tower.position, self.position)
 
             if self.ground and not same_sign(tower_target.position.y, self.position.y): # if behind bridge and cant cross river
-            
-                r_bridge = vector.distance(vector.Vector(5.5, 0), tower_target.position)
-                l_bridge = vector.distance(vector.Vector(-5.5, 0), tower_target.position)
+                
+                r_bridge = vector.distance(vector.Vector(5.5, 0), self.position)
+                l_bridge = vector.distance(vector.Vector(-5.5, 0), self.position)
                 
                 tar_bridge = None
                 
+                
                 if (r_bridge < l_bridge): #find closest bridge
                     tar_bridge = vector.Vector(5.5, 0)
-                else:
+                elif abs(r_bridge - l_bridge) > 0.1:
                     tar_bridge = vector.Vector(-5.5, 0)
+                else: # if similar dist
+                    if vector.distance(vector.Vector(5.5, 0), tower_target.position) < vector.distance(vector.Vector(-5.5, 0), tower_target.position):
+                        tar_bridge = vector.Vector(5.5, 0) #go to side closer to tower
+                    else:
+                        tar_bridge = vector.Vector(-5.5, 0)
             
                 direction_x = tar_bridge.x - self.position.x #set movement
                 direction_y = tar_bridge.y - self.position.y
@@ -357,7 +365,10 @@ class Building:
         if self.cur_hp <= 0:
             arena.buildings.remove(self)
             for i in range(self.death_spawn_count):
-                arena.troops.append(self.death_spawn(self.side, copy.deepcopy(self.position), self.level))
+                arena.troops.append(self.death_spawn(self.side, 
+                    self.position.added(vector.Vector(random.uniform(-self.collision_radius, self.collision_radius), random.uniform(-self.collision_radius, self.collision_radius))), 
+                    self.level))
+        
         if self.target is None or (vector.distance(self.target.position, self.position) > self.hit_range + self.target.collision_radius and (self.attack_cooldown <= self.hit_speed - self.load_time)):
                 self.attack_cooldown = self.hit_speed - self.load_time #if not currently attacking but cooldown is less than first hit delay
         else: #otherwise

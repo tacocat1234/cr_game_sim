@@ -2,10 +2,16 @@ import math
 import vector
 import training_camp_cards
 import goblin_stadium_cards
+import bone_pit_cards
 
-troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer", "speargoblins", "goblins"]
+troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer", 
+          "speargoblins", "goblins", 
+          "skeletons", "bomber", "valkyrie"]
+
 spells = ["fireball", "arrows"]
-buildings = ["goblinhut", "goblincage"]
+
+buildings = ["goblinhut", "goblincage", 
+             "tombstone"]
 
 def get_type(name):
     if name in troops:
@@ -62,6 +68,18 @@ def troop_factory(side, position, name, level):
                 goblin_stadium_cards.Goblin(side, position.added(pos2), level),
                 goblin_stadium_cards.Goblin(side, position.added(pos3), level),
                 goblin_stadium_cards.Goblin(side, position.added(pos4), level),]
+    elif name == "skeletons":
+        flip = 1 if side else -1
+        pos1 = vector.Vector(0, 1/2 * flip)
+        pos2 = vector.Vector(-math.sqrt(3)/4, -1/4 * flip)
+        pos3 = vector.Vector(math.sqrt(3)/4, -1/4 * flip)
+        return [bone_pit_cards.Skeleton(side, position.added(pos1), level), 
+                bone_pit_cards.Skeleton(side, position.added(pos2), level),
+                bone_pit_cards.Skeleton(side, position.added(pos3), level)]
+    elif name == "bomber":
+        return bone_pit_cards.Bomber(side, position, level)
+    elif name == "valkyrie":
+        return bone_pit_cards.Valkyrie(side, position, level)
     else:
         raise Exception("Invalid troop name.")
 
@@ -78,6 +96,8 @@ def building_factory(side, position, name, level):
         return goblin_stadium_cards.GoblinCage(side, position, level)
     elif name == "goblinhut":
         return goblin_stadium_cards.GoblinHut(side, position, level)
+    elif name == "tombstone":
+        return bone_pit_cards.Tombstone(side, position, level)
     else:
         raise Exception("Invalid building name")
 
@@ -96,5 +116,9 @@ elixir_map = {
     "speargoblins" : 2,
     "goblins" : 2,
     "goblincage" : 4,
-    "goblinhut" : 5
+    "goblinhut" : 5,
+    "skeletons" : 1,
+    "bomber" : 2,
+    "tombstone" : 3,
+    "valkyrie" : 4
 }

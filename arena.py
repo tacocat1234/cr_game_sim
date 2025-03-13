@@ -53,7 +53,7 @@ class Arena:
                     applyVelocity[troop] = applyVelocity.get(troop, vector.Vector(0, 0)).added(vec.scaled(-mass_ratio_ctroop))
                     applyVelocity[c_troop] = applyVelocity.get(c_troop, vector.Vector(0, 0)).added(vec.scaled(mass_ratio_troop))
 
-        # Handle troop-to-building and troop-to-tower collisions
+        # Handle troop-to-building and troop-to-tower collisions1x``
         for troop in self.troops:
             for building in self.buildings + self.towers:
                 dist = vector.distance(troop.position, building.position)

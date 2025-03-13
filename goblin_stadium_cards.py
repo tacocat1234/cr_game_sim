@@ -3,7 +3,6 @@ from abstract_classes import Troop
 from abstract_classes import Building
 from abstract_classes import TILES_PER_MIN
 from abstract_classes import TICK_TIME
-import random
 import vector
 import copy
 
@@ -124,7 +123,7 @@ class Goblin(Troop):
         )
         self.level = level
     def attack(self):
-        return GoblinBrawlerAttackEntity(self.side, self.hit_damage, self.position, self.target)
+        return GoblinAttackEntity(self.side, self.hit_damage, self.position, self.target)
 
 class GoblinBrawlerAttackEntity(AttackEntity):
     HIT_RANGE = 0.8
@@ -205,8 +204,6 @@ class GoblinCage(Building):
             p=position
         )
         self.level = level
-        print("goblin cage init")
-        print(self.cur_hp)  
 
 class GoblinHut(Building):
     SPAWN_INTERVAL = 0.5
@@ -235,14 +232,14 @@ class GoblinHut(Building):
     
     def tick(self, arena):
         if self.attack_cooldown <= 0: #attack code
-            front = vector.Vector(random.uniform(-1.5, 1.5), 1.5) if self.side else vector.Vector(random.uniform(-1.5, 1.5), -1.5)
+            front = vector.Vector(0, 1.5) if self.side else vector.Vector(0, -1.5)
             arena.troops.append(SpearGoblin(self.side, self.position.added(front), self.level))
             self.next_spawn = 0.5
             self.remaining_spawn_count = 2
             self.attack_cooldown = self.hit_speed
         
         if self.remaining_spawn_count > 0 and self.next_spawn <= 0: #remaining 2 gobs
-            front = vector.Vector(random.uniform(-1.5, 1.5), 1.5) if self.side else vector.Vector(random.uniform(-1.5, 1.5), -1.5)
+            front = vector.Vector(0, 1.5) if self.side else vector.Vector(0, -1.5)
             arena.troops.append(SpearGoblin(self.side, self.position.added(front), self.level))
             self.remaining_spawn_count -= 1 #one less spawn
             if self.remaining_spawn_count > 0: #if still spawns left

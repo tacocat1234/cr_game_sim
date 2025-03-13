@@ -9,14 +9,22 @@ import arena
 import towers
 import vector
 
+game_arena = arena.Arena()
 
+game_arena.towers = [towers.KingTower(True, 1), 
+                       towers.PrincessTower(True, 1, True), 
+                       towers.PrincessTower(True, 1, False), 
+                       towers.KingTower(False, 3), 
+                       towers.PrincessTower(False, 2, True), 
+                       towers.PrincessTower(False, 2, False)
+                       ]
 #player deck
-deck = [Card(True, "minipekka", 1), Card(True, "giant", 1), Card(True, "archers", 1), Card(True, "knight", 1), 
-        Card(True, "minions", 1), Card(True, "goblinhut", 1), Card(True, "fireball", 1), Card(True, "arrows", 1)]
+deck = [Card(True, "minipekka", 1), Card(True, "giant", 1), Card(True, "tombstone", 1), Card(True, "bomber", 1), 
+        Card(True, "skeletons", 1), Card(True, "valkyrie", 1), Card(True, "fireball", 1), Card(True, "arrows", 1)]
 
 #bot deck (duh)
-bot_deck = [Card(False, "goblincage", 3), Card(False, "giant", 2), Card(False, "speargoblins", 3), Card(False, "knight", 2), 
-        Card(False, "minions", 1), Card(False, "goblinhut", 3), Card(False, "fireball", 3), Card(False, "arrows", 3)]
+bot_deck = [Card(False, "minipekka", 2), Card(False, "giant", 2), Card(False, "speargoblins", 3), Card(False, "valkyrie", 3), 
+        Card(False, "minions", 3), Card(False, "tombstone", 3), Card(False, "fireball", 4), Card(False, "arrows", 4)]
 
 bot = Bot(bot_deck)
 #height comp screen ~ 800
@@ -55,16 +63,6 @@ pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Crash Royale Arena")    
 font = pygame.font.Font(None, 12) 
-
-game_arena = arena.Arena()
-
-game_arena.towers = [towers.KingTower(True, 1), 
-                       towers.PrincessTower(True, 1, True), 
-                       towers.PrincessTower(True, 1, False), 
-                       towers.KingTower(False, 1), 
-                       towers.PrincessTower(False, 1, True), 
-                       towers.PrincessTower(False, 1, False)
-                       ]
 
 #temp
 #game_arena.troops.append(training_camp_cards.Giant(True, vector.Vector(-2, -3), 1))
@@ -167,12 +165,34 @@ def draw():
 
     for attack in game_arena.active_attacks:
         attack_x, attack_y= convert_to_pygame(attack.position)
-        pygame.draw.circle(screen, YELLOW, (attack_x, attack_y), 5)  # Attack circle
-
+        if attack.display_size != 0.25:
+            # Create a transparent surface
+            attack_size = attack.display_size * SCALE
+            attack_surface = pygame.Surface((attack_size * 2, attack_size * 2), pygame.SRCALPHA)
+            
+            # Draw a semi-transparent yellow circle
+            pygame.draw.circle(attack_surface, (255, 255, 0, 128), (attack_size, attack_size), attack_size)
+            
+            # Blit the surface onto the screen
+            screen.blit(attack_surface, (attack_x - attack_size, attack_y - attack_size))
+        else:
+            # Regular solid yellow circle for small attacks
+            pygame.draw.circle(screen, YELLOW, (attack_x, attack_y), attack.display_size * SCALE)
     for spell in game_arena.spells:
         spell_x, spell_y = convert_to_pygame(spell.position)
         size = spell.radius * SCALE if spell.spawn_timer <= 0 else 1 * SCALE
-        pygame.draw.circle(screen, PURPLE, (spell_x, spell_y), size)  # Attack circle
+        if spell.spawn_timer <= 0:
+            # Partially transparent when the spell has spawned
+            # Create a surface to represent the spell
+            spell_surface = pygame.Surface((size * 2, size * 2), pygame.SRCALPHA)  # Creating transparent surface
+            
+            # Fill the surface with the purple color and set transparency (alpha channel)
+            pygame.draw.circle(spell_surface, (128, 0, 128, 128), (size, size), size)
+            # Draw the surface onto the screen at the correct position
+            screen.blit(spell_surface, (spell_x - size, spell_y - size))  # Centering the spell's circle
+        else:
+            # Non-transparent when the spell is in its "flying" phase (spawn_timer > 0)
+            pygame.draw.circle(screen, PURPLE, (spell_x, spell_y), size)
     
     card_name_font = pygame.font.Font(None, 24)  # Use a larger font for card names
 
@@ -260,12 +280,12 @@ while running:
             # Check if the click is in the bottom 128 pixels
             if mouse_y > HEIGHT - 128:
                 # Determine the quarter (split the width of the screen)
-                quarter_width = (WIDTH) // 4  # Total width including bottom bar
-                if mouse_x < quarter_width:
+                quarter_width = (WIDTH) // 5  # Total width including bottom bar
+                if mouse_x < WIDTH/10 + quarter_width:
                     click_quarter = 1  # First quarter
-                elif mouse_x < 2 * quarter_width:
+                elif mouse_x < WIDTH/10 + 2 * quarter_width:
                     click_quarter = 2  # Second quarter
-                elif mouse_x < 3 * quarter_width:
+                elif mouse_x < WIDTH/10 + 3 * quarter_width:
                     click_quarter = 3  # Third quarter
                 else:
                     click_quarter = 4  # Fourth quarter
