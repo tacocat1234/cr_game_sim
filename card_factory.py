@@ -4,17 +4,20 @@ import training_camp_cards
 import goblin_stadium_cards
 import bone_pit_cards
 import barbarian_bowl_cards
+import spell_valley_cards
 
 troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer", 
           "speargoblins", "goblins", 
           "skeletons", "bomber", "valkyrie",
-          "barbarians", "megaminion", "battleram"]
+          "barbarians", "megaminion", "battleram",
+          "firespirit", "electrospirit"]
 
 spells = ["fireball", "arrows"]
 
 buildings = ["goblinhut", "goblincage", 
              "tombstone",
-             "cannon"]
+             "cannon",
+             "bombtower", "infernotower"]
 
 def get_type(name):
     if name in troops:
@@ -96,6 +99,10 @@ def troop_factory(side, position, name, level):
         return out
     elif name == "battleram":
         return barbarian_bowl_cards.BattleRam(side, position, level)
+    elif name == "firespirit":
+        return spell_valley_cards.FireSpirit(side, position, level)
+    elif name == "electrospirit":
+        return spell_valley_cards.ElectroSpirit(side, position, level)
     else:
         raise Exception("Invalid troop name.")
 
@@ -142,5 +149,7 @@ elixir_map = {
     "megaminion" : 3,
     "cannon" : 3,
     "battleram" : 4,
-    "barbarians" : 5
+    "barbarians" : 5,
+    "firespirit" : 1,
+    "electrospirit" : 1
 }

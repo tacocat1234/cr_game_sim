@@ -20,7 +20,7 @@ game_arena.towers = [towers.KingTower(True, 1),
                        ]
 #player deck
 deck = [Card(True, "minipekka", 1), Card(True, "battleram", 1), Card(True, "cannon", 1), Card(True, "bomber", 1), 
-        Card(True, "skeletons", 1), Card(True, "valkyrie", 1), Card(True, "fireball", 1), Card(True, "arrows", 1)]
+        Card(True, "electrospirit", 1), Card(True, "valkyrie", 1), Card(True, "fireball", 1), Card(True, "arrows", 1)]
 
 #bot deck (duh)
 bot_deck = [Card(False, "barbarians", 2), Card(False, "battleram", 2), Card(False, "speargoblins", 3), Card(False, "valkyrie", 3), 

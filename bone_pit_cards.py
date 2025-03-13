@@ -77,6 +77,7 @@ class BomberAttackEntity(AttackEntity):
         )
         self.target_pos = target_pos
         self.exploded = False
+        self.has_hit = []
 
     def detect_hits(self, arena):
         hits = []
@@ -91,11 +92,7 @@ class BomberAttackEntity(AttackEntity):
         if self.exploded:
             hits = self.detect_hits(arena)
             for each in hits:
-                new = True
-                for h in self.has_hit:
-                    if each is h:
-                        new = False
-                        break
+                new = not any(each is h for h in self.has_hit)
                 if (new):
                     each.cur_hp -= self.damage
                     self.has_hit.append(each)
@@ -162,12 +159,13 @@ class Tombstone(Building):
         self.level = level
     
     def tick(self, arena):
-        if self.attack_cooldown <= 0: #attack code
-            front = vector.Vector(0, 1.5) if self.side else vector.Vector(0, -1.5)
-            arena.troops.append(Skeleton(self.side, self.position.added(front), self.level))
-            self.next_spawn = 0.5
-            self.remaining_spawn_count = 1
-            self.attack_cooldown = self.hit_speed
+        if self.stun_timer <= 0:
+            if self.attack_cooldown <= 0: #attack code
+                front = vector.Vector(0, 1.5) if self.side else vector.Vector(0, -1.5)
+                arena.troops.append(Skeleton(self.side, self.position.added(front), self.level))
+                self.next_spawn = 0.5
+                self.remaining_spawn_count = 1
+                self.attack_cooldown = self.hit_speed
         
         if self.remaining_spawn_count > 0 and self.next_spawn <= 0: #remaining 2 gobs
             front = vector.Vector(0, 1.5) if self.side else vector.Vector(0, -1.5)
@@ -180,18 +178,22 @@ class Tombstone(Building):
                 self.remaining_spawn_count = 0 #no more
 
     def cleanup(self, arena):
-        self.cur_hp -= self.hit_points * TICK_TIME / self.lifespan
+        
         if self.cur_hp <= 0:
             arena.buildings.remove(self)
             for i in range(self.death_spawn_count):
                 arena.troops.append(self.death_spawn(self.side, 
                     self.position.added(vector.Vector(random.uniform(-self.collision_radius, self.collision_radius), random.uniform(-self.collision_radius, self.collision_radius))), 
                     self.level))
-
-        if not self.next_spawn is None and self.next_spawn > 0:
-            self.next_spawn -= TICK_TIME
-        
-        self.attack_cooldown -= TICK_TIME
+            
+        if self.stun_timer <= 0:
+            self.cur_hp -= self.hit_points * TICK_TIME / self.lifespan
+            if not self.next_spawn is None and self.next_spawn > 0:
+                self.next_spawn -= TICK_TIME
+            
+            self.attack_cooldown -= TICK_TIME
+        else:
+            self.stun_timer -= TICK_TIME
 
 class ValkyrieAttackEntity(AttackEntity):
     HIT_RANGE = 2.0
