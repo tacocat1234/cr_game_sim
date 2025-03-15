@@ -203,7 +203,7 @@ class ValkyrieAttackEntity(AttackEntity):
             s=side,
             d=damage,
             v=0,
-            l=0.5,
+            l=0.25,
             i_p=position
             )
         self.target = target

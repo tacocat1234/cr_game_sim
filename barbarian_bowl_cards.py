@@ -247,6 +247,13 @@ class BattleRam(Troop):
         self.charging = False
         self.should_delete = False
 
+    def stun(self):
+        self.charging = False
+        self.charge_charge_distance = 0
+        self.stun_timer = 0.5
+        self.move_speed = 60 * TILES_PER_MIN
+        self.target = None
+
     def attack(self):
         self.should_delete = True
         if self.charging:
@@ -255,12 +262,12 @@ class BattleRam(Troop):
             return BattleRamAttackEntity(self.side, self.hit_damage, self.position, self.target)  
     
     def tick(self, arena):
-        if not self.charging and self.charge_charge_distance >= 3:
+        if self.stun_timer <= 0 and not self.charging and self.charge_charge_distance >= 3:
             self.charging = True
             self.move_speed = self.charge_speed
             self.charge_charge_distance = 0
 
-        if self.deploy_time <= 0:
+        if self.stun_timer <= 0 and self.deploy_time <= 0:
             if self.target is None or self.target.cur_hp <= 0:
                 self.update_target(arena)
             if self.move(arena) and self.attack_cooldown <= 0: #move, then if within range, attack
@@ -275,14 +282,19 @@ class BattleRam(Troop):
     
     def cleanup(self, arena): # each troop runs this after ALL ticks are finished
         if self.cur_hp <= 0 or self.should_delete:
+            self.cur_hp = -1
             arena.troops.append(Barbarian(self.side, self.position.added(vector.Vector(0.3, 0)), self.level))
             arena.troops.append(Barbarian(self.side, self.position.added(vector.Vector(-0.3, 0)), self.level))
             arena.troops.remove(self)
         
         if self.deploy_time > 0: #if deploying, timer
             self.deploy_time -= TICK_TIME
-        else:
+        elif self.stun_timer <= 0:
             if not self.target is None and not vector.distance(self.target.position, self.position) < self.hit_range + self.target.collision_radius + self.collision_radius and (self.attack_cooldown <= self.hit_speed - self.load_time):
-                self.attack_cooldown = self.hit_speed - self.load_time #if not currently attacking but cooldown is less than first hit delay
+                if not self.charging:
+                    self.attack_cooldown = self.hit_speed - self.load_time #if not currently attacking but cooldown is less than first hit delay
             else: #otherwise
                 self.attack_cooldown -= TICK_TIME #decrement time if eithe
+        else:
+            self.stun_timer -= TICK_TIME
+

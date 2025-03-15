@@ -10,7 +10,7 @@ troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer",
           "speargoblins", "goblins", 
           "skeletons", "bomber", "valkyrie",
           "barbarians", "megaminion", "battleram",
-          "firespirit", "electrospirit"]
+          "firespirit", "electrospirit", "skeletondragons", "wizard"]
 
 spells = ["fireball", "arrows"]
 
@@ -103,6 +103,13 @@ def troop_factory(side, position, name, level):
         return spell_valley_cards.FireSpirit(side, position, level)
     elif name == "electrospirit":
         return spell_valley_cards.ElectroSpirit(side, position, level)
+    elif name == "wizard":
+        return spell_valley_cards.Wizard(side, position, level)
+    elif name == "skeletondragons":
+        pos1 = vector.Vector(0.75, 0)
+        pos2 = vector.Vector(-0.75, 0)
+        return [spell_valley_cards.SkeletonDragon(side, position.added(pos1), level),
+                spell_valley_cards.SkeletonDragon(side, position.added(pos2), level)]
     else:
         raise Exception("Invalid troop name.")
 
@@ -123,6 +130,8 @@ def building_factory(side, position, name, level):
         return bone_pit_cards.Tombstone(side, position, level)
     elif name == "cannon":
         return barbarian_bowl_cards.Cannon(side, position, level)
+    elif name == "infernotower":
+        return spell_valley_cards.InfernoTower(side, position, level)
     else:
         raise Exception("Invalid building name")
 
@@ -151,5 +160,9 @@ elixir_map = {
     "battleram" : 4,
     "barbarians" : 5,
     "firespirit" : 1,
-    "electrospirit" : 1
+    "electrospirit" : 1,
+    "bombtower" : 4,
+    "skeletondragons" : 4,
+    "wizard" : 5,
+    "infernotower" : 5
 }

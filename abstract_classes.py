@@ -96,6 +96,8 @@ class Troop:
         for tower in arena.towers: #check for towers that it can currently hit
             if tower.side != self.side:
                 dist = vector.distance(tower.position, self.position)
+                if not self.target is None and dist < vector.distance(self.target.position, self.position):
+                    self.target = None
                 if dist <= self.hit_range and dist < min_dist: #iff can hit tower, then it locks on.
                     self.target = tower #ensures only locks when activel attacking tower, so giant at bridge doesnt immediatly lock onto tower and ruin everyones day
                     min_dist = vector.distance(tower.position, self.position)
@@ -152,7 +154,7 @@ class Troop:
             self.position.y += direction_y * self.move_speed
             return False
 
-        if self.ground and not same_sign(self.target.position.y, self.position.y):
+        if self.ground and not (same_sign(self.target.position.y, self.position.y) or math.isclose(self.position.y, 0, abs_tol=1e-2)):
             
             r_bridge = vector.distance(vector.Vector(5.5, 0), self.target.position)
             l_bridge = vector.distance(vector.Vector(-5.5, 0), self.target.position)
