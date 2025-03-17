@@ -371,7 +371,7 @@ class InfernoTower(Building):
             h_r = 5.5,
             s_r = 5.5,
             g = True,
-            t_g_o = True,
+            t_g_o = False,
             t_o = False,
             l=30,
             d_t=1,
@@ -465,7 +465,7 @@ class BombTowerAttackEntity(AttackEntity):
             
             if vector.distance(self.position, self.target_pos) < 0.25:
                 self.display_size = BombTowerAttackEntity.DAMAGE_RADIUS
-                self.duration =  0.5
+                self.duration =  0.25
                 self.exploded = True
 
 class BombTower(Building):
@@ -488,9 +488,10 @@ class BombTower(Building):
             d_s=BombTowerDeathBomb,
             p=position
         )
+        self.level = level
 
     def attack(self):
-        return BombTowerAttackEntity()
+        return BombTowerAttackEntity(self.side, self.hit_damage, self.position, self.target.position)
     
 class BombTowerDeathBombAttackEntity(AttackEntity):
     DAMAGE_RADIUS = 3
@@ -502,14 +503,14 @@ class BombTowerDeathBombAttackEntity(AttackEntity):
             l=0.25,
             i_p=copy.deepcopy(position)
         )
-        self.display_size = BombTowerAttackEntity.DAMAGE_RADIUS
+        self.display_size = BombTowerDeathBombAttackEntity.DAMAGE_RADIUS
         self.has_hit = []
 
     def detect_hits(self, arena):
         hits = []
         for each in arena.towers + arena.buildings + arena.troops:
             if each.side != self.side and (isinstance(each, Tower) or (each.ground and not each.invulnerable)): # if different side
-                if vector.distance(self.position, each.position) < BombTowerAttackEntity.DAMAGE_RADIUS + each.collision_radius:
+                if vector.distance(self.position, each.position) < BombTowerDeathBombAttackEntity.DAMAGE_RADIUS + each.collision_radius:
                     hits.append(each)
         return hits
             
@@ -546,10 +547,10 @@ class BombTowerDeathBomb(Troop):
         self.targetable=False
         self.target=None
 
-    def tick(self):
+    def tick(self, arena):
         if self.deploy_time <= 0:
-            self.attack()
-            self.hp = -1
+            arena.active_attacks.append(self.attack())
+            self.cur_hp = -1
     
     def attack(self):
         return BombTowerDeathBombAttackEntity(self.side, self.hit_damage, self.position, self.target)

@@ -5,6 +5,7 @@ import goblin_stadium_cards
 import bone_pit_cards
 import barbarian_bowl_cards
 import spell_valley_cards
+import builders_workshop_cards
 
 troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer", 
           "speargoblins", "goblins", 
@@ -12,7 +13,8 @@ troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer",
           "barbarians", "megaminion", "battleram",
           "firespirit", "electrospirit", "skeletondragons", "wizard"]
 
-spells = ["fireball", "arrows"]
+spells = ["fireball", "arrows",
+          "zap"]
 
 buildings = ["goblinhut", "goblincage", 
              "tombstone",
@@ -118,6 +120,8 @@ def spell_factory(side, position, name, level):
         return training_camp_cards.Fireball(side, position, level)
     elif name == "arrows":
         return training_camp_cards.Arrows(side, position, level)
+    elif name == "zap":
+        return builders_workshop_cards.Zap(side, position, level)
     else:
         raise Exception("Invalid spell name.")
 
@@ -130,6 +134,8 @@ def building_factory(side, position, name, level):
         return bone_pit_cards.Tombstone(side, position, level)
     elif name == "cannon":
         return barbarian_bowl_cards.Cannon(side, position, level)
+    elif name == "bombtower":
+        return spell_valley_cards.BombTower(side, position, level)
     elif name == "infernotower":
         return spell_valley_cards.InfernoTower(side, position, level)
     else:
@@ -164,5 +170,6 @@ elixir_map = {
     "bombtower" : 4,
     "skeletondragons" : 4,
     "wizard" : 5,
-    "infernotower" : 5
+    "infernotower" : 5,
+    "zap" : 2
 }

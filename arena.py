@@ -48,7 +48,7 @@ class Arena:
                         if dist < (c_troop.collision_radius + troop.collision_radius):
                             vec = troop.position.subtracted(c_troop.position)  # building to troop vector
                             if vec.magnitude() > 0:
-                                vec.scale(((building.collision_radius + troop.collision_radius) / vec.magnitude()) - 1)
+                                vec.scale(((c_troop.collision_radius + troop.collision_radius) / vec.magnitude()) - 1)
                             
                             applyVelocity[troop] = applyVelocity.get(troop, vector.Vector(0, 0)).added(vec)
                     elif troop.invulnerable:

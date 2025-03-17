@@ -19,8 +19,8 @@ game_arena.towers = [towers.KingTower(True, 1),
                        towers.PrincessTower(False, 2, False)
                        ]
 #player deck
-deck = [Card(True, "skeletons", 1), Card(True, "battleram", 1), Card(True, "infernotower", 1), Card(True, "valkyrie", 1), 
-        Card(True, "archers", 1), Card(True, "electrospirit", 1), Card(True, "fireball", 1), Card(True, "arrows", 1)]
+deck = [Card(True, "skeletons", 1), Card(True, "arrows", 1), Card(True, "bombtower", 1), Card(True, "infernotower", 1), 
+        Card(True, "bomber", 1), Card(True, "archers", 1), Card(True, "zap", 1), Card(True, "battleram", 1)]
 
 #bot deck (duh)
 bot_deck = [Card(False, "firespirit", 2), Card(False, "battleram", 2), Card(False, "wizard", 3), Card(False, "valkyrie", 3), 
@@ -118,8 +118,9 @@ def draw():
         hp_bar_width = 20
         hp_bar_height = 3
 
-        pygame.draw.rect(screen, BLACK, (hp_bar_x, hp_bar_y, hp_bar_width, hp_bar_height))
-        pygame.draw.rect(screen, GREEN, (hp_bar_x, hp_bar_y, int(hp_bar_width * (troop.cur_hp / troop.hit_points)), hp_bar_height))
+        if not troop.invulnerable:
+            pygame.draw.rect(screen, BLACK, (hp_bar_x, hp_bar_y, hp_bar_width, hp_bar_height))
+            pygame.draw.rect(screen, GREEN, (hp_bar_x, hp_bar_y, int(hp_bar_width * (troop.cur_hp / troop.hit_points)), hp_bar_height))
 
         # Draw Level Indicator
         level_box_size = 10  # Square size for level indicator
