@@ -336,12 +336,51 @@ while running:
                 drag_start_pos = None
 
 
-    #if count == 120:
-    #    game_arena.spells.append(training_camp_cards.Fireball(False, vector.Vector(-6, -5.5), 1))
+        a = 0
+    b = 0
+    for tower in game_arena.towers:
+        if tower.side:
+            a += 1
+        else:
+            b += 1
+    
+    if a == 0 or b == 0:
+        break
 
     game_arena.tick()  # Update game logic
     game_arena.cleanup()
     draw()  # Redraw screen
+
+winfont = pygame.font.Font(None, 100)  # Adjust font size as needed
+text = None
+a = 0
+b = 0
+for tower in game_arena.towers:
+    if tower.side:
+        a += 1
+    else:
+        b += 1
+
+if b == 0:
+    text = winfont.render("YOU WIN", True, WHITE)
+elif a == 0:
+    text = winfont.render("YOU LOSE", True, WHITE)
+else:
+    text = winfont.render("quit_screen_text", True, WHITE)
+
+# Get text rectangle and center it
+text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+
+while running:
+    screen.fill(BLACK)  # Fill background
+    screen.blit(text, text_rect)  # Draw text
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    pygame.display.flip()  # Update display
+
 
     #count += 1
 

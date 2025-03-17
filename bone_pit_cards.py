@@ -83,7 +83,7 @@ class BomberAttackEntity(AttackEntity):
         hits = []
         if self.exploded:
             for each in arena.towers + arena.buildings + arena.troops:
-                if each.side != self.side and (isinstance(each, Tower) or each.ground): # if different side
+                if each.side != self.side and (isinstance(each, Tower) or (each.ground and not each.invulnerable)): # if different side
                     if vector.distance(self.position, each.position) < 1.5 + each.collision_radius:
                         hits.append(each)
         return hits
@@ -213,7 +213,7 @@ class ValkyrieAttackEntity(AttackEntity):
     def detect_hits(self, arena):
         hits = []
         for each in arena.towers + arena.buildings + arena.troops:
-            if each.side != self.side and (isinstance(each, Tower) or each.ground): # if different side
+            if each.side != self.side and (isinstance(each, Tower) or (each.ground and not each.invulnerable)): # if different side
                 if vector.distance(self.position, each.position) < ValkyrieAttackEntity.HIT_RANGE + ValkyrieAttackEntity.COLLISION_RADIUS + each.collision_radius:
                     hits.append(each)
         return hits

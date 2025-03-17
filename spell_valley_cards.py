@@ -1,6 +1,7 @@
 from abstract_classes import AttackEntity
 from abstract_classes import Troop
 from abstract_classes import Building
+from abstract_classes import Tower
 from abstract_classes import TILES_PER_MIN
 from abstract_classes import TICK_TIME
 import vector
@@ -26,7 +27,7 @@ class FireSpiritAttackEntity(AttackEntity):
         hits = []
         if self.exploded:
             for each in arena.towers + arena.buildings + arena.troops:
-                if each.side != self.side: # if different side
+                if (isinstance(each, Tower) or not each.invulnerable) and each.side != self.side: # if different side
                     if vector.distance(self.position, each.position) < FireSpiritAttackEntity.DAMAGE_RADIUS + each.collision_radius:
                         hits.append(each)
         return hits
@@ -125,7 +126,7 @@ class ElectroSpiritAttackEntity(AttackEntity):
                     min_dist = float("inf")
                     min = None
                     for each in arena.towers + arena.buildings + arena.troops: #find new hits
-                        if each.side != self.side and vector.distance(each.position, self.chain_center) < 4: # if different side
+                        if (isinstance(each, Tower) or not each.invulnerable) and each.side != self.side and vector.distance(each.position, self.chain_center) < 4: # if different side
                             new = not any(each is h for h in self.has_hit)
                             if vector.distance(each.position, self.chain_center) < min_dist and new:
                                 min = each
@@ -205,7 +206,7 @@ class WizardAttackEntity(AttackEntity):
         hits = []
         if self.exploded:
             for each in arena.towers + arena.buildings + arena.troops:
-                if each.side != self.side: # if different side
+                if (isinstance(each, Tower) or not each.invulnerable) and each.side != self.side: # if different side
                     if vector.distance(self.position, each.position) < WizardAttackEntity.DAMAGE_RADIUS + each.collision_radius:
                         hits.append(each)
         return hits
@@ -272,8 +273,8 @@ class SkeletonDragonAttackEntity(AttackEntity):
         hits = []
         if self.exploded:
             for each in arena.towers + arena.buildings + arena.troops:
-                if each.side != self.side: # if different side
-                    if vector.distance(self.position, each.position) < WizardAttackEntity.DAMAGE_RADIUS + each.collision_radius:
+                if (isinstance(each, Tower) or not each.invulnerable) and each.side != self.side: # if different side
+                    if vector.distance(self.position, each.position) < SkeletonDragonAttackEntity.DAMAGE_RADIUS + each.collision_radius:
                         hits.append(each)
         return hits
             
@@ -423,3 +424,132 @@ class InfernoTower(Building):
                 self.stage_duration -= TICK_TIME
         else:
             self.stun_timer -= TICK_TIME
+
+class BombTowerAttackEntity(AttackEntity):
+    DAMAGE_RADIUS = 1.5
+    def __init__(self, side, damage, position, target_pos):
+        super().__init__(
+            s=side,
+            d=damage,
+            v=500*TILES_PER_MIN,
+            l=float('inf'),
+            i_p=copy.deepcopy(position)
+        )
+        self.target_pos = target_pos
+        self.exploded = False
+        self.has_hit = []
+
+    def detect_hits(self, arena):
+        hits = []
+        if self.exploded:
+            for each in arena.towers + arena.buildings + arena.troops:
+                if each.side != self.side and (isinstance(each, Tower) or (each.ground and not each.invulnerable)): # if different side
+                    if vector.distance(self.position, each.position) < BombTowerAttackEntity.DAMAGE_RADIUS + each.collision_radius:
+                        hits.append(each)
+        return hits
+            
+    def tick(self, arena):
+        if self.exploded:
+            hits = self.detect_hits(arena)
+            for each in hits:
+                new = not any(each is h for h in self.has_hit)
+                if (new):
+                    each.cur_hp -= self.damage
+                    self.has_hit.append(each)
+        else:
+            direction = self.target_pos.subtracted(self.position)
+            direction.normalize()
+
+            movement = direction.scaled(self.velocity)
+            self.position.add(movement)
+            
+            if vector.distance(self.position, self.target_pos) < 0.25:
+                self.display_size = BombTowerAttackEntity.DAMAGE_RADIUS
+                self.duration =  0.5
+                self.exploded = True
+
+class BombTower(Building):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,
+            h_p=640 * pow(1.1, level - 3),
+            h_d=105 * pow(1.1, level - 3),
+            h_s=1.6,
+            l_t=1.6,
+            h_r=6,
+            s_r=6,
+            g=True,
+            t_g_o=True,
+            t_o=False,
+            l=30,
+            d_t=1,
+            c_r=0.6,
+            d_s_c=1,
+            d_s=BombTowerDeathBomb,
+            p=position
+        )
+
+    def attack(self):
+        return BombTowerAttackEntity()
+    
+class BombTowerDeathBombAttackEntity(AttackEntity):
+    DAMAGE_RADIUS = 3
+    def __init__(self, side, damage, position, target_pos):
+        super().__init__(
+            s=side,
+            d=damage,
+            v=0,
+            l=0.25,
+            i_p=copy.deepcopy(position)
+        )
+        self.display_size = BombTowerAttackEntity.DAMAGE_RADIUS
+        self.has_hit = []
+
+    def detect_hits(self, arena):
+        hits = []
+        for each in arena.towers + arena.buildings + arena.troops:
+            if each.side != self.side and (isinstance(each, Tower) or (each.ground and not each.invulnerable)): # if different side
+                if vector.distance(self.position, each.position) < BombTowerAttackEntity.DAMAGE_RADIUS + each.collision_radius:
+                    hits.append(each)
+        return hits
+            
+    def tick(self, arena):
+        hits = self.detect_hits(arena)
+        for each in hits:
+            new = not any(each is h for h in self.has_hit)
+            if (new):
+                each.cur_hp -= self.damage
+                self.has_hit.append(each)
+
+
+class BombTowerDeathBomb(Troop):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p=  float('inf'),         # Hit points (Example value)
+            h_d= 105 * pow(1.1, level - 3),          # Hit damage (Example value)
+            h_s=0,          # Hit speed (Seconds per hit)
+            l_t=0,            # First hit cooldown
+            h_r=0,            # Hit range
+            s_r=0,            # Sight Range
+            g=True,           # Ground troop
+            t_g_o=False,       # Targets ground-only
+            t_o=False,        # Not tower-only
+            m_s=0,          # Movement speed 
+            d_t=3,            # Deploy time
+            m=float('inf'),            #mass
+            c_r=0.45,        #collision radius
+            p=position               # Position (vector.Vector object)
+        ) 
+        self.level = level
+        self.invulnerable=True
+        self.targetable=False
+        self.target=None
+
+    def tick(self):
+        if self.deploy_time <= 0:
+            self.attack()
+            self.hp = -1
+    
+    def attack(self):
+        return BombTowerDeathBombAttackEntity(self.side, self.hit_damage, self.position, self.target)

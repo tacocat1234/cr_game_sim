@@ -68,6 +68,9 @@ class Troop:
 
         self.stun_timer = 0
 
+        self.targetable = True
+        self.invulnerable = False
+
     def stun(self):
         self.stun_timer = 0.5
         self.target = None
@@ -81,7 +84,7 @@ class Troop:
         min_dist = float('inf')
         if not self.tower_only: #if not tower targeting
             for each in arena.troops: #for each troop
-                if each.side != self.side and (not self.ground_only or (self.ground_only and each.ground)): #targets air or is ground only and each is ground troup
+                if self.targetable and not self.invulnerable and each.side != self.side and (not self.ground_only or (self.ground_only and each.ground)): #targets air or is ground only and each is ground troup
                     dist = vector.distance(each.position, self.position)
                     if  dist < min_dist and dist < self.sight_range:
                         self.target = each
@@ -242,7 +245,7 @@ class Tower:
         min_dist = float('inf')
         for each in arena.troops + arena.buildings:
             dist = vector.distance(each.position, self.position)
-            if each.side != self.side and dist < min_dist and dist < self.hit_range + each.collision_radius:
+            if not each.invulnerable and each.targetable and each.side != self.side and dist < min_dist and dist < self.hit_range + each.collision_radius:
                 self.target = each
                 min_dist = vector.distance(each.position, self.position)
     
@@ -298,7 +301,7 @@ class Spell:
     def detect_hits(self, arena): #override
         out = []
         for each in arena.troops + arena.buildings + arena.towers:
-            if each.side != self.side and (vector.distance(each.position, self.position) <= self.radius + each.collision_radius):
+            if (isinstance(each, Tower) or not each.invulnerable) and each.side != self.side and (vector.distance(each.position, self.position) <= self.radius + each.collision_radius):
                 out.append(each)
         return out
         
@@ -358,6 +361,9 @@ class Building:
 
         self.stun_timer = 0
 
+        self.targetable = True
+        self.invulnerable = False
+
     def stun(self):
         self.stun_timer = 0.5
         self.target = None
@@ -370,7 +376,7 @@ class Building:
         min_dist = float('inf')
         for each in arena.troops + arena.buildings + arena.towers:
             dist = vector.distance(each.position, self.position)
-            if each.side != self.side and dist < min_dist and dist < self.hit_range + self.collision_radius + each.collision_radius:
+            if (isinstance(each, Tower) or not each.invulnerable and each.targetable) and each.side != self.side and dist < min_dist and dist < self.hit_range + self.collision_radius + each.collision_radius:
                 self.target = each
                 min_dist = vector.distance(each.position, self.position)
     

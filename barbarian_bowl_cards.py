@@ -283,8 +283,8 @@ class BattleRam(Troop):
     def cleanup(self, arena): # each troop runs this after ALL ticks are finished
         if self.cur_hp <= 0 or self.should_delete:
             self.cur_hp = -1
-            arena.troops.append(Barbarian(self.side, self.position.added(vector.Vector(0.3, 0)), self.level))
-            arena.troops.append(Barbarian(self.side, self.position.added(vector.Vector(-0.3, 0)), self.level))
+            arena.troops.append(Barbarian(self.side, self.position.added(vector.Vector(0, 0.3)), self.level))
+            arena.troops.append(Barbarian(self.side, self.position.added(vector.Vector(0, -0.3)), self.level))
             arena.troops.remove(self)
         
         if self.deploy_time > 0: #if deploying, timer
