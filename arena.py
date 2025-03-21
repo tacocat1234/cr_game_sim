@@ -33,7 +33,9 @@ class Arena:
         for building in self.buildings:
             building.cleanup(self)
         for tower in self.towers:
-            tower.cleanup(self)
+            winSide = tower.cleanup(self)
+            if not winSide is None:
+                return winSide
 
         #do collision checks
         applyVelocity = {}
