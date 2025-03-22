@@ -54,10 +54,17 @@ def handle_clients():
             player_id = player_data["id"]  # Unique player ID
             action = player_data["action"]
             arena_id = player_data["arena_id"]
-            place_x = player_data["x"]
-            place_y = player_data["y"]
-            place_level = player_data["level"]
-            place_str = player_data["place"]
+
+            if not (action == "join" or action == "create"):
+                place_x = player_data["x"]
+                place_y = player_data["y"]
+                place_level = player_data["level"]
+                place_str = player_data["place"]
+            else:
+                place_x = 0
+                place_y = 0
+                place_level = 0
+                place_str = ""
 
             place_pos = vector.Vector(place_x, place_y)
             verification = False
@@ -67,7 +74,7 @@ def handle_clients():
                     case "create":
                         if arena_id not in id_map:
                             id_map[arena_id] = arena.Arena()
-                            id_map[arena_id].extend([towers.KingTower(True, player_data["king_level"]), 
+                            id_map[arena_id].towers.extend([towers.KingTower(True, player_data["king_level"]), 
                                 towers.PrincessTower(True, player_data["princess_level"], True), 
                                 towers.PrincessTower(True, player_data["princess_level"], False), 
                                 ])
@@ -77,7 +84,7 @@ def handle_clients():
                     case "join":
                         if arena_id in player_map and len(player_map[arena_id]) == 1:
                             player_map[arena_id].append(player_id)
-                            id_map[arena_id].extend([towers.KingTower(True, player_data["king_level"]), #send this data (king_level, princesselevel) only when action is create or join
+                            id_map[arena_id].towers.extend([towers.KingTower(True, player_data["king_level"]), #send this data (king_level, princesselevel) only when action is create or join
                                 towers.PrincessTower(True, player_data["princess_level"], True), 
                                 towers.PrincessTower(True, player_data["princess_level"], False), 
                                 ])

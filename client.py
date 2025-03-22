@@ -408,6 +408,7 @@ while running:
                 drag_start_pos = None
         else: #no action
             recieve = wait()
+    
     draw()  # Redraw screen
     if recieve["arena_state"] == "p1_win" or recieve["arena_state"] == "p2_win":
         running = False
