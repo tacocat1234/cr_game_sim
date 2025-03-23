@@ -54,8 +54,8 @@ def convert_to_pygame(coordinate):
     return pygame_x, pygame_y
 
 def convert_from_pygame(pygame_x, pygame_y):
-    x = (pygame_x - WIDTH / 2) // SCALE
-    y = (HEIGHT / 2 - 60 - pygame_y) // SCALE  # Invert Y-axis back
+    x = (pygame_x - WIDTH / 2) // SCALE + 0.5
+    y = (HEIGHT / 2 - 60 - pygame_y) // SCALE + 0.5# Invert Y-axis back
     return vector.Vector(x, y)
 
 

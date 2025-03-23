@@ -19,6 +19,7 @@ class AttackEntity:
         
         self.duration = l
         self.has_hit = []
+        self.sprite_path = ""
         self.display_size = 0.25
         
     def tick(self, arena):
@@ -66,7 +67,12 @@ class Troop:
         self.target = None
         self.attack_cooldown = h_s - l_t
 
+        self.facing_dir = 0
+        self.walk_cycle_frames = 1
+        self.walk_cycle_cur = 1
+        self.sprite_path = ""
         self.stun_timer = 0
+        self.move_modifier = 1
 
     def stun(self):
         self.stun_timer = 0.5
@@ -152,6 +158,10 @@ class Troop:
             # Move in the direction of the target
             self.position.x += direction_x * self.move_speed
             self.position.y += direction_y * self.move_speed
+
+            angle = math.degrees(math.atan2(direction_y, direction_x))  # Get angle in degrees
+            self.facing_dir = round(angle / 45) * 45  # Round to the nearest 45 degrees
+
             return False
 
         if self.ground and not (same_sign(self.target.position.y, self.position.y) or math.isclose(self.position.y, 0, abs_tol=1e-2)):
@@ -198,6 +208,12 @@ class Troop:
                     elif not atk is None:
                         arena.active_attacks.append(self.attack())
                     self.attack_cooldown = self.hit_speed
+            
+            class_name = self.__class__.__name__.lower()
+            if not self.walk_cycle_frames == 1: #more than one frame per thing
+                self.sprite_path = f"sprites/{class_name}/{class_name}{self.facing_dir}_{self.walk_cycle_cur}.png"
+            else:
+                self.sprite_path = f"sprites/{class_name}/{class_name}{self.facing_dir}.png"
     
     def cleanup(self, arena): # each troop runs this after ALL ticks are finished
         if self.cur_hp <= 0:
@@ -212,6 +228,7 @@ class Troop:
                 self.attack_cooldown -= TICK_TIME #decrement time if either close enough to attack, cooldown greater than min cooldown, or both
         else:
             self.stun_timer -= TICK_TIME
+
 class Tower:
     def __init__(self, s, h_d, h_r, h_s, l_t, h_p, c_r, p):
         self.side = s
