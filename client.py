@@ -1,35 +1,105 @@
+import socket
+import json
+import uuid
 import pygame
 import random
-from cards import Card
-from abstract_classes import TICK_TIME
-from bot import Bot
-from bot import place
-from card_factory import get_type
-import arena
-import towers
 import vector
 
-game_arena = arena.Arena()
+from card_factory import get_type
+from card_factory import get_elixir
 
-game_arena.towers = [towers.KingTower(True, 1), 
-                       towers.PrincessTower(True, 1, True), 
-                       towers.PrincessTower(True, 1, False), 
-                       towers.KingTower(False, 3), 
-                       towers.PrincessTower(False, 2, True), 
-                       towers.PrincessTower(False, 2, False)
-                       ]
-#player deck
-deck = [Card(True, "skeletons", 1), Card(True, "arrows", 1), Card(True, "bombtower", 1), Card(True, "infernotower", 1), 
-        Card(True, "bomber", 1), Card(True, "archers", 1), Card(True, "zap", 1), Card(True, "battleram", 1)]
+SERVER_IP = "127.0.0.1"
+SERVER_PORT = 5555
+BUFFER_SIZE = 4096
+#-----------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------
+# modify the below to set deck and tower levels
+DECK = [("skeletons", 11), ("arrows", 11), ("bombtower", 11), ("infernotower", 11), 
+        ("bomber", 11), ("archers", 11), ("zap", 11), ("battleram", 11)]
+KING_LEVEL = 11
+PRINCESS_LEVEL = 11
+#
+#-----------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------
+#-----------------------------------------------------------------------------------
+client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
-#bot deck (duh)
-bot_deck = [Card(False, "firespirit", 2), Card(False, "battleram", 2), Card(False, "wizard", 3), Card(False, "valkyrie", 3), 
-        Card(False, "goblinhut", 5), Card(False, "skeletondragons", 3), Card(False, "minipekka", 2), Card(False, "arrows", 4)]
+# Generate a unique player ID
+player_id = str(uuid.uuid1())
+arena_id = None
+side = None
 
-bot = Bot(bot_deck)
-#height comp screen ~ 800
-#20x20 per tile
-# 18 x 32
+
+def send_data(data):
+    #Send JSON data to the server and receive a response.#
+    client_socket.sendto(json.dumps(data).encode(), (SERVER_IP, SERVER_PORT))
+    response, _ = client_socket.recvfrom(BUFFER_SIZE)
+    return json.loads(response.decode())
+
+def create_arena(a_id, king_level=1, princess_level=1):
+    global side
+    #Send a request to create an arena.#
+    data = {
+        "id": player_id,
+        "action": "create",
+        "arena_id": a_id,
+        "king_level": king_level,
+        "princess_level": princess_level
+    }
+    side = True
+    return send_data(data)
+
+def join_arena(a_id, king_level=1, princess_level=1):
+    global side
+    #Send a request to join an existing arena.#
+    data = {
+        "id": player_id,
+        "action": "join",
+        "arena_id": a_id,
+        "king_level": king_level,
+        "princess_level": princess_level
+    }
+    side = False
+    return send_data(data)
+
+def wait(): #no action registered
+    action = "wait"
+    data = {
+        "id": player_id,
+        "action": action,
+        "arena_id": arena_id,
+        "x": 0,
+        "y": 0,
+        "side": side,
+        "level": 0,
+        "place": False
+    }
+    return send_data(data)
+
+def place_card(x, y, card, level=1): #valid card place registered
+    action = "created" if side else "joined"
+    data = {
+        "id": player_id,
+        "action": action,
+        "arena_id": arena_id,
+        "x": x,
+        "y": y,
+        "side": side,
+        "level": level,
+        "place": card
+    }
+    return send_data(data)
+
+def exit_arena():
+    #Exit the arena.#
+    data = {
+        "id": player_id,
+        "action": "exit",
+        "arena_id": arena_id
+    }
+    return send_data(data)
+
 WIDTH, HEIGHT = 360 + 128, 640 + 128
 
 SCALE = 20  # Scale factor to map game coordinates to screen
@@ -54,28 +124,23 @@ def convert_to_pygame(coordinate):
     return pygame_x, pygame_y
 
 def convert_from_pygame(pygame_x, pygame_y):
-    x = (pygame_x - WIDTH / 2) // SCALE + 0.5
-    y = (HEIGHT / 2 - 60 - pygame_y) // SCALE + 0.5# Invert Y-axis back
+    x = (pygame_x - WIDTH / 2) // SCALE
+    y = (HEIGHT / 2 - 60 - pygame_y) // SCALE  # Invert Y-axis back
     return vector.Vector(x, y)
 
 
-pygame.init()
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Crash Royale Arena")    
-font = pygame.font.Font(None, 12) 
 
-#temp
-#game_arena.troops.append(training_camp_cards.Giant(True, vector.Vector(-2, -3), 1))
-#game_arena.troops.append(training_camp_cards.Archer(True, vector.Vector(-3, -4), 1))
-#game_arena.troops.append(training_camp_cards.Giant(False, vector.Vector(-3, 3), 1))
-#game_arena.troops.append(training_camp_cards.MiniPekka(True, vector.Vector(-3, -4), 1))
-#temp
+random.shuffle(DECK)
+
+hand = [0, 1, 2, 3]
+cycler = [4, 5, 6, 7]
+elixir = 5
 
 def cycle(hand, index, queue):
     queue.append(hand[index])
     hand[index] = queue.pop(0)
 
-def draw():
+def draw(troop_vecs, spell_vecs, building_vecs, attack_vecs, tower_vecs): #takes list of all vector.Vector objects of positions
     screen.fill(BG_TEMP)
 
     # Draw river
@@ -89,7 +154,7 @@ def draw():
     pygame.draw.rect(screen, BRIDGE_TEMP, (WIDTH - (64 + 4.5 * SCALE), HEIGHT/2 - 60 - 1.5 *SCALE, SCALE * 2, SCALE * 3)) 
 
     # Draw Towers
-    for tower in game_arena.towers:
+    for tower in tower_vecs:
         tower_x, tower_y = convert_to_pygame(tower.position)
         
         # Adjust position so that the rectangle is centered at the tower's coordinates
@@ -105,9 +170,9 @@ def draw():
         pygame.draw.rect(screen, GREEN, (tower_x, tower_y - 5, int(tower_rect_width * (tower.cur_hp / tower.hit_points)), 3))
 
     # Draw Troops
-    for troop in game_arena.troops:
+    for troop in troop_vecs:
         troop_x, troop_y = convert_to_pygame(troop.position)
-        troop_color = BLUE if troop.side else RED
+        troop_color = BLUE if not (troop.side ^ side) else RED
 
         # Draw troop circle
         pygame.draw.circle(screen, troop_color, (troop_x, troop_y), troop.collision_radius * SCALE)
@@ -135,9 +200,9 @@ def draw():
         screen.blit(level_text, text_rect)
     # Draw Attack Entities (Projectiles)
 
-    for building in game_arena.buildings:
+    for building in building_vecs:
         building_x, building_y = convert_to_pygame(building.position)
-        building_color = BLUE if building.side else RED
+        building_color = BLUE if not (building.side ^ side) else RED
 
         # Draw building square
         building_size = building.collision_radius * 2 * SCALE
@@ -164,7 +229,7 @@ def draw():
         text_rect = level_text.get_rect(center=(level_box_x + level_box_size / 2, level_box_y + level_box_size / 2))
         screen.blit(level_text, text_rect)
 
-    for attack in game_arena.active_attacks:
+    for attack in attack_vecs:
         attack_x, attack_y= convert_to_pygame(attack.position)
         if attack.display_size != 0.25:
             # Create a transparent surface
@@ -179,7 +244,7 @@ def draw():
         else:
             # Regular solid yellow circle for small attacks
             pygame.draw.circle(screen, YELLOW, (attack_x, attack_y), attack.display_size * SCALE)
-    for spell in game_arena.spells:
+    for spell in spell_vecs:
         spell_x, spell_y = convert_to_pygame(spell.position)
         size = spell.radius * SCALE if spell.spawn_timer <= 0 else 1 * SCALE
         if spell.spawn_timer <= 0:
@@ -198,8 +263,8 @@ def draw():
     card_name_font = pygame.font.Font(None, 24)  # Use a larger font for card names
 
     for i, hand_i in enumerate(hand):
-        card = deck[hand_i]
-        card_name_text = card_name_font.render(card.name, True, WHITE)
+        card = DECK[hand_i]
+        card_name_text = card_name_font.render(card[0], True, WHITE)
         card_name_x = (WIDTH * (i + 1)) // 5  # Positions: WIDTH/5, WIDTH*2/5, WIDTH*3/5, WIDTH*4/5
         card_name_y = HEIGHT - 64  # Vertical position at the bottom
         text_rect = card_name_text.get_rect(center=(card_name_x, card_name_y))
@@ -235,15 +300,8 @@ def draw():
     screen.blit(elixir_text, text_rect)  # Display elixir text
 
     pygame.display.flip()
+        
 
-random.shuffle(deck)
-
-hand = [0, 1, 2, 3]
-cycler = [4, 5, 6, 7]
-elixir = 5
-bot_elixir = 9 #for bot
-
-# Main Loop
 running = True
 clock = pygame.time.Clock()
 
@@ -254,29 +312,54 @@ drag_end_pos = None  # Ending position of the drag
 
 elixir_recharge = 2.8
 elixir_timer = elixir_recharge
+recieve = None
+
+valid = True
+
+while True:
+    create_or_join = input("Create or Join?\n")
+    if create_or_join.lower() == "create":
+        arena_id = str(uuid.uuid1())
+        print("Your arena id is: " + arena_id)
+        recieve = create_arena(arena_id, KING_LEVEL, PRINCESS_LEVEL)
+
+    elif create_or_join.lower() == "join":
+        arena_id = input("What arena id?\n")
+        recieve = join_arena(arena_id, KING_LEVEL, PRINCESS_LEVEL)
+        if not recieve["err"] is None:
+            print(recieve["err"])
+            valid = False
+
+    else:
+        print("Invalid option. ", end="")
+        valid = False
+
+    if valid:
+        break
+
+print("Waiting...")
+while not recieve["arena_state"] == "active":
+    recieve = wait()
+
+print("Match start.")
+pygame.init()
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Crash Royale Arena")    
+font = pygame.font.Font(None, 12) 
+
 
 while running:
     clock.tick(60)  # 60 FPS
 
     if (elixir_timer < 0):
         elixir = min(elixir + 1, 10)
-        bot_elixir = min(bot_elixir + 1, 10)
-        elixir_timer = elixir_recharge
-    else:
-        elixir_timer -= TICK_TIME
-
-    bot_card = bot.tick(bot_elixir)
-    if not bot_card is None:
-        print(bot_card.name)
-        bot_elixir -= bot_card.elixir_cost
-        bot_card_type, bot_summon = bot_card.summon(Bot.random_pos(get_type(bot_card.name) == "spell", game_arena.troops + game_arena.buildings))
-        place(bot_card_type, bot_summon, game_arena)
-
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
+            recieve = exit_arena()
             running = False
         # Detect mouse click in the bottom 128 pixels
         if event.type == pygame.MOUSEBUTTONDOWN:
+            recieve = wait()
             mouse_x, mouse_y = pygame.mouse.get_pos()
 
             # Check if the click is in the bottom 128 pixels
@@ -298,6 +381,7 @@ while running:
 
         # Detect mouse drag movement
         elif event.type == pygame.MOUSEMOTION:
+            recieve = wait()
             if drag_start_pos is not None:
                 # add code to animate thign at mouse pos later
                 pass
@@ -309,66 +393,32 @@ while running:
 
                 # Store the ending position of the drag
                 drag_end_pos = (mouse_x, mouse_y)
-                cur_card = deck[hand[click_quarter - 1]]
-                if mouse_y < HEIGHT - 128 and (get_type(cur_card.name) == "spell" or mouse_y > 320):
-                    if (cur_card.elixir_cost <= elixir):
-                        card_type, card = deck[hand[click_quarter - 1]].summon(convert_from_pygame(mouse_x, mouse_y))
-
-                        if card_type == "troop":
-                            if isinstance(card, list):
-                                game_arena.troops.extend(card)
-                            else:
-                                game_arena.troops.append(card)
-                        elif card_type == "spell":
-                            if isinstance(card, list):
-                                game_arena.spells.extend(card)
-                            else:
-                                game_arena.spells.append(card)
-                        elif card_type == "building":
-                            if isinstance(card, list):
-                                game_arena.buildings.extend(card)
-                            else:
-                                game_arena.buildings.append(card)
+                cur_card = DECK[hand[click_quarter - 1]]
+                if mouse_y < HEIGHT - 128 and (get_type(cur_card[0]) == "spell" or mouse_y > 320):
+                    if get_elixir(cur_card[0]) <= elixir:
+                        
+                        #place card code
+                        #
+                        x, y = convert_to_pygame
+                        recieve = place_card(x, y, cur_card[0], cur_card[1]) #send data, recieve data
 
                         cycle(hand, click_quarter - 1, cycler)
-                        elixir -= cur_card.elixir_cost
-
+                        elixir -= get_elixir(cur_card[0])
                 # Reset drag start position after the release
                 drag_start_pos = None
-
-
-        a = 0
-    b = 0
-    for tower in game_arena.towers:
-        if tower.side:
-            a += 1
-        else:
-            b += 1
+        else: #no action
+            recieve = wait()
     
-    if a == 0 or b == 0:
-        break
-
-    game_arena.tick()  # Update game logic
-    game_arena.cleanup()
     draw()  # Redraw screen
+    if recieve["arena_state"] == "p1_win" or recieve["arena_state"] == "p2_win":
+        running = False
 
 winfont = pygame.font.Font(None, 100)  # Adjust font size as needed
-text = None
-a = 0
-b = 0
-for tower in game_arena.towers:
-    if tower.side:
-        a += 1
-    else:
-        b += 1
 
-if b == 0:
+if (recieve["arena_state"] == "p1_win" and side) or (recieve["arena_state"] == "p2_win" and not side):
     text = winfont.render("YOU WIN", True, WHITE)
-elif a == 0:
-    text = winfont.render("YOU LOSE", True, WHITE)
 else:
-    text = winfont.render("quit_screen_text", True, WHITE)
-
+    text = winfont.render("YOU LOSE", True, WHITE)
 # Get text rectangle and center it
 text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
 

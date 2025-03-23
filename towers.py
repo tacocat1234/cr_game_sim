@@ -137,8 +137,9 @@ class KingTower(Tower):
     def cleanup(self, arena):
         if self.cur_hp <= 0:
             arena.towers.remove(self)
+            return not self.side
         
-        if self.target is None or (vector.distance(self.target.position, self.position) > self.hit_range and (self.attack_cooldown <= self.hit_speed - self.load_time)):
+        if self.target is None or (vector.distance(self.target.position, self.position) > self.hit_range + self.collision_radius and (self.attack_cooldown <= self.hit_speed - self.load_time)):
                 self.attack_cooldown = self.hit_speed - self.load_time #if not currently attacking but cooldown is less than first hit delay
         else: #otherwise
             self.attack_cooldown -= TICK_TIME

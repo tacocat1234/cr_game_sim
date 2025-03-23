@@ -74,6 +74,9 @@ class Troop:
         self.stun_timer = 0
         self.move_modifier = 1
 
+        self.targetable = True
+        self.invulnerable = False
+
     def stun(self):
         self.stun_timer = 0.5
         self.target = None
@@ -87,7 +90,7 @@ class Troop:
         min_dist = float('inf')
         if not self.tower_only: #if not tower targeting
             for each in arena.troops: #for each troop
-                if each.side != self.side and (not self.ground_only or (self.ground_only and each.ground)): #targets air or is ground only and each is ground troup
+                if each.targetable and not each.invulnerable and each.side != self.side and (not self.ground_only or (self.ground_only and each.ground)): #targets air or is ground only and each is ground troup
                     dist = vector.distance(each.position, self.position)
                     if  dist < min_dist and dist < self.sight_range:
                         self.target = each
@@ -120,8 +123,7 @@ class Troop:
                         tower_target = tower
                         min_dist = vector.distance(tower.position, self.position)
 
-            if self.ground and not same_sign(tower_target.position.y, self.position.y): # if behind bridge and cant cross river
-                
+            if not tower_target is None and self.ground and not same_sign(tower_target.position.y, self.position.y): # if behind bridge and cant cross river
                 r_bridge = vector.distance(vector.Vector(5.5, 0), self.position)
                 l_bridge = vector.distance(vector.Vector(-5.5, 0), self.position)
                 
@@ -141,7 +143,7 @@ class Troop:
                 direction_x = tar_bridge.x - self.position.x #set movement
                 direction_y = tar_bridge.y - self.position.y
                 distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
-            else:
+            elif not tower_target is None:
                 direction_x = tower_target.position.x - self.position.x #set to directly move to tower
                 direction_y = tower_target.position.y - self.position.y
                 distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
@@ -259,7 +261,7 @@ class Tower:
         min_dist = float('inf')
         for each in arena.troops + arena.buildings:
             dist = vector.distance(each.position, self.position)
-            if each.side != self.side and dist < min_dist and dist < self.hit_range + each.collision_radius:
+            if not each.invulnerable and each.targetable and each.side != self.side and dist < min_dist and dist < self.hit_range + each.collision_radius:
                 self.target = each
                 min_dist = vector.distance(each.position, self.position)
     
@@ -310,12 +312,12 @@ class Spell:
 
         self.total_time = self.spawn_timer #number of ticks
         
-        self.position = self.king_pos
+        self.position = tar if v == 0 else self.king_pos
 
     def detect_hits(self, arena): #override
         out = []
         for each in arena.troops + arena.buildings + arena.towers:
-            if each.side != self.side and (vector.distance(each.position, self.position) <= self.radius + each.collision_radius):
+            if (isinstance(each, Tower) or not each.invulnerable) and each.side != self.side and (vector.distance(each.position, self.position) <= self.radius + each.collision_radius):
                 out.append(each)
         return out
         
@@ -375,6 +377,9 @@ class Building:
 
         self.stun_timer = 0
 
+        self.targetable = True
+        self.invulnerable = False
+
     def stun(self):
         self.stun_timer = 0.5
         self.target = None
@@ -387,7 +392,7 @@ class Building:
         min_dist = float('inf')
         for each in arena.troops + arena.buildings + arena.towers:
             dist = vector.distance(each.position, self.position)
-            if each.side != self.side and dist < min_dist and dist < self.hit_range + self.collision_radius + each.collision_radius:
+            if (isinstance(each, Tower) or ((not each.invulnerable and each.targetable) and (not self.ground_only or (self.ground_only and each.ground)))) and each.side != self.side and dist < min_dist and dist < self.hit_range + self.collision_radius + each.collision_radius:
                 self.target = each
                 min_dist = vector.distance(each.position, self.position)
     
