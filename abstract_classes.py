@@ -68,8 +68,10 @@ class Troop:
         self.attack_cooldown = h_s - l_t
 
         self.facing_dir = 0
+        self.ticks_per_frame = 12
+        self.cur_ticks_per_frame = 0
         self.walk_cycle_frames = 1
-        self.walk_cycle_cur = 1
+        self.walk_cycle_cur = 0
         self.sprite_path = ""
         self.stun_timer = 0
         self.move_modifier = 1
@@ -162,7 +164,7 @@ class Troop:
             self.position.y += direction_y * self.move_speed
 
             angle = math.degrees(math.atan2(direction_y, direction_x))  # Get angle in degrees
-            self.facing_dir = round(angle / 45) * 45  # Round to the nearest 45 degrees
+            self.facing_dir = angle
 
             return False
 
@@ -211,11 +213,6 @@ class Troop:
                         arena.active_attacks.append(self.attack())
                     self.attack_cooldown = self.hit_speed
             
-            class_name = self.__class__.__name__.lower()
-            if not self.walk_cycle_frames == 1: #more than one frame per thing
-                self.sprite_path = f"sprites/{class_name}/{class_name}{self.facing_dir}_{self.walk_cycle_cur}.png"
-            else:
-                self.sprite_path = f"sprites/{class_name}/{class_name}{self.facing_dir}.png"
     
     def cleanup(self, arena): # each troop runs this after ALL ticks are finished
         if self.cur_hp <= 0:
@@ -228,6 +225,21 @@ class Troop:
                 self.attack_cooldown = self.hit_speed - self.load_time #if not currently attacking but cooldown is less than first hit delay
             else: #otherwise
                 self.attack_cooldown -= TICK_TIME #decrement time if either close enough to attack, cooldown greater than min cooldown, or both
+            
+            #new sprite updating code
+            class_name = self.__class__.__name__.lower()
+            if not self.walk_cycle_frames == 1: #more than one frame per thing
+                self.sprite_path = f"sprites/{class_name}/{class_name}_{self.walk_cycle_cur}.png"
+            else:
+                self.sprite_path = f"sprites/{class_name}/{class_name}.png"
+
+            if self.cur_ticks_per_frame <= 0:
+                self.cur_ticks_per_frame = self.ticks_per_frame
+                self.walk_cycle_cur += 1
+                if self.walk_cycle_cur >= self.walk_cycle_frames:
+                    self.walk_cycle_cur = 0
+            else:
+                self.cur_ticks_per_frame -= 1
         else:
             self.stun_timer -= TICK_TIME
 
@@ -248,6 +260,9 @@ class Tower:
         self.target = None
 
         self.stun_timer = 0
+        self.sprite_path = ""
+        self.animation_cycle_frames = 1
+        self.animation_cycle_cur = 1
 
     def stun(self):
         self.stun_timer = 0.5
@@ -277,6 +292,12 @@ class Tower:
                 elif not atk is None:
                     arena.active_attacks.append(self.attack())
                 self.attack_cooldown = self.hit_speed
+            
+            class_name = self.__class__.__name__.lower()
+            if not self.animation_cycle_frames == 1: #more than one frame per thing
+                self.sprite_path = f"sprites/{class_name}/{class_name}_{self.animation_cycle_cur}.png"
+            else:
+                self.sprite_path = f"sprites/{class_name}/{class_name}.png"
     
     def cleanup(self, arena):
         #print(self.cur_hp) #temp

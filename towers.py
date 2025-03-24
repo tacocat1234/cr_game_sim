@@ -101,6 +101,7 @@ class KingTowerAttackEntity(AttackEntity):
 
             movement = direction.scaled(self.velocity)
             self.position.add(movement)
+            
     
     def cleanup(self, arena):
         if self.should_delete:
@@ -127,11 +128,18 @@ class KingTower(Tower):
         return KingTowerAttackEntity(self.side, self.hit_damage, self.position, self.target)
 
     def tick(self, arena):
-        if self.target is None or self.target.cur_hp <= 0:
-            self.update_target(arena)
-        if self.activation_timer <= 0 and not self.target is None and self.attack_cooldown <= 0:
-            arena.active_attacks.append(self.attack())
-            self.attack_cooldown = self.hit_speed
+        if self.stun_timer <= 0:
+            if self.target is None or self.target.cur_hp <= 0:
+                self.update_target(arena)
+            if self.activation_timer <= 0 and not self.target is None and self.attack_cooldown <= 0:
+                arena.active_attacks.append(self.attack())
+                self.attack_cooldown = self.hit_speed
+
+            class_name = self.__class__.__name__.lower()
+            if not self.animation_cycle_frames == 1: #more than one frame per thing
+                self.sprite_path = f"sprites/{class_name}/{class_name}_{self.animation_cycle_cur}.png"
+            else:
+                self.sprite_path = f"sprites/{class_name}/{class_name}.png"
 
 
     def cleanup(self, arena):
@@ -139,21 +147,25 @@ class KingTower(Tower):
             arena.towers.remove(self)
             return not self.side
         
-        if self.target is None or (vector.distance(self.target.position, self.position) > self.hit_range + self.collision_radius and (self.attack_cooldown <= self.hit_speed - self.load_time)):
-                self.attack_cooldown = self.hit_speed - self.load_time #if not currently attacking but cooldown is less than first hit delay
-        else: #otherwise
-            self.attack_cooldown -= TICK_TIME
 
-        if not self.activated:
-            if self.cur_hp < self.hit_points: # if been hit
-                self.activated = True #activate
+        if self.stun_timer <= 0:
+            if self.target is None or (vector.distance(self.target.position, self.position) > self.hit_range + self.collision_radius and (self.attack_cooldown <= self.hit_speed - self.load_time)):
+                    self.attack_cooldown = self.hit_speed - self.load_time #if not currently attacking but cooldown is less than first hit delay
+            else: #otherwise
+                self.attack_cooldown -= TICK_TIME
 
-            alive_towers = 0
-            for each in arena.towers: #count # towers
-                if each.side == self.side:
-                    alive_towers += 1
+            if not self.activated:
+                if self.cur_hp < self.hit_points: # if been hit
+                    self.activated = True #activate
 
-            if alive_towers < KingTower.MAX_TOWERS: #if any towers gone
-                self.activated = True #activate
-        elif self.activation_timer > 0:
-            self.activation_timer -= TICK_TIME
+                alive_towers = 0
+                for each in arena.towers: #count # towers
+                    if each.side == self.side:
+                        alive_towers += 1
+
+                if alive_towers < KingTower.MAX_TOWERS: #if any towers gone
+                    self.activated = True #activate
+            elif self.activation_timer > 0:
+                self.activation_timer -= TICK_TIME
+        else:
+            self.stun_timer -= TICK_TIME

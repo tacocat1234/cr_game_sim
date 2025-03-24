@@ -247,6 +247,8 @@ class BattleRam(Troop):
         self.charging = False
         self.should_delete = False
 
+        self.sprite_path = "sprites/battleram/battleram.png"
+
     def stun(self):
         self.charging = False
         self.charge_charge_distance = 0

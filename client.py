@@ -15,8 +15,8 @@ BUFFER_SIZE = 4096
 #-----------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------
 # modify the below to set deck and tower levels
-DECK = [("skeletons", 11), ("arrows", 11), ("bombtower", 11), ("infernotower", 11), 
-        ("bomber", 11), ("archers", 11), ("zap", 11), ("battleram", 11)]
+DECK = [("skeletons", 11), ("skeletons", 11), ("skeletons", 11), ("skeletons", 11), #only have art for battleram and skeletons so too bad so sad
+        ("battleram", 11), ("battleram", 11), ("battleram", 11), ("battleram", 11)]
 KING_LEVEL = 11
 PRINCESS_LEVEL = 11
 #
@@ -30,6 +30,10 @@ player_id = str(uuid.uuid1())
 arena_id = None
 side = None
 
+def load_image(path):
+    """Loads an image with transparency."""
+    image = pygame.image.load(path).convert_alpha()
+    return image
 
 def send_data(data):
     #Send JSON data to the server and receive a response.#
@@ -123,6 +127,12 @@ def convert_to_pygame(coordinate):
     pygame_y = int(HEIGHT / 2 - 60 - coordinate.y * SCALE)  # Invert Y-axis 
     return pygame_x, pygame_y
 
+def convert_to_pygame(x, y):
+    pygame_x = int(WIDTH / 2 + x * SCALE)
+    pygame_y = int(HEIGHT / 2 - 60 - y * SCALE)  # Invert Y-axis 
+    return pygame_x, pygame_y
+
+
 def convert_from_pygame(pygame_x, pygame_y):
     x = (pygame_x - WIDTH / 2) // SCALE
     y = (HEIGHT / 2 - 60 - pygame_y) // SCALE  # Invert Y-axis back
@@ -140,7 +150,37 @@ def cycle(hand, index, queue):
     queue.append(hand[index])
     hand[index] = queue.pop(0)
 
-def draw(troop_vecs, spell_vecs, building_vecs, attack_vecs, tower_vecs): #takes list of all vector.Vector objects of positions
+def draw(server_data): #takes list of all vector.Vector objects of positions
+     # Extract data from server response
+    troop_x = server_data["troop_x"]
+    troop_y = server_data["troop_y"]
+    troop_l = server_data["troop_l"]
+    troop_hp_ratio = server_data["troop_hp_ratio"]
+    troop_sprites = server_data["troop_sprite"]
+    troop_dir = server_data["troop_dir"]
+    troop_side = server_data["troop_side"]
+
+    spell_x = server_data["spell_x"]
+    spell_y = server_data["spell_y"]
+    spell_sprites = server_data["spell_sprite"]
+
+    building_x = server_data["building_x"]
+    building_y = server_data["building_y"]
+    building_l = server_data["building_l"]
+    building_hp = server_data["building_hp"]
+    building_sprites = server_data["building_sprite"]
+    building_side = server_data["building_side"]
+
+    attack_x = server_data["attack_x"]
+    attack_y = server_data["attack_y"]
+    attack_r = server_data["attack_r"]
+
+    tower_x = server_data["tower_x"]
+    tower_y = server_data["tower_y"]
+    tower_l = server_data["tower_l"]
+    tower_hp = server_data["tower_hp"]
+    tower_sprites = server_data["tower_sprite"]
+    
     screen.fill(BG_TEMP)
 
     # Draw river
@@ -154,28 +194,39 @@ def draw(troop_vecs, spell_vecs, building_vecs, attack_vecs, tower_vecs): #takes
     pygame.draw.rect(screen, BRIDGE_TEMP, (WIDTH - (64 + 4.5 * SCALE), HEIGHT/2 - 60 - 1.5 *SCALE, SCALE * 2, SCALE * 3)) 
 
     # Draw Towers
-    for tower in tower_vecs:
-        tower_x, tower_y = convert_to_pygame(tower.position)
+    for i in range(len(tower_x)):
+        t_x, t_y = convert_to_pygame(tower_x[i], tower_y[i])
         
-        # Adjust position so that the rectangle is centered at the tower's coordinates
         tower_rect_width = 3 * SCALE
-        tower_rect_height = 3 * SCALE
-        tower_x -= tower_rect_width // 2
-        tower_y -= tower_rect_height // 2
         
-        pygame.draw.rect(screen, GRAY, (tower_x, tower_y, tower_rect_width, tower_rect_height))  # Tower square
+        if tower_sprites[i]:  # Ensure there is a sprite path
+            tower_image = load_image(tower_sprites[i])  # Load image using helper function
+            tower_rect = tower_image.get_rect(center=(t_x, t_y))
+            screen.blit(tower_image, tower_rect)  # Draw sprite
 
         # Health bar
-        pygame.draw.rect(screen, BLACK, (tower_x, tower_y - 5, tower_rect_width, 3))
-        pygame.draw.rect(screen, GREEN, (tower_x, tower_y - 5, int(tower_rect_width * (tower.cur_hp / tower.hit_points)), 3))
+        pygame.draw.rect(screen, BLACK, (t_x, t_y - 5, tower_rect_width, 3))
+        pygame.draw.rect(screen, GREEN, (t_x, t_y - 5, int(tower_rect_width * tower_hp[i])), 3)
+
+        level_box_size = 10  # Square size for level indicator
+        level_box_x = hp_bar_x - level_box_size - 2  # Slight padding to the left
+        level_box_y = hp_bar_y - 2  # Align with HP bar
+
+        pygame.draw.rect(screen, YELLOW, (level_box_x, level_box_y, level_box_size, level_box_size))
+        level_text = font.render(str(tower_l[i]), True, WHITE)  # White text
+        text_rect = level_text.get_rect(center=(level_box_x + level_box_size / 2, level_box_y + level_box_size / 2))
+        screen.blit(level_text, text_rect)
 
     # Draw Troops
-    for troop in troop_vecs:
-        troop_x, troop_y = convert_to_pygame(troop.position)
-        troop_color = BLUE if not (troop.side ^ side) else RED
+    for i in range(len(troop_x)):
+        t_x, t_y = convert_to_pygame(troop_x[i], troop_y[i])
+        troop_color = BLUE if not (troop_side[i] ^ side) else RED
 
-        # Draw troop circle
-        pygame.draw.circle(screen, troop_color, (troop_x, troop_y), troop.collision_radius * SCALE)
+        if troop_sprites[i]:  # Ensure sprite exists
+            troop_image = load_image(troop_sprites[i])
+            troop_image = pygame.transform.rotate(troop_image, troop_dir[i] - 90)  # Adjust rotation
+            troop_rect = troop_image.get_rect(center=(t_x, t_y))
+            screen.blit(troop_image, troop_rect)
 
         # Health bar
         hp_bar_x = troop_x - 10
@@ -183,9 +234,8 @@ def draw(troop_vecs, spell_vecs, building_vecs, attack_vecs, tower_vecs): #takes
         hp_bar_width = 20
         hp_bar_height = 3
 
-        if not troop.invulnerable:
-            pygame.draw.rect(screen, BLACK, (hp_bar_x, hp_bar_y, hp_bar_width, hp_bar_height))
-            pygame.draw.rect(screen, GREEN, (hp_bar_x, hp_bar_y, int(hp_bar_width * (troop.cur_hp / troop.hit_points)), hp_bar_height))
+        pygame.draw.rect(screen, BLACK, (hp_bar_x, hp_bar_y, hp_bar_width, hp_bar_height))
+        pygame.draw.rect(screen, GREEN, (hp_bar_x, hp_bar_y, int(hp_bar_width * (hp_bar_width * troop_hp_ratio[i])), hp_bar_height))
 
         # Draw Level Indicator
         level_box_size = 10  # Square size for level indicator
@@ -195,27 +245,29 @@ def draw(troop_vecs, spell_vecs, building_vecs, attack_vecs, tower_vecs): #takes
         pygame.draw.rect(screen, troop_color, (level_box_x, level_box_y, level_box_size, level_box_size))
 
         # Render level number text
-        level_text = font.render(str(troop.level), True, WHITE)  # White text
+        level_text = font.render(str(troop_l[i]), True, WHITE)  # White text
         text_rect = level_text.get_rect(center=(level_box_x + level_box_size / 2, level_box_y + level_box_size / 2))
         screen.blit(level_text, text_rect)
     # Draw Attack Entities (Projectiles)
 
-    for building in building_vecs:
-        building_x, building_y = convert_to_pygame(building.position)
-        building_color = BLUE if not (building.side ^ side) else RED
+    for i in range(len(building_x)):
+        b_x, b_y = convert_to_pygame(building_x[i], building_y[i])
 
-        # Draw building square
-        building_size = building.collision_radius * 2 * SCALE
-        pygame.draw.rect(screen, building_color, (building_x - building_size // 2, building_y - building_size // 2, building_size, building_size))
+        building_color = BLUE if not (building_side[i] ^ side) else RED
 
+        if building_sprites[i]:  # Ensure sprite exists
+            building_image = load_image(building_sprites[i])
+            building_rect = building_image.get_rect(center=(b_x, b_y))
+            screen.blit(building_image, building_rect)
+        
         # Health bar
         hp_bar_x = building_x - 10
-        hp_bar_y = building_y - 12 - building_size // 2  # Slightly above the building
+        hp_bar_y = building_y - 12  # Slightly above the building
         hp_bar_width = 20
         hp_bar_height = 3
 
         pygame.draw.rect(screen, BLACK, (hp_bar_x, hp_bar_y, hp_bar_width, hp_bar_height))
-        pygame.draw.rect(screen, GREEN, (hp_bar_x, hp_bar_y, int(hp_bar_width * (building.cur_hp / building.hit_points)), hp_bar_height))
+        pygame.draw.rect(screen, GREEN, (hp_bar_x, hp_bar_y, int(hp_bar_width * building_hp[i]), hp_bar_height))
 
         # Draw Level Indicator
         level_box_size = 10  # Square size for level indicator
@@ -225,40 +277,28 @@ def draw(troop_vecs, spell_vecs, building_vecs, attack_vecs, tower_vecs): #takes
         pygame.draw.rect(screen, building_color, (level_box_x, level_box_y, level_box_size, level_box_size))
 
         # Render level number text
-        level_text = font.render(str(building.level), True, WHITE)  # White text
+        level_text = font.render(str(building_l[i]), True, WHITE)  # White text
         text_rect = level_text.get_rect(center=(level_box_x + level_box_size / 2, level_box_y + level_box_size / 2))
         screen.blit(level_text, text_rect)
 
-    for attack in attack_vecs:
-        attack_x, attack_y= convert_to_pygame(attack.position)
-        if attack.display_size != 0.25:
-            # Create a transparent surface
-            attack_size = attack.display_size * SCALE
+    for i in range(len(attack_x)):
+        a_x, a_y = convert_to_pygame(attack_x[i], attack_y[i])
+
+        if attack_r[i] != 0.25:
+            attack_size = attack_r[i] * SCALE
             attack_surface = pygame.Surface((attack_size * 2, attack_size * 2), pygame.SRCALPHA)
-            
-            # Draw a semi-transparent yellow circle
             pygame.draw.circle(attack_surface, (255, 255, 0, 128), (attack_size, attack_size), attack_size)
-            
-            # Blit the surface onto the screen
-            screen.blit(attack_surface, (attack_x - attack_size, attack_y - attack_size))
+            screen.blit(attack_surface, (a_x - attack_size, a_y - attack_size))
         else:
-            # Regular solid yellow circle for small attacks
-            pygame.draw.circle(screen, YELLOW, (attack_x, attack_y), attack.display_size * SCALE)
-    for spell in spell_vecs:
-        spell_x, spell_y = convert_to_pygame(spell.position)
-        size = spell.radius * SCALE if spell.spawn_timer <= 0 else 1 * SCALE
-        if spell.spawn_timer <= 0:
-            # Partially transparent when the spell has spawned
-            # Create a surface to represent the spell
-            spell_surface = pygame.Surface((size * 2, size * 2), pygame.SRCALPHA)  # Creating transparent surface
-            
-            # Fill the surface with the purple color and set transparency (alpha channel)
-            pygame.draw.circle(spell_surface, (128, 0, 128, 128), (size, size), size)
-            # Draw the surface onto the screen at the correct position
-            screen.blit(spell_surface, (spell_x - size, spell_y - size))  # Centering the spell's circle
-        else:
-            # Non-transparent when the spell is in its "flying" phase (spawn_timer > 0)
-            pygame.draw.circle(screen, PURPLE, (spell_x, spell_y), size)
+            pygame.draw.circle(screen, YELLOW, (a_x, a_y), attack_r[i] * SCALE)
+    
+    for i in range(len(spell_x)):
+        s_x, s_y = convert_to_pygame(spell_x[i], spell_y[i])
+
+        if spell_sprites[i]:  # Ensure sprite exists
+            spell_image = load_image(spell_sprites[i])
+            spell_rect = spell_image.get_rect(center=(s_x, s_y))
+            screen.blit(spell_image, spell_rect)
     
     card_name_font = pygame.font.Font(None, 24)  # Use a larger font for card names
 
@@ -400,7 +440,12 @@ while running:
                         #place card code
                         #
                         x, y = convert_to_pygame
-                        recieve = place_card(x, y, cur_card[0], cur_card[1]) #send data, recieve data
+                        
+
+                        while True:
+                            recieve = place_card(x, y, cur_card[0], cur_card[1]) #send data, recieve data
+                            if recieve["ack"] is not None: #resend until ack
+                                break
 
                         cycle(hand, click_quarter - 1, cycler)
                         elixir -= get_elixir(cur_card[0])
@@ -409,7 +454,7 @@ while running:
         else: #no action
             recieve = wait()
     
-    draw()  # Redraw screen
+    draw(recieve)  # Redraw screen
     if recieve["arena_state"] == "p1_win" or recieve["arena_state"] == "p2_win":
         running = False
 

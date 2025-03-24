@@ -63,6 +63,8 @@ class Skeleton(Troop):
             p=position               # Position (vector.Vector object)
         )
         self.level = level
+
+        self.walk_cycle_frames = 4
     def attack(self):
         return SkeletonAttackEntity(self.side, self.hit_damage, self.position, self.target)
     

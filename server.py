@@ -67,7 +67,7 @@ def handle_clients():
                 place_str = ""
 
             place_pos = vector.Vector(place_x, place_y)
-            verification = False
+            verification = None
 
             with lock:
                 match action:
@@ -128,35 +128,72 @@ def handle_clients():
                 if arena_id in id_map:
                     troop_x = [t.position.x for t in id_map[arena_id].troops]
                     troop_y = [t.position.y for t in id_map[arena_id].troops]
+                    troop_l = [t.level for t in id_map[arena_id].troops]
+                    troop_hp_ratio = [t.cur_hp / t.hit_points for t in id_map[arena_id].troops]
+                    troop_sprite = [t.sprite_path for t in id_map[arena_id].troops]
+                    troop_dir = [t.facing_dir for t in id_map[arena_id].troops]
+                    troop_side = [t.side for t in id_map[arena_id].troops]
+
                     spell_x = [s.position.x for s in id_map[arena_id].spells]
                     spell_y = [s.position.y for s in id_map[arena_id].spells]
+                    spell_sprite = [s.sprite_path for s in id_map[arena_id].spells]
+
                     building_x = [b.position.x for b in id_map[arena_id].buildings]
                     building_y = [b.position.y for b in id_map[arena_id].buildings]
+                    building_l = [b.level for b in id_map[arena_id].buildings]
+                    building_hp = [b.cur_hp / b.hit_points for b in id_map[arena_id].buildings]
+                    building_sprite = [b.sprite_path for b in id_map[arena_id].buildings]
+                    building_side = [b.side for b in id_map[arena_id].buildings]
+
                     attack_x = [a.position.x for a in id_map[arena_id].active_attacks]
                     attack_y = [a.position.y for a in id_map[arena_id].active_attacks]
+                    attack_r = [a.display_size for a in id_map[arena_id].active_attacks]
+
                     tower_x = [t.position.x for t in id_map[arena_id].towers]
                     tower_y = [t.position.y for t in id_map[arena_id].towers]
+                    tower_l = [t.level for t in id_map[arena_id].towers]
+                    tower_hp = [t.cur_hp / t.hit_points for t in id_map[arena_id].towers]
+                    tower_sprite = [t.sprite_path for t in id_map[arena_id].towers]
                 else:
-                    troop_x = troop_y = spell_x = spell_y = building_x = building_y = attack_x = attack_y = tower_x = tower_y = []
+                    troop_x = troop_y = troop_l = troop_hp_ratio = troop_sprite = troop_dir = []
+                    spell_x = spell_y = spell_sprite = []
+                    building_x = building_y = building_l = building_hp = building_sprite = []
+                    attack_x = attack_y = []
+                    tower_x = tower_y = tower_l = tower_hp = tower_sprite = []
 
                 # Send response
                 response_data = {
                     "arena_state": arena_states.get(arena_id, "unknown"),
                     "troop_x": troop_x,
                     "troop_y": troop_y,
+                    "troop_l": troop_l,
+                    "troop_hp": troop_hp_ratio,  # actually ratio of cur hp to max hp
+                    "troop_sprite": troop_sprite,
+                    "troop_dir": troop_dir,
+                    "troop_side": troop_side,
                     "spell_x": spell_x,
                     "spell_y": spell_y,
+                    "spell_sprite": spell_sprite,
                     "building_x": building_x,
                     "building_y": building_y,
+                    "building_l": building_l,
+                    "building_hp": building_hp,
+                    "building_sprite": building_sprite,
+                    "building_side" : building_side,
                     "attack_x": attack_x,
                     "attack_y": attack_y,
+                    "attack_r" : attack_r,
                     "tower_x": tower_x,
                     "tower_y": tower_y,
-                    "ack" : verification,
+                    "tower_l": tower_l,
+                    "tower_hp": tower_hp, # actually ratio of cur hp to max hp
+                    "tower_sprite": tower_sprite,
+                    "ack": verification,
                     "err": err
                 }
 
             server_socket.sendto(json.dumps(response_data).encode(), addr)
+
 
         except Exception as e:
             print(f"Error: {e}")
