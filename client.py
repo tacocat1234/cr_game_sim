@@ -7,6 +7,7 @@ import vector
 
 from card_factory import get_type
 from card_factory import get_elixir
+from abstract_classes import TICK_TIME
 
 SERVER_IP = "127.0.0.1"
 SERVER_PORT = 5555
@@ -15,8 +16,8 @@ BUFFER_SIZE = 4096
 #-----------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------
 # modify the below to set deck and tower levels
-DECK = [("skeletons", 11), ("skeletons", 11), ("skeletons", 11), ("skeletons", 11), #only have art for battleram and skeletons so too bad so sad
-        ("battleram", 11), ("battleram", 11), ("battleram", 11), ("battleram", 11)]
+DECK = [("skeletons", 11), ("barbarians", 11), ("barbarians", 11), ("skeletons", 11), #only have art for these 
+        ("battleram", 11), ("archers", 11), ("archers", 11), ("battleram", 11)]
 KING_LEVEL = 11
 PRINCESS_LEVEL = 11
 #
@@ -73,11 +74,7 @@ def wait(): #no action registered
         "id": player_id,
         "action": action,
         "arena_id": arena_id,
-        "x": 0,
-        "y": 0,
         "side": side,
-        "level": 0,
-        "place": False
     }
     return send_data(data)
 
@@ -87,8 +84,8 @@ def place_card(x, y, card, level=1): #valid card place registered
         "id": player_id,
         "action": action,
         "arena_id": arena_id,
-        "x": x,
-        "y": y,
+        "x": round(x),
+        "y": round(y),
         "side": side,
         "level": level,
         "place": card
@@ -138,6 +135,11 @@ def convert_from_pygame(pygame_x, pygame_y):
     y = (HEIGHT / 2 - 60 - pygame_y) // SCALE  # Invert Y-axis back
     return vector.Vector(x, y)
 
+def convert_from_pygame(pygame_x, pygame_y):
+    x = (pygame_x - WIDTH / 2) // SCALE
+    y = (HEIGHT / 2 - 60 - pygame_y) // SCALE  # Invert Y-axis back
+    return x, y
+
 
 
 random.shuffle(DECK)
@@ -155,7 +157,7 @@ def draw(server_data): #takes list of all vector.Vector objects of positions
     troop_x = server_data["troop_x"]
     troop_y = server_data["troop_y"]
     troop_l = server_data["troop_l"]
-    troop_hp_ratio = server_data["troop_hp_ratio"]
+    troop_hp_ratio = server_data["troop_hp"]
     troop_sprites = server_data["troop_sprite"]
     troop_dir = server_data["troop_dir"]
     troop_side = server_data["troop_side"]
@@ -196,6 +198,8 @@ def draw(server_data): #takes list of all vector.Vector objects of positions
     # Draw Towers
     for i in range(len(tower_x)):
         t_x, t_y = convert_to_pygame(tower_x[i], tower_y[i])
+        hp_bar_x = t_x - 1.5*SCALE
+        hp_bar_y = t_y - 1.7*SCALE
         
         tower_rect_width = 3 * SCALE
         
@@ -205,8 +209,8 @@ def draw(server_data): #takes list of all vector.Vector objects of positions
             screen.blit(tower_image, tower_rect)  # Draw sprite
 
         # Health bar
-        pygame.draw.rect(screen, BLACK, (t_x, t_y - 5, tower_rect_width, 3))
-        pygame.draw.rect(screen, GREEN, (t_x, t_y - 5, int(tower_rect_width * tower_hp[i])), 3)
+        pygame.draw.rect(screen, BLACK, (hp_bar_x, hp_bar_y, tower_rect_width, 3))
+        pygame.draw.rect(screen, GREEN, (hp_bar_x, hp_bar_y, int(tower_rect_width * tower_hp[i]), 3))
 
         level_box_size = 10  # Square size for level indicator
         level_box_x = hp_bar_x - level_box_size - 2  # Slight padding to the left
@@ -229,13 +233,13 @@ def draw(server_data): #takes list of all vector.Vector objects of positions
             screen.blit(troop_image, troop_rect)
 
         # Health bar
-        hp_bar_x = troop_x - 10
-        hp_bar_y = troop_y - 12
+        hp_bar_x = t_x - 10
+        hp_bar_y = t_y - 12
         hp_bar_width = 20
         hp_bar_height = 3
 
         pygame.draw.rect(screen, BLACK, (hp_bar_x, hp_bar_y, hp_bar_width, hp_bar_height))
-        pygame.draw.rect(screen, GREEN, (hp_bar_x, hp_bar_y, int(hp_bar_width * (hp_bar_width * troop_hp_ratio[i])), hp_bar_height))
+        pygame.draw.rect(screen, GREEN, (hp_bar_x, hp_bar_y, int(hp_bar_width * troop_hp_ratio[i]), hp_bar_height))
 
         # Draw Level Indicator
         level_box_size = 10  # Square size for level indicator
@@ -261,8 +265,8 @@ def draw(server_data): #takes list of all vector.Vector objects of positions
             screen.blit(building_image, building_rect)
         
         # Health bar
-        hp_bar_x = building_x - 10
-        hp_bar_y = building_y - 12  # Slightly above the building
+        hp_bar_x = b_x - 10
+        hp_bar_y = b_y - 12  # Slightly above the building
         hp_bar_width = 20
         hp_bar_height = 3
 
@@ -317,7 +321,7 @@ def draw(server_data): #takes list of all vector.Vector objects of positions
         pygame.draw.circle(screen, PURPLE, (elixir_cost_circle_x, elixir_cost_circle_y), elixir_cost_circle_radius)  # Draw elixir circle
 
         # Render the elixir amount text
-        elixir_text = card_name_font.render(str(card.elixir_cost), True, WHITE)
+        elixir_text = card_name_font.render(str(get_elixir(card[0])), True, WHITE)
         text_rect = elixir_text.get_rect(center=(elixir_cost_circle_x, elixir_cost_circle_y))
         screen.blit(elixir_text, text_rect)  # Display elixir text
 
@@ -387,12 +391,28 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Crash Royale Arena")    
 font = pygame.font.Font(None, 12) 
 
+resend = False
+resend_data = {
+    "x" : 0,
+    "y" : 0,
+    "name" : None,
+    "level" : 0
+}
 
 while running:
     clock.tick(60)  # 60 FPS
 
     if (elixir_timer < 0):
         elixir = min(elixir + 1, 10)
+        elixir_timer = elixir_recharge
+    else:
+        elixir_timer -= TICK_TIME
+    
+    if resend:
+        recieve = place_card(resend_data["x"], resend_data["y"], resend_data["name"], resend_data["level"])
+        if recieve["ack"] is not None: #if its ack
+            resend = False #stop resending, otherwise keep trying to resend
+
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             recieve = exit_arena()
@@ -439,13 +459,20 @@ while running:
                         
                         #place card code
                         #
-                        x, y = convert_to_pygame
+                        x, y = convert_from_pygame(mouse_x, mouse_y)
+                        y = y if side else -y
+                        print(f"{x}, {y}")
                         
 
-                        while True:
-                            recieve = place_card(x, y, cur_card[0], cur_card[1]) #send data, recieve data
-                            if recieve["ack"] is not None: #resend until ack
-                                break
+                        recieve = place_card(x, y, cur_card[0], cur_card[1]) #send data, recieve data
+                        if recieve["ack"] is None: #resend until ack
+                            resend = True
+                            resend_data = {
+                                "x" : x,
+                                "y" : y,
+                                "name" : cur_card[0],
+                                "level" : cur_card[1]
+                            }
 
                         cycle(hand, click_quarter - 1, cycler)
                         elixir -= get_elixir(cur_card[0])

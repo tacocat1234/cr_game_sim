@@ -63,6 +63,8 @@ class PrincessTower(Tower):
             c_r=1,
             p=vector.Vector(x, y)
         )
+
+        self.level = level
     def attack(self):
         return PrincessTowerAttackEntity(self.side, self.hit_damage, self.position, self.target)
 
@@ -123,6 +125,8 @@ class KingTower(Tower):
         )
         self.activated = False
         self.activation_timer = 4
+
+        self.level = level
     
     def attack(self):
         return KingTowerAttackEntity(self.side, self.hit_damage, self.position, self.target)

@@ -297,6 +297,11 @@ class Archer(Troop):
             p=position               # Position (vector.Vector object)
         ) 
         self.level = level
+
+        self.ticks_per_frame = 6
+        self.walk_cycle_frames = 5
+        class_name = self.__class__.__name__.lower()
+        self.sprite_path = f"sprites/{class_name}/{class_name}_{self.walk_cycle_cur}.png"
     
     def attack(self):
         return ArcherAttackEntity(self.side, self.hit_damage, self.position, self.target)

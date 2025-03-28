@@ -1,5 +1,4 @@
 import math
-import copy
 import random
 import vector
 
@@ -72,7 +71,13 @@ class Troop:
         self.cur_ticks_per_frame = 0
         self.walk_cycle_frames = 1
         self.walk_cycle_cur = 0
-        self.sprite_path = ""
+        
+        class_name = self.__class__.__name__.lower()
+        if not self.walk_cycle_frames == 1: #more than one frame per thing
+            self.sprite_path = f"sprites/{class_name}/{class_name}_0.png"
+        else:
+            self.sprite_path = f"sprites/{class_name}/{class_name}.png"
+
         self.stun_timer = 0
         self.move_modifier = 1
 
@@ -226,7 +231,6 @@ class Troop:
             else: #otherwise
                 self.attack_cooldown -= TICK_TIME #decrement time if either close enough to attack, cooldown greater than min cooldown, or both
             
-            #new sprite updating code
             class_name = self.__class__.__name__.lower()
             if not self.walk_cycle_frames == 1: #more than one frame per thing
                 self.sprite_path = f"sprites/{class_name}/{class_name}_{self.walk_cycle_cur}.png"

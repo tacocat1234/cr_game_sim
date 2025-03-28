@@ -61,6 +61,10 @@ class Barbarian(Troop):
             p=position               # Position (vector.Vector object)
         )
         self.level = level
+        self.ticks_per_frame = 6
+        self.walk_cycle_frames = 6
+        class_name = self.__class__.__name__.lower()
+        self.sprite_path = f"sprites/{class_name}/{class_name}_0.png"
     def attack(self):
         return BarbarianAttackEntity(self.side, self.hit_damage, self.position, self.target)
     
@@ -273,6 +277,7 @@ class BattleRam(Troop):
             if self.target is None or self.target.cur_hp <= 0:
                 self.update_target(arena)
             if self.move(arena) and self.attack_cooldown <= 0: #move, then if within range, attack
+                print(f"should delete: {self.should_delete}, self:({self.position.x}, {self.position.y}), target:({self.target.position.x}, {self.target.position.y}), dist:{vector.distance(self.target.position, self.position)}")
                 atk = self.attack()
                 if isinstance(atk, list) and len(atk) > 0:
                     arena.active_attacks.extend(atk)
