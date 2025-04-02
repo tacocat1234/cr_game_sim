@@ -17,8 +17,6 @@ server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 server_socket.bind((HOST_IP, PORT))
 
 
-
-
 print(f"Server started on {HOST_IP}:{PORT}")
 
 id_map = {} # int : arena.Arena() obj
@@ -67,8 +65,6 @@ def handle_clients():
                 place_y = player_data["y"]
                 place_level = player_data["level"]
                 place_str = player_data["place"]
-
-                print(f"{place_x}, {place_y}")
             
             side = None
 
@@ -94,9 +90,6 @@ def handle_clients():
                             towers.PrincessTower(False, player_data["princess_level"], True), 
                             towers.PrincessTower(False, player_data["princess_level"], False), 
                             ])
-                        
-                        for each in id_map[arena_id].towers:
-                            print(f"pos:{each.position.toString()}, side:{each.side}")
 
                         arena_states[arena_id] = "active"  # Two players, match active
                     else:
@@ -110,7 +103,6 @@ def handle_clients():
                             if isinstance(place_obj, list):
                                 id_map[arena_id].troops.extend(place_obj)
                             else:
-                                print(f"position:{place_obj.position.toString()}, side:{place_obj.side}")
                                 id_map[arena_id].troops.append(place_obj)
                         elif place_type == "spell":
                             if isinstance(place_obj, list):
@@ -137,30 +129,30 @@ def handle_clients():
             # Prepare game state update
             if arena_id in id_map:
                 troop_x = [t.position.x for t in id_map[arena_id].troops]
-                troop_y = [(-t.position.y if side ^ t.side else t.position.y) for t in id_map[arena_id].troops]
+                troop_y = [(t.position.y if side else -t.position.y) for t in id_map[arena_id].troops]
                 troop_l = [t.level for t in id_map[arena_id].troops]
                 troop_hp_ratio = [t.cur_hp / t.hit_points for t in id_map[arena_id].troops]
                 troop_sprite = [t.sprite_path for t in id_map[arena_id].troops]
-                troop_dir = [(-t.facing_dir if side ^ t.side else t.facing_dir) for t in id_map[arena_id].troops]
+                troop_dir = [(t.facing_dir if side else -t.facing_dir) for t in id_map[arena_id].troops]
                 troop_side = [t.side for t in id_map[arena_id].troops]
 
                 spell_x = [s.position.x for s in id_map[arena_id].spells]
-                spell_y = [(-s.position.y if side ^ s.side else s.position.y) for s in id_map[arena_id].spells]
+                spell_y = [(s.position.y if side else -s.position.y) for s in id_map[arena_id].spells]
                 spell_sprite = [s.sprite_path for s in id_map[arena_id].spells]
 
                 building_x = [b.position.x for b in id_map[arena_id].buildings]
-                building_y = [(-b.position.y if side ^ b.side else b.position.y) for b in id_map[arena_id].buildings]
+                building_y = [(b.position.y if side else -b.position.y) for b in id_map[arena_id].buildings]
                 building_l = [b.level for b in id_map[arena_id].buildings]
                 building_hp = [b.cur_hp / b.hit_points for b in id_map[arena_id].buildings]
                 building_sprite = [b.sprite_path for b in id_map[arena_id].buildings]
                 building_side = [b.side for b in id_map[arena_id].buildings]
 
                 attack_x = [a.position.x for a in id_map[arena_id].active_attacks]
-                attack_y = [(-a.position.y if side ^ a.side else a.position.y) for a in id_map[arena_id].active_attacks]
+                attack_y = [(a.position.y if side else -a.position.y) for a in id_map[arena_id].active_attacks]
                 attack_r = [a.display_size for a in id_map[arena_id].active_attacks]
 
                 tower_x = [t.position.x for t in id_map[arena_id].towers]
-                tower_y = [(-t.position.y if side ^ t.side else t.position.y) for t in id_map[arena_id].towers]
+                tower_y = [(t.position.y if side else -t.position.y) for t in id_map[arena_id].towers]
                 tower_l = [t.level for t in id_map[arena_id].towers]
                 tower_hp = [t.cur_hp / t.hit_points for t in id_map[arena_id].towers]
                 tower_sprite = [t.sprite_path for t in id_map[arena_id].towers]
@@ -170,6 +162,7 @@ def handle_clients():
                 building_x = building_y = building_l = building_hp = building_sprite = []
                 attack_x = attack_y = []
                 tower_x = tower_y = tower_l = tower_hp = tower_sprite = []
+                print("invalid arena??")
 
             # Send response
             response_data = {

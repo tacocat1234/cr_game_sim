@@ -277,7 +277,6 @@ class BattleRam(Troop):
             if self.target is None or self.target.cur_hp <= 0:
                 self.update_target(arena)
             if self.move(arena) and self.attack_cooldown <= 0: #move, then if within range, attack
-                print(f"should delete: {self.should_delete}, self:({self.position.x}, {self.position.y}), target:({self.target.position.x}, {self.target.position.y}), dist:{vector.distance(self.target.position, self.position)}")
                 atk = self.attack()
                 if isinstance(atk, list) and len(atk) > 0:
                     arena.active_attacks.extend(atk)

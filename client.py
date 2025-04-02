@@ -4,6 +4,7 @@ import uuid
 import pygame
 import random
 import vector
+import time
 
 from card_factory import get_type
 from card_factory import get_elixir
@@ -31,10 +32,12 @@ player_id = str(uuid.uuid1())
 arena_id = None
 side = None
 
-def load_image(path):
-    """Loads an image with transparency."""
-    image = pygame.image.load(path).convert_alpha()
-    return image
+IMAGE_CACHE = {}
+
+def load_image_cached(path):
+    if path not in IMAGE_CACHE:
+        IMAGE_CACHE[path] = pygame.image.load(path).convert_alpha()
+    return IMAGE_CACHE[path]
 
 def send_data(data):
     #Send JSON data to the server and receive a response.#
@@ -204,7 +207,7 @@ def draw(server_data): #takes list of all vector.Vector objects of positions
         tower_rect_width = 3 * SCALE
         
         if tower_sprites[i]:  # Ensure there is a sprite path
-            tower_image = load_image(tower_sprites[i])  # Load image using helper function
+            tower_image = load_image_cached(tower_sprites[i])  # Load image using helper function
             tower_rect = tower_image.get_rect(center=(t_x, t_y))
             screen.blit(tower_image, tower_rect)  # Draw sprite
 
@@ -227,7 +230,7 @@ def draw(server_data): #takes list of all vector.Vector objects of positions
         troop_color = BLUE if not (troop_side[i] ^ side) else RED
 
         if troop_sprites[i]:  # Ensure sprite exists
-            troop_image = load_image(troop_sprites[i])
+            troop_image = load_image_cached(troop_sprites[i])
             troop_image = pygame.transform.rotate(troop_image, troop_dir[i] - 90)  # Adjust rotation
             troop_rect = troop_image.get_rect(center=(t_x, t_y))
             screen.blit(troop_image, troop_rect)
@@ -260,7 +263,7 @@ def draw(server_data): #takes list of all vector.Vector objects of positions
         building_color = BLUE if not (building_side[i] ^ side) else RED
 
         if building_sprites[i]:  # Ensure sprite exists
-            building_image = load_image(building_sprites[i])
+            building_image = load_image_cached(building_sprites[i])
             building_rect = building_image.get_rect(center=(b_x, b_y))
             screen.blit(building_image, building_rect)
         
@@ -300,7 +303,7 @@ def draw(server_data): #takes list of all vector.Vector objects of positions
         s_x, s_y = convert_to_pygame(spell_x[i], spell_y[i])
 
         if spell_sprites[i]:  # Ensure sprite exists
-            spell_image = load_image(spell_sprites[i])
+            spell_image = load_image_cached(spell_sprites[i])
             spell_rect = spell_image.get_rect(center=(s_x, s_y))
             screen.blit(spell_image, spell_rect)
     
@@ -343,7 +346,7 @@ def draw(server_data): #takes list of all vector.Vector objects of positions
     text_rect = elixir_text.get_rect(center=(elixir_circle_x, elixir_circle_y))
     screen.blit(elixir_text, text_rect)  # Display elixir text
 
-    pygame.display.flip()
+    pygame.display.flip() #draws correct, 
         
 
 running = True
@@ -399,9 +402,21 @@ resend_data = {
     "level" : 0
 }
 
-while running:
-    clock.tick(60)  # 60 FPS
+frame_count = 0
+start_time = time.time()
 
+while running:
+    draw(recieve)  # Redraw screen
+    frame_count += 1
+
+    # Calculate FPS every second
+    if time.time() - start_time >= 1:
+        fps = frame_count
+        print(f"FPS: {fps}")
+        start_time = time.time()
+        frame_count = 0
+
+    clock.tick(60)  # 60 FPS
     if (elixir_timer < 0):
         elixir = min(elixir + 1, 10)
         elixir_timer = elixir_recharge
@@ -413,13 +428,14 @@ while running:
         if recieve["ack"] is not None: #if its ack
             resend = False #stop resending, otherwise keep trying to resend
 
+    did_recieve = False
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
+            did_recieve = True
             recieve = exit_arena()
             running = False
         # Detect mouse click in the bottom 128 pixels
         if event.type == pygame.MOUSEBUTTONDOWN:
-            recieve = wait()
             mouse_x, mouse_y = pygame.mouse.get_pos()
 
             # Check if the click is in the bottom 128 pixels
@@ -441,7 +457,6 @@ while running:
 
         # Detect mouse drag movement
         elif event.type == pygame.MOUSEMOTION:
-            recieve = wait()
             if drag_start_pos is not None:
                 # add code to animate thign at mouse pos later
                 pass
@@ -461,9 +476,8 @@ while running:
                         #
                         x, y = convert_from_pygame(mouse_x, mouse_y)
                         y = y if side else -y
-                        print(f"{x}, {y}")
                         
-
+                        did_recieve = True
                         recieve = place_card(x, y, cur_card[0], cur_card[1]) #send data, recieve data
                         if recieve["ack"] is None: #resend until ack
                             resend = True
@@ -477,11 +491,10 @@ while running:
                         cycle(hand, click_quarter - 1, cycler)
                         elixir -= get_elixir(cur_card[0])
                 # Reset drag start position after the release
+                
                 drag_start_pos = None
-        else: #no action
-            recieve = wait()
-    
-    draw(recieve)  # Redraw screen
+    if not did_recieve:
+        recieve = wait()
     if recieve["arena_state"] == "p1_win" or recieve["arena_state"] == "p2_win":
         running = False
 
