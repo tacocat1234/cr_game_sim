@@ -219,10 +219,15 @@ def handle_clients():
 def update_arenas():
     while True:
         for id, a in list(id_map.items()):
-            a.tick()
-            fin = a.cleanup()
-            if fin is not None:
-                arena_states[id] = "p1_win" if fin else "p2_win"
+            try:
+                a.tick()
+            
+                fin = a.cleanup()
+                if fin is not None:
+                    arena_states[id] = "p1_win" if fin else "p2_win"
+            
+            except Exception as e:
+                print(e)
         time.sleep(TICK_TIME)
 
 client_thread = threading.Thread(target=handle_clients, daemon=True)

@@ -10,7 +10,9 @@ from card_factory import get_type
 from card_factory import get_elixir
 from abstract_classes import TICK_TIME
 
-SERVER_IP = "127.0.0.1"
+
+
+SERVER_IP = input("What is server IP? (server device should read \"Server started on {Server IP} : Port\")\n")
 SERVER_PORT = 5555
 BUFFER_SIZE = 4096
 #-----------------------------------------------------------------------------------
@@ -146,13 +148,6 @@ def convert_from_pygame(pygame_x, pygame_y):
     y = (HEIGHT / 2 - 60 - pygame_y) // SCALE  # Invert Y-axis back
     return x, y
 
-
-
-random.shuffle(DECK)
-
-hand = [0, 1, 2, 3]
-cycler = [4, 5, 6, 7]
-elixir = 5
 
 def cycle(hand, index, queue):
     queue.append(hand[index])
@@ -357,176 +352,188 @@ def draw(server_data): #takes list of all vector.Vector objects of positions
 
     pygame.display.flip() #draws correct, 
         
+again = True
+while again:
+    random.shuffle(DECK)
 
-running = True
-clock = pygame.time.Clock()
+    hand = [0, 1, 2, 3]
+    cycler = [4, 5, 6, 7]
+    elixir = 5
 
-# Variables to store click and drag information
-click_quarter = None  # Will store which quarter of the screen the player clicked in
-drag_start_pos = None  # Starting position of the drag
-drag_end_pos = None  # Ending position of the drag
+    running = True
+    clock = pygame.time.Clock()
 
-elixir_recharge = 2.8
-elixir_timer = elixir_recharge
-recieve = None
+    # Variables to store click and drag information
+    click_quarter = None  # Will store which quarter of the screen the player clicked in
+    drag_start_pos = None  # Starting position of the drag
+    drag_end_pos = None  # Ending position of the drag
 
-valid = True
+    elixir_recharge = 2.8
+    elixir_timer = elixir_recharge
+    recieve = None
 
-while True:
-    create_or_join = input("Create or Join?\n")
-    if create_or_join.lower() == "create":
-        arena_id = str(uuid.uuid1())
-        print("Your arena id is: " + arena_id)
-        recieve = create_arena(arena_id, KING_LEVEL, PRINCESS_LEVEL)
+    valid = True
 
-    elif create_or_join.lower() == "join":
-        arena_id = input("What arena id?\n")
-        recieve = join_arena(arena_id, KING_LEVEL, PRINCESS_LEVEL)
-        if not recieve["err"] is None:
-            print(recieve["err"])
+    while True:
+        create_or_join = input("Create or Join?\n")
+        if create_or_join.lower() == "create":
+            arena_id = str(uuid.uuid1())
+            print("Your arena id is: " + arena_id)
+            recieve = create_arena(arena_id, KING_LEVEL, PRINCESS_LEVEL)
+
+        elif create_or_join.lower() == "join":
+            arena_id = input("What arena id?\n")
+            recieve = join_arena(arena_id, KING_LEVEL, PRINCESS_LEVEL)
+            if not recieve["err"] is None:
+                print(recieve["err"])
+                valid = False
+
+        else:
+            print("Invalid option. ", end="")
             valid = False
 
-    else:
-        print("Invalid option. ", end="")
-        valid = False
+        if valid:
+            break
 
-    if valid:
-        break
+    print("Waiting...")
+    while not recieve["arena_state"] == "active":
+        recieve = wait()
 
-print("Waiting...")
-while not recieve["arena_state"] == "active":
-    recieve = wait()
+    print("Match start.")
+    pygame.init()
+    screen = pygame.display.set_mode((WIDTH, HEIGHT))
+    pygame.display.set_caption("Crash Royale Arena")    
+    font = pygame.font.Font(None, 12) 
 
-print("Match start.")
-pygame.init()
-screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Crash Royale Arena")    
-font = pygame.font.Font(None, 12) 
+    resend = False
+    resend_data = {
+        "x" : 0,
+        "y" : 0,
+        "name" : None,
+        "level" : 0
+    }
 
-resend = False
-resend_data = {
-    "x" : 0,
-    "y" : 0,
-    "name" : None,
-    "level" : 0
-}
+    frame_count = 0
+    start_time = time.time()
 
-frame_count = 0
-start_time = time.time()
+    while running:
+        draw(recieve)  # Redraw screen
+        frame_count += 1
 
-while running:
-    draw(recieve)  # Redraw screen
-    frame_count += 1
+        # Calculate FPS every second
+        if time.time() - start_time >= 1:
+            fps = frame_count
+            print(f"FPS: {fps}")
+            start_time = time.time()
+            frame_count = 0
 
-    # Calculate FPS every second
-    if time.time() - start_time >= 1:
-        fps = frame_count
-        print(f"FPS: {fps}")
-        start_time = time.time()
-        frame_count = 0
+        clock.tick(60)  # 60 FPS
+        if (elixir_timer < 0):
+            elixir = min(elixir + 1, 10)
+            elixir_timer = elixir_recharge
+        else:
+            elixir_timer -= TICK_TIME
+        
+        if resend:
+            recieve = place_card(resend_data["x"], resend_data["y"], resend_data["name"], resend_data["level"])
+            if recieve["ack"] is not None: #if its ack
+                resend = False #stop resending, otherwise keep trying to resend
 
-    clock.tick(60)  # 60 FPS
-    if (elixir_timer < 0):
-        elixir = min(elixir + 1, 10)
-        elixir_timer = elixir_recharge
-    else:
-        elixir_timer -= TICK_TIME
-    
-    if resend:
-        recieve = place_card(resend_data["x"], resend_data["y"], resend_data["name"], resend_data["level"])
-        if recieve["ack"] is not None: #if its ack
-            resend = False #stop resending, otherwise keep trying to resend
-
-    did_recieve = False
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            did_recieve = True
-            recieve = exit_arena()
-            running = False
-        # Detect mouse click in the bottom 128 pixels
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            mouse_x, mouse_y = pygame.mouse.get_pos()
-
-            # Check if the click is in the bottom 128 pixels
-            if mouse_y > HEIGHT - 128:
-                # Determine the quarter (split the width of the screen)
-                quarter_width = (WIDTH) // 5  # Total width including bottom bar
-                if mouse_x < WIDTH/10 + quarter_width:
-                    click_quarter = 1  # First quarter
-                elif mouse_x < WIDTH/10 + 2 * quarter_width:
-                    click_quarter = 2  # Second quarter
-                elif mouse_x < WIDTH/10 + 3 * quarter_width:
-                    click_quarter = 3  # Third quarter
-                else:
-                    click_quarter = 4  # Fourth quarter
-                #print(f"Clicked in quarter {click_quarter}")
-
-                # Store the starting position of the drag
-                drag_start_pos = (mouse_x, mouse_y)
-
-        # Detect mouse drag movement
-        elif event.type == pygame.MOUSEMOTION:
-            if drag_start_pos is not None:
-                # add code to animate thign at mouse pos later
-                pass
-
-        # Detect when the player releases the mouse button
-        elif event.type == pygame.MOUSEBUTTONUP:
-            if drag_start_pos is not None:
+        did_recieve = False
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                did_recieve = True
+                recieve = exit_arena()
+                running = False
+            # Detect mouse click in the bottom 128 pixels
+            if event.type == pygame.MOUSEBUTTONDOWN:
                 mouse_x, mouse_y = pygame.mouse.get_pos()
 
-                # Store the ending position of the drag
-                drag_end_pos = (mouse_x, mouse_y)
-                cur_card = DECK[hand[click_quarter - 1]]
-                if mouse_y < HEIGHT - 128 and (get_type(cur_card[0]) == "spell" or mouse_y > 320):
-                    if get_elixir(cur_card[0]) <= elixir:
-                        
-                        #place card code
-                        #
-                        x, y = convert_from_pygame(mouse_x, mouse_y)
-                        y = y if side else -y
-                        
-                        did_recieve = True
-                        recieve = place_card(x, y, cur_card[0], cur_card[1]) #send data, recieve data
-                        if recieve["ack"] is None: #resend until ack
-                            resend = True
-                            resend_data = {
-                                "x" : x,
-                                "y" : y,
-                                "name" : cur_card[0],
-                                "level" : cur_card[1]
-                            }
+                # Check if the click is in the bottom 128 pixels
+                if mouse_y > HEIGHT - 128:
+                    # Determine the quarter (split the width of the screen)
+                    quarter_width = (WIDTH) // 5  # Total width including bottom bar
+                    if mouse_x < WIDTH/10 + quarter_width:
+                        click_quarter = 1  # First quarter
+                    elif mouse_x < WIDTH/10 + 2 * quarter_width:
+                        click_quarter = 2  # Second quarter
+                    elif mouse_x < WIDTH/10 + 3 * quarter_width:
+                        click_quarter = 3  # Third quarter
+                    else:
+                        click_quarter = 4  # Fourth quarter
+                    #print(f"Clicked in quarter {click_quarter}")
 
-                        cycle(hand, click_quarter - 1, cycler)
-                        elixir -= get_elixir(cur_card[0])
-                # Reset drag start position after the release
-                
-                drag_start_pos = None
-    if not did_recieve:
-        recieve = wait()
-    if recieve["arena_state"] == "p1_win" or recieve["arena_state"] == "p2_win":
-        running = False
+                    # Store the starting position of the drag
+                    drag_start_pos = (mouse_x, mouse_y)
 
-winfont = pygame.font.Font(None, 100)  # Adjust font size as needed
+            # Detect mouse drag movement
+            elif event.type == pygame.MOUSEMOTION:
+                if drag_start_pos is not None:
+                    # add code to animate thign at mouse pos later
+                    pass
 
-if (recieve["arena_state"] == "p1_win" and side) or (recieve["arena_state"] == "p2_win" and not side):
-    text = winfont.render("YOU WIN", True, WHITE)
-else:
-    text = winfont.render("YOU LOSE", True, WHITE)
-# Get text rectangle and center it
-text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+            # Detect when the player releases the mouse button
+            elif event.type == pygame.MOUSEBUTTONUP:
+                if drag_start_pos is not None:
+                    mouse_x, mouse_y = pygame.mouse.get_pos()
 
-while running:
-    screen.fill(BLACK)  # Fill background
-    screen.blit(text, text_rect)  # Draw text
+                    # Store the ending position of the drag
+                    drag_end_pos = (mouse_x, mouse_y)
+                    cur_card = DECK[hand[click_quarter - 1]]
+                    if mouse_y < HEIGHT - 128 and (get_type(cur_card[0]) == "spell" or mouse_y > 320):
+                        if get_elixir(cur_card[0]) <= elixir:
+                            
+                            #place card code
+                            #
+                            x, y = convert_from_pygame(mouse_x, mouse_y)
+                            y = y if side else -y
+                            
+                            did_recieve = True
+                            recieve = place_card(x, y, cur_card[0], cur_card[1]) #send data, recieve data
+                            if recieve["ack"] is None: #resend until ack
+                                resend = True
+                                resend_data = {
+                                    "x" : x,
+                                    "y" : y,
+                                    "name" : cur_card[0],
+                                    "level" : cur_card[1]
+                                }
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
+                            cycle(hand, click_quarter - 1, cycler)
+                            elixir -= get_elixir(cur_card[0])
+                    # Reset drag start position after the release
+                    
+                    drag_start_pos = None
+        if not did_recieve:
+            recieve = wait()
+        if recieve["arena_state"] == "p1_win" or recieve["arena_state"] == "p2_win":
             running = False
 
-    pygame.display.flip()  # Update display
+    winfont = pygame.font.Font(None, 100)  # Adjust font size as needed
+
+    if (recieve["arena_state"] == "p1_win" and side) or (recieve["arena_state"] == "p2_win" and not side):
+        text = winfont.render("YOU WIN", True, WHITE)
+    else:
+        text = winfont.render("YOU LOSE", True, WHITE)
+    # Get text rectangle and center it
+    text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+    running = True
+    while running:
+        screen.fill(BLACK)  # Fill background
+        screen.blit(text, text_rect)  # Draw text
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT or event.type == pygame.MOUSEBUTTONDOWN:
+                running = False
+
+        pygame.display.flip()  # Update display
 
 
-    #count += 1
+        #count += 1
 
-pygame.quit()
+    pygame.quit()
+
+    ipt = input("\n\nQue again? y/n\n")
+    while not (ipt == "y" or ipt == "n"):
+        ipt = input("Invalid input. Que again? y/n")
+    again = True if ipt == "y" else False

@@ -155,8 +155,9 @@ class Troop:
 
             # Normalize direction
             
-
-            if min_dist < self.hit_range + self.collision_radius + tower_target.collision_radius: #within hit range, locks on
+            if tower_target is None:
+                return #exit
+            elif min_dist < self.hit_range + self.collision_radius + tower_target.collision_radius: #within hit range, locks on
                 self.target = tower_target
                 return True
             
