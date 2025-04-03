@@ -67,22 +67,20 @@ class Troop:
         self.attack_cooldown = h_s - l_t
 
         self.facing_dir = 0
-        self.ticks_per_frame = 12
+        self.ticks_per_frame = 6
         self.cur_ticks_per_frame = 0
         self.walk_cycle_frames = 1
         self.walk_cycle_cur = 0
         
         class_name = self.__class__.__name__.lower()
-        if not self.walk_cycle_frames == 1: #more than one frame per thing
-            self.sprite_path = f"sprites/{class_name}/{class_name}_0.png"
-        else:
-            self.sprite_path = f"sprites/{class_name}/{class_name}.png"
+        self.sprite_path = f"sprites/{class_name}/{class_name}.png"
 
         self.stun_timer = 0
         self.move_modifier = 1
 
         self.targetable = True
         self.invulnerable = False
+        self.should_delete = False #only for kamikaze troops
 
     def stun(self):
         self.stun_timer = 0.5
@@ -220,7 +218,8 @@ class Troop:
             
     
     def cleanup(self, arena): # each troop runs this after ALL ticks are finished
-        if self.cur_hp <= 0:
+        if self.cur_hp <= 0 or self.should_delete:
+            self.cur_hp = -1
             arena.troops.remove(self)
         
         if self.deploy_time > 0: #if deploying, timer
@@ -338,6 +337,9 @@ class Spell:
         self.total_time = self.spawn_timer #number of ticks
         
         self.position = tar if v == 0 else self.king_pos
+        
+        self.class_name = self.__class__.__name__.lower()
+        self.sprite_path = f"sprites/{self.class_name}/{self.class_name}_travel.png"
 
     def detect_hits(self, arena): #override
         out = []
@@ -352,6 +354,7 @@ class Spell:
             self.position.add(tower_to_target.scaled(self.velocity / tower_to_target.magnitude()))
             self.spawn_timer -= 1 #spawn in
         elif self.waves > 0 and self.damage_cd <= 0:
+            self.sprite_path = f"sprites/{self.class_name}/{self.class_name}_hit.png"
             hits = self.detect_hits(arena)
             for each in hits:
                 if (isinstance(each, Tower)):
@@ -402,6 +405,10 @@ class Building:
 
         self.stun_timer = 0
 
+        self.facing_dir = 0
+        class_name = self.__class__.__name__.lower()
+        self.sprite_path_front = f"sprites/{class_name}/{class_name}" # + "_base.png" or + "_top.png"
+
         self.targetable = True
         self.invulnerable = False
 
@@ -420,6 +427,9 @@ class Building:
             if (isinstance(each, Tower) or ((not each.invulnerable and each.targetable) and (not self.ground_only or (self.ground_only and each.ground)))) and each.side != self.side and dist < min_dist and dist < self.hit_range + self.collision_radius + each.collision_radius:
                 self.target = each
                 min_dist = vector.distance(each.position, self.position)
+
+                angle = math.degrees(math.atan2(each.position.y - self.position.y, each.positon.x - self.position.x))  # Get angle in degrees
+                self.facing_dir = angle
     
     def tick(self, arena):
         #print(self.target) #temp

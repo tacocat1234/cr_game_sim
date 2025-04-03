@@ -64,6 +64,7 @@ class Skeleton(Troop):
         )
         self.level = level
 
+        self.ticks_per_frame = 12
         self.walk_cycle_frames = 4
         class_name = self.__class__.__name__.lower()
         self.sprite_path = f"sprites/{class_name}/{class_name}_0.png"

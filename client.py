@@ -14,11 +14,14 @@ SERVER_IP = "127.0.0.1"
 SERVER_PORT = 5555
 BUFFER_SIZE = 4096
 #-----------------------------------------------------------------------------------
-#-----------------------------------------------------------------------------------
+#cards avaliable:
+#archers, barbarians, battleram, electrospirit, firespirit, skeletons, giant, 
+#fireball, arrows,
+#cannon, tombstone
 #-----------------------------------------------------------------------------------
 # modify the below to set deck and tower levels
-DECK = [("skeletons", 11), ("barbarians", 11), ("barbarians", 11), ("skeletons", 11), #only have art for these 
-        ("battleram", 11), ("archers", 11), ("archers", 11), ("battleram", 11)]
+DECK = [("tombstone", 11), ("cannon", 11), ("fireball", 11), ("electrospirit", 11),
+        ("giant", 11), ("arrows", 11), ("archers", 11), ("battleram", 11)]
 KING_LEVEL = 11
 PRINCESS_LEVEL = 11
 #
@@ -174,6 +177,7 @@ def draw(server_data): #takes list of all vector.Vector objects of positions
     building_l = server_data["building_l"]
     building_hp = server_data["building_hp"]
     building_sprites = server_data["building_sprite"]
+    building_dir = server_data["building_dir"]
     building_side = server_data["building_side"]
 
     attack_x = server_data["attack_x"]
@@ -262,11 +266,16 @@ def draw(server_data): #takes list of all vector.Vector objects of positions
 
         building_color = BLUE if not (building_side[i] ^ side) else RED
 
-        if building_sprites[i]:  # Ensure sprite exists
-            building_image = load_image_cached(building_sprites[i])
+        if building_sprites[i]:  # MODIFY CODE HERE
+            building_image = load_image_cached(building_sprites[i] + "_base.png")
             building_rect = building_image.get_rect(center=(b_x, b_y))
             screen.blit(building_image, building_rect)
-        
+
+            building_top_image = load_image_cached(building_sprites[i] + "_top.png")
+            rotated_top_image = pygame.transform.rotate(building_top_image, building_dir[i] - 90)  # Rotate to face direction
+            top_rect = rotated_top_image.get_rect(center=(b_x, b_y))
+            screen.blit(rotated_top_image, top_rect)
+            
         # Health bar
         hp_bar_x = b_x - 10
         hp_bar_y = b_y - 12  # Slightly above the building

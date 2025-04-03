@@ -177,6 +177,9 @@ class Giant(Troop):
             p=position
         ) 
         self.level = level
+        self.walk_cycle_frames = 10
+        class_name = self.__class__.__name__.lower()
+        self.sprite_path = f"sprites/{class_name}/{class_name}_{self.walk_cycle_cur}.png"
     
     def attack(self):
         return GiantAttackEntity(self.side, self.hit_damage, self.position, self.target)
@@ -298,8 +301,7 @@ class Archer(Troop):
         ) 
         self.level = level
 
-        self.ticks_per_frame = 6
-        self.walk_cycle_frames = 5
+        self.walk_cycle_frames = 7
         class_name = self.__class__.__name__.lower()
         self.sprite_path = f"sprites/{class_name}/{class_name}_{self.walk_cycle_cur}.png"
     

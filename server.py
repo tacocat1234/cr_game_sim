@@ -145,6 +145,7 @@ def handle_clients():
                 building_l = [b.level for b in id_map[arena_id].buildings]
                 building_hp = [b.cur_hp / b.hit_points for b in id_map[arena_id].buildings]
                 building_sprite = [b.sprite_path for b in id_map[arena_id].buildings]
+                building_dir = [(b.facing_dir if side else - b.facing_dir) for b in id_map[arena_id].buildings]
                 building_side = [b.side for b in id_map[arena_id].buildings]
 
                 attack_x = [a.position.x for a in id_map[arena_id].active_attacks]
@@ -182,6 +183,7 @@ def handle_clients():
                 "building_l": building_l,
                 "building_hp": building_hp,
                 "building_sprite": building_sprite,
+                "building_dir" : building_dir,
                 "building_side" : building_side,
                 "attack_x": attack_x,
                 "attack_y": attack_y,

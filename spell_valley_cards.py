@@ -73,25 +73,14 @@ class FireSpirit(Troop):
         ) 
         self.level = level
         self.should_delete = False
+        self.walk_cycle_frames = 4
+        class_name = self.__class__.__name__.lower()
+        self.sprite_path = f"sprites/{class_name}/{class_name}_0.png"
     
     def attack(self):
         self.should_delete = True
         return FireSpiritAttackEntity(self.side, self.hit_damage, self.position, self.target)
 
-    def cleanup(self, arena): # each troop runs this after ALL ticks are finished
-        if self.cur_hp <= 0 or self.should_delete:
-                self.cur_hp = -1
-                arena.troops.remove(self)
-            
-        if self.deploy_time > 0: #if deploying, timer
-                self.deploy_time -= TICK_TIME
-        elif self.stun_timer <= 0:
-            if not self.target is None and not vector.distance(self.target.position, self.position) < self.hit_range + self.target.collision_radius + self.collision_radius and (self.attack_cooldown <= self.hit_speed - self.load_time):
-                self.attack_cooldown = self.hit_speed - self.load_time #if not currently attacking but cooldown is less than first hit delay
-            else: #otherwise
-                self.attack_cooldown -= TICK_TIME #decrement time if either close enough to attack, cooldown greater than min cooldown, or both
-        else:
-            self.stun_timer -= TICK_TIME
 
 class ElectroSpiritAttackEntity(AttackEntity):
     CHAIN_RADIUS = 4
@@ -168,25 +157,14 @@ class ElectroSpirit(Troop):
         ) 
         self.level = level
         self.should_delete = False
+
+        self.walk_cycle_frames = 4
+        class_name = self.__class__.__name__.lower()
+        self.sprite_path = f"sprites/{class_name}/{class_name}_0.png"
     
     def attack(self):
         self.should_delete = True
         return ElectroSpiritAttackEntity(self.side, self.hit_damage, self.position, self.target)
-
-    def cleanup(self, arena): # each troop runs this after ALL ticks are finished
-        if self.cur_hp <= 0 or self.should_delete:
-                self.cur_hp = -1
-                arena.troops.remove(self)
-            
-        if self.deploy_time > 0: #if deploying, timer
-                self.deploy_time -= TICK_TIME
-        elif self.stun_timer <= 0:
-            if not self.target is None and not vector.distance(self.target.position, self.position) < self.hit_range + self.target.collision_radius + self.collision_radius and (self.attack_cooldown <= self.hit_speed - self.load_time):
-                self.attack_cooldown = self.hit_speed - self.load_time #if not currently attacking but cooldown is less than first hit delay
-            else: #otherwise
-                self.attack_cooldown -= TICK_TIME #decrement time if either close enough to attack, cooldown greater than min cooldown, or both
-        else:
-            self.stun_timer -= TICK_TIME
 
 class WizardAttackEntity(AttackEntity):
     DAMAGE_RADIUS = 1.5
