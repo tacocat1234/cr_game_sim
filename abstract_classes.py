@@ -428,7 +428,7 @@ class Building:
                 self.target = each
                 min_dist = vector.distance(each.position, self.position)
 
-                angle = math.degrees(math.atan2(each.position.y - self.position.y, each.positon.x - self.position.x))  # Get angle in degrees
+                angle = math.degrees(math.atan2(each.position.y - self.position.y, each.position.x - self.position.x))  # Get angle in degrees
                 self.facing_dir = angle
     
     def tick(self, arena):

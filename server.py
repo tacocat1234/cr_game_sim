@@ -9,7 +9,20 @@ import time
 
 from abstract_classes import TICK_TIME
 
-HOST_IP = "127.0.0.1"
+def get_local_ip():
+    """Finds the local IP address of the current machine."""
+    try:
+        # Create a temporary socket and connect to an external server
+        s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+        s.connect(("8.8.8.8", 80))  # Google's public DNS (doesn't send data)
+        local_ip = s.getsockname()[0]
+        s.close()
+        return local_ip
+    except Exception as e:
+        print(f"Error finding local IP: {e}")
+        return "127.0.0.1"  # Fallback to localhost
+
+HOST_IP = get_local_ip()
 PORT = 5555
 BUFFER_SIZE = 4096
 
@@ -144,7 +157,7 @@ def handle_clients():
                 building_y = [(b.position.y if side else -b.position.y) for b in id_map[arena_id].buildings]
                 building_l = [b.level for b in id_map[arena_id].buildings]
                 building_hp = [b.cur_hp / b.hit_points for b in id_map[arena_id].buildings]
-                building_sprite = [b.sprite_path for b in id_map[arena_id].buildings]
+                building_sprite = [b.sprite_path_front for b in id_map[arena_id].buildings]
                 building_dir = [(b.facing_dir if side else - b.facing_dir) for b in id_map[arena_id].buildings]
                 building_side = [b.side for b in id_map[arena_id].buildings]
 
