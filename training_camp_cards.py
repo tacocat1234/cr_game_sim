@@ -240,6 +240,9 @@ class Minion(Troop):
             p=position               # Position (vector.Vector object)
         ) 
         self.level = level
+        self.walk_cycle_frames = 4
+        class_name = self.__class__.__name__.lower()
+        self.sprite_path = f"sprites/{class_name}/{class_name}_0.png"
     def attack(self):
         return MinionAttackEntity(self.side, self.hit_damage, self.position, self.target)
 

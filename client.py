@@ -10,26 +10,41 @@ from card_factory import get_type
 from card_factory import get_elixir
 from abstract_classes import TICK_TIME
 
-
-
-SERVER_IP = input("What is server IP? (server device should read \"Server started on {Server IP} : Port\")\n")
-SERVER_PORT = 5555
-BUFFER_SIZE = 4096
 #-----------------------------------------------------------------------------------
 #cards avaliable:
-#archers, barbarians, battleram, electrospirit, firespirit, skeletons, giant, 
-#fireball, arrows,
-#cannon, tombstone
+#archers, barbarians, battleram, electrospirit, firespirit, skeletons, giant, bomber
+#minions, megaminion, speargoblins
+#fireball, arrows, zap
+#cannon, tombstone, goblinhut = 24,310 possible decks
 #-----------------------------------------------------------------------------------
 # modify the below to set deck and tower levels
-DECK = [("tombstone", 11), ("cannon", 11), ("fireball", 11), ("electrospirit", 11),
-        ("giant", 11), ("arrows", 11), ("archers", 11), ("battleram", 11)]
-KING_LEVEL = 11
-PRINCESS_LEVEL = 11
+DECK = []
+KING_LEVEL = PRINCESS_LEVEL = 11
+with open("deck.txt", "r") as file:
+    for _ in range(8):
+        line = file.readline().strip()
+        if line:  # Ensure line is not empty
+            card, level = line.rsplit(" ", 1)  # Split at the last space
+            DECK.append((card, int(level)))
+            
+    line = file.readline().strip()
+    if line:
+        _, KING_LEVEL = line.rsplit(" ", 1)
+        KING_LEVEL = int(KING_LEVEL)
+
+    line = file.readline().strip()
+    if line:
+        _, PRINCESS_LEVEL = line.rsplit(" ", 1)
+        PRINCESS_LEVEL = int(PRINCESS_LEVEL)
 #
 #-----------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------
 #-----------------------------------------------------------------------------------
+
+SERVER_IP = input("What is the server IP? (server device should read \"Server started on {Server IP} : Port\")\n")
+SERVER_PORT = 5555
+BUFFER_SIZE = 4096
+
 client_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
 
 # Generate a unique player ID

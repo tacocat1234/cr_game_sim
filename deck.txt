@@ -1,0 +1,10 @@
+tombstone 11
+cannon 11
+fireball 11
+electrospirit 11
+giant 11
+zap 11
+archers 11
+battleram 11
+kingtower 11
+princesstower 11
