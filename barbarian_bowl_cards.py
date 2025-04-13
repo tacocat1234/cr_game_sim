@@ -1,4 +1,5 @@
-from abstract_classes import AttackEntity
+from abstract_classes import MeleeAttackEntity
+from abstract_classes import RangedAttackEntity
 from abstract_classes import Troop
 from abstract_classes import Building
 from abstract_classes import TILES_PER_MIN
@@ -6,39 +7,16 @@ from abstract_classes import TICK_TIME
 import vector
 import copy
 
-class BarbarianAttackEntity(AttackEntity):
+class BarbarianAttackEntity(MeleeAttackEntity):
     HIT_RANGE = 0.7
     COLLISION_RADIUS = 0.5
     def __init__(self, side, damage, position, target):
         super().__init__(
-            s=side,
-            d=damage,
-            v=0,
-            l=0.5,
-            i_p=position
+            side=side,
+            damage=damage,
+            position=position,
+            target=target
             )
-        self.target = target
-        self.should_delete = False
-    
-    def detect_hits(self, arena):
-        
-        if (vector.distance(self.target.position, self.position) <= BarbarianAttackEntity.HIT_RANGE + BarbarianAttackEntity.COLLISION_RADIUS + self.target.collision_radius): #within hitrange of knight
-            return [self.target]
-        else:
-            return [] #theoretically should never trigger, when attack, should always be in range unless very strange circumstances
-        
-    def tick(self, arena):
-        hits = self.detect_hits(arena)
-        if len(hits) > 0:
-            hits[0].cur_hp -= self.damage
-            self.should_delete = True
-
-    def cleanup(self, arena): #also delete self if single target here in derived classes
-        self.duration -= TICK_TIME
-        if self.duration <= 0:
-            arena.active_attacks.remove(self)
-        if self.should_delete:
-            arena.active_attacks.remove(self)
         
             
 class Barbarian(Troop):
@@ -68,42 +46,15 @@ class Barbarian(Troop):
     def attack(self):
         return BarbarianAttackEntity(self.side, self.hit_damage, self.position, self.target)
     
-class CannonAttackEntity(AttackEntity):
+class CannonAttackEntity(RangedAttackEntity):
     def __init__(self, side, damage, position, target):
         super().__init__(
-            s=side,
-            d=damage,
-            v=1000*TILES_PER_MIN,
-            l=float('inf'),
-            i_p=copy.deepcopy(position)
+            side=side,
+            damage=damage,
+            velocity=1000*TILES_PER_MIN,
+            position=position,
+            target=target,
         )
-        self.target = target
-        self.should_delete = False
-
-    def detect_hits(self, arena):
-        if (vector.distance(self.target.position, self.position) < self.target.collision_radius):
-            return [self.target] # has hit
-        else:
-            return [] #hasnt hit yet
-            
-    def tick(self, arena):
-        hits = self.detect_hits(arena)
-        if len(hits) > 0:
-            hits[0].cur_hp -= self.damage
-            self.should_delete = True
-        else:
-            direction = vector.Vector(
-                self.target.position.x - self.position.x, 
-                self.target.position.y - self.position.y
-            )
-            direction.normalize()
-
-            movement = direction.scaled(self.velocity)
-            self.position.add(movement)
-
-    def cleanup(self, arena):
-        if self.should_delete:
-            arena.active_attacks.remove(self)
 
 
 class Cannon(Building):
@@ -133,39 +84,16 @@ class Cannon(Building):
     def attack(self):
         return CannonAttackEntity(self.side, self.hit_damage, self.position, self.target)
 
-class MegaMinionAttackEntity(AttackEntity):
+class MegaMinionAttackEntity(MeleeAttackEntity):
     HIT_RANGE = 1.6
     COLLISION_RADIUS = 0.6
     def __init__(self, side, damage, position, target):
         super().__init__(
-            s=side,
-            d=damage,
-            v=0,
-            l=0.5,
-            i_p=position
+            side=side,
+            damage=damage,
+            position=position,
+            target=target
             )
-        self.target = target
-        self.should_delete = False
-    
-    def detect_hits(self, arena):
-        
-        if (vector.distance(self.target.position, self.position) <= MegaMinionAttackEntity.HIT_RANGE + MegaMinionAttackEntity.COLLISION_RADIUS + self.target.collision_radius): #within hitrange of knight
-            return [self.target]
-        else:
-            return [] #theoretically should never trigger, when attack, should always be in range unless very strange circumstances
-        
-    def tick(self, arena):
-        hits = self.detect_hits(arena)
-        if len(hits) > 0:
-            hits[0].cur_hp -= self.damage
-            self.should_delete = True
-
-    def cleanup(self, arena): #also delete self if single target here in derived classes
-        self.duration -= TICK_TIME
-        if self.duration <= 0:
-            arena.active_attacks.remove(self)
-        if self.should_delete:
-            arena.active_attacks.remove(self)
         
             
 class MegaMinion(Troop):
@@ -194,39 +122,16 @@ class MegaMinion(Troop):
     def attack(self):
         return MegaMinionAttackEntity(self.side, self.hit_damage, self.position, self.target)   
     
-class BattleRamAttackEntity(AttackEntity):
+class BattleRamAttackEntity(MeleeAttackEntity):
     HIT_RANGE = 0.5
     COLLISION_RADIUS = 0.75
     def __init__(self, side, damage, position, target):
         super().__init__(
-            s=side,
-            d=damage,
-            v=0,
-            l=0.5,
-            i_p=position
+            side=side,
+            damage=damage,
+            position=position,
+            target=target
             )
-        self.target = target
-        self.should_delete = False
-    
-    def detect_hits(self, arena):
-        
-        if (vector.distance(self.target.position, self.position) <= BattleRamAttackEntity.HIT_RANGE + BattleRamAttackEntity.COLLISION_RADIUS + self.target.collision_radius): #within hitrange of knight
-            return [self.target]
-        else:
-            return [] #theoretically should never trigger, when attack, should always be in range unless very strange circumstances
-        
-    def tick(self, arena):
-        hits = self.detect_hits(arena)
-        if len(hits) > 0:
-            hits[0].cur_hp -= self.damage
-            self.should_delete = True
-
-    def cleanup(self, arena): #also delete self if single target here in derived classes
-        self.duration -= TICK_TIME
-        if self.duration <= 0:
-            arena.active_attacks.remove(self)
-        if self.should_delete:
-            arena.active_attacks.remove(self)
     
 class BattleRam(Troop):
     def __init__(self, side, position, level):

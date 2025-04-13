@@ -1,6 +1,7 @@
 import math
 import random
 import vector
+import copy
 
 TICK_TIME = 1/60 #tps
 TILES_PER_MIN = 1/3600
@@ -42,6 +43,80 @@ class AttackEntity:
         
     def detect_hits(self, arena): # to be overriden in derived
         return []
+    
+    
+class RangedAttackEntity(AttackEntity):
+    def __init__(self, side, damage, velocity, position, target):
+        super().__init__(
+            s=side,
+            d=damage,
+            v=velocity,
+            l=float('inf'),
+            i_p=copy.deepcopy(position)
+        )
+        self.target = target
+        self.should_delete = False
+
+    def detect_hits(self, arena):
+        if (vector.distance(self.target.position, self.position) < self.target.collision_radius):
+            return [self.target] # has hit
+        else:
+            return [] #hasnt hit yet
+            
+    def tick(self, arena):
+        hits = self.detect_hits(arena)
+        if len(hits) > 0:
+            hits[0].cur_hp -= self.damage
+            self.should_delete = True
+        else:
+            direction = vector.Vector(
+                self.target.position.x - self.position.x, 
+                self.target.position.y - self.position.y
+            )
+            direction.normalize()
+
+            movement = direction.scaled(self.velocity)
+            self.position.add(movement)
+
+    def cleanup(self, arena):
+        self.duration -= TICK_TIME
+        if self.duration <= 0:
+            arena.active_attacks.remove(self)
+        if self.should_delete:
+            arena.active_attacks.remove(self)
+
+class MeleeAttackEntity(AttackEntity):
+    HIT_RANGE = 0
+    COLLISION_RADIUS = 0
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            s=side,
+            d=damage,
+            v=0,
+            l=0.5,
+            i_p=position
+            )
+        self.target = target
+        self.should_delete = False
+    
+    def detect_hits(self, arena):
+        if (vector.distance(self.target.position, self.position) <= self.HIT_RANGE + self.COLLISION_RADIUS + self.target.collision_radius): #within hitrange of knight
+            return [self.target]
+        else:
+            return [] #theoretically should never trigger, when attack, should always be in range unless very strange circumstances
+        
+    def tick(self, arena):
+        hits = self.detect_hits(arena)
+        if len(hits) > 0:
+            hits[0].cur_hp -= self.damage
+            self.should_delete = True
+
+    def cleanup(self, arena): #also delete self if single target here in derived classes
+        self.duration -= TICK_TIME
+        if self.duration <= 0:
+            arena.active_attacks.remove(self)
+        if self.should_delete:
+            arena.active_attacks.remove(self)
 
 
 class Troop:
@@ -80,6 +155,7 @@ class Troop:
 
         self.targetable = True
         self.invulnerable = False
+        self.cross_river = False
         self.should_delete = False #only for kamikaze troops
 
     def stun(self):
@@ -128,7 +204,7 @@ class Troop:
                         tower_target = tower
                         min_dist = vector.distance(tower.position, self.position)
 
-            if not tower_target is None and self.ground and not same_sign(tower_target.position.y, self.position.y): # if behind bridge and cant cross river
+            if not tower_target is None and (self.ground and not self.cross_river) and not same_sign(tower_target.position.y, self.position.y): # if behind bridge and cant cross river
                 r_bridge = vector.distance(vector.Vector(5.5, 0), self.position)
                 l_bridge = vector.distance(vector.Vector(-5.5, 0), self.position)
                 

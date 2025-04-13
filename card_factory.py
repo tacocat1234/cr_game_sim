@@ -11,15 +11,17 @@ troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer",
           "speargoblins", "goblins", 
           "skeletons", "bomber", "valkyrie",
           "barbarians", "megaminion", "battleram",
-          "firespirit", "electrospirit", "skeletondragons", "wizard"]
+          "firespirit", "electrospirit", "skeletondragons", "wizard",
+          "bats", "hogrider"]
 
 spells = ["fireball", "arrows",
-          "zap"]
+          "zap", "rocket"]
 
 buildings = ["goblinhut", "goblincage", 
              "tombstone",
              "cannon",
-             "bombtower", "infernotower"]
+             "bombtower", "infernotower",
+             "mortar"]
 
 def get_type(name):
     if name in troops:
@@ -112,6 +114,17 @@ def troop_factory(side, position, name, level):
         pos2 = vector.Vector(-0.75, 0)
         return [spell_valley_cards.SkeletonDragon(side, position.added(pos1), level),
                 spell_valley_cards.SkeletonDragon(side, position.added(pos2), level)]
+    elif name == "bats":
+        flip = 1 if side else -1
+        radius = 0.75
+        angles = [(2 * math.pi * k / 5) + (math.pi / 2) for k in range(5)]
+        positions = [vector.Vector(radius * math.cos(a), radius * math.sin(a) * flip) for a in angles]
+        out = []
+        for each in positions:
+            out.append(builders_workshop_cards.Bat(side, position.added(each), level))
+        return out
+    elif name == "hogrider":
+        return builders_workshop_cards.HogRider(side, position, level)
     else:
         raise Exception("Invalid troop name.")
 
@@ -122,6 +135,8 @@ def spell_factory(side, position, name, level):
         return training_camp_cards.Arrows(side, position, level)
     elif name == "zap":
         return builders_workshop_cards.Zap(side, position, level)
+    elif name == "rocket":
+        return builders_workshop_cards.Rocket(side, position, level)
     else:
         raise Exception("Invalid spell name.")
 
@@ -138,6 +153,8 @@ def building_factory(side, position, name, level):
         return spell_valley_cards.BombTower(side, position, level)
     elif name == "infernotower":
         return spell_valley_cards.InfernoTower(side, position, level)
+    elif name == "mortar":
+        return builders_workshop_cards.Mortar(side, position, level)
     else:
         raise Exception("Invalid building name")
 
@@ -171,5 +188,8 @@ elixir_map = {
     "skeletondragons" : 4,
     "wizard" : 5,
     "infernotower" : 5,
-    "zap" : 2
+    "zap" : 2,
+    "bats" : 2,
+    "hogrider": 4,
+    "mortar" : 4
 }

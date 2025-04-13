@@ -19,11 +19,11 @@ game_arena.towers = [towers.KingTower(True, 1),
                        towers.PrincessTower(False, 2, False)
                        ]
 #player deck
-deck = [Card(True, "skeletons", 1), Card(True, "arrows", 1), Card(True, "bombtower", 1), Card(True, "infernotower", 1), 
-        Card(True, "bomber", 1), Card(True, "archers", 1), Card(True, "zap", 1), Card(True, "battleram", 1)]
+deck = [Card(True, "mortar", 1), Card(True, "minipekka", 1), Card(True, "musketeer", 1), Card(True, "bomber", 1), 
+        Card(True, "arrows", 1), Card(True, "skeletons", 1), Card(True, "zap", 1), Card(True, "cannon", 1)]
 
 #bot deck (duh)
-bot_deck = [Card(False, "firespirit", 2), Card(False, "battleram", 2), Card(False, "wizard", 3), Card(False, "valkyrie", 3), 
+bot_deck = [Card(False, "electrospirit", 2), Card(False, "hogrider", 2), Card(False, "wizard", 3), Card(False, "valkyrie", 3), 
         Card(False, "goblinhut", 5), Card(False, "skeletondragons", 3), Card(False, "minipekka", 2), Card(False, "arrows", 4)]
 
 bot = Bot(bot_deck)
@@ -199,7 +199,7 @@ def draw():
 
     for i, hand_i in enumerate(hand):
         card = deck[hand_i]
-        card_name_text = card_name_font.render(card.name, True, WHITE)
+        card_name_text = card_name_font.render(card.name, True, BLACK)
         card_name_x = (WIDTH * (i + 1)) // 5  # Positions: WIDTH/5, WIDTH*2/5, WIDTH*3/5, WIDTH*4/5
         card_name_y = HEIGHT - 64  # Vertical position at the bottom
         text_rect = card_name_text.get_rect(center=(card_name_x, card_name_y))
