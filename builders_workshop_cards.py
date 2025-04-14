@@ -204,3 +204,37 @@ class HogRider(Troop):
         self.jump_speed = 160 * TILES_PER_MIN
     def attack(self):
         return HogRiderAttackEntity(self.side, self.hit_damage, self.position, self.target)
+    
+class FlyingMachineAttackEntity(RangedAttackEntity):
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            side=side,
+            damage=damage,
+            velocity=800*TILES_PER_MIN,
+            position=position,
+            target=target,
+        )
+    
+class FlyingMachine(Troop):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 290 * pow(1.1, level - 3),         # Hit points (Example value)
+            h_d= 81 * pow(1.1, level - 3),          # Hit damage (Example value)
+            h_s=1.1,          # Hit speed (Seconds per hit)
+            l_t=0.6,            # First hit cooldown
+            h_r=6,            # Hit range
+            s_r=6,            # Sight Range
+            g=False,           # Ground troop
+            t_g_o=False,       # Targets ground-only
+            t_o=False,        # Not tower-only
+            m_s=90*TILES_PER_MIN,          # Movement speed 
+            d_t=1,            # Deploy time
+            m=3,            #mass
+            c_r=0.5,        #collision radius
+            p=position               # Position (vector.Vector object)
+        ) 
+        self.level = level
+    
+    def attack(self):
+        return FlyingMachineAttackEntity(self.side, self.hit_damage, self.position, self.target)

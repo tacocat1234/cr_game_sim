@@ -6,13 +6,16 @@ import bone_pit_cards
 import barbarian_bowl_cards
 import spell_valley_cards
 import builders_workshop_cards
+import pekkas_playhouse_cards
+import random
 
 troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer", 
           "speargoblins", "goblins", 
           "skeletons", "bomber", "valkyrie",
           "barbarians", "megaminion", "battleram",
           "firespirit", "electrospirit", "skeletondragons", "wizard",
-          "bats", "hogrider"]
+          "bats", "hogrider", "flyingmachine",
+          "skeletonarmy", "babydragon", "pekka"]
 
 spells = ["fireball", "arrows",
           "zap", "rocket"]
@@ -125,6 +128,17 @@ def troop_factory(side, position, name, level):
         return out
     elif name == "hogrider":
         return builders_workshop_cards.HogRider(side, position, level)
+    elif name == "flyingmachine":
+        return builders_workshop_cards.FlyingMachine(side, position, level)
+    elif name == "skeletonarmy":
+        out = []
+        for _ in range(15):
+            out.append(bone_pit_cards.Skeleton(side, position.added(vector.Vector(random.uniform(-2, 2), random.uniform(-2, 2))), level))
+        return out
+    elif name == "babydragon":
+        return pekkas_playhouse_cards.BabyDragon(side, position, level)
+    elif name == "pekka":
+        return pekkas_playhouse_cards.Pekka(side, position, level)
     else:
         raise Exception("Invalid troop name.")
 
@@ -191,5 +205,10 @@ elixir_map = {
     "zap" : 2,
     "bats" : 2,
     "hogrider": 4,
-    "mortar" : 4
+    "mortar" : 4,
+    "flyingmachine" : 4,
+    "rocket" : 6,
+    "skeletonarmy" : 3,
+    "babydragon" : 4,
+    "pekka": 7
 }
