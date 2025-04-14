@@ -195,6 +195,7 @@ class Troop:
     def move(self, arena):
         direction_x = 0
         direction_y = 0
+        m_s = self.move_speed
         if self.target is None: #head towards tower, since it sees nobody else
             min_dist = float('inf')
             tower_target = None
@@ -224,6 +225,11 @@ class Troop:
                 direction_x = tar_bridge.x - self.position.x #set movement
                 direction_y = tar_bridge.y - self.position.y
                 distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
+            elif self.cross_river and ((self.side and (self.position.y > - 2 and self.position.y < 1)) or (not self.side and (self.position.y < 2 and self.position.y > -1))):
+                direction_x = 0
+                direction_y = 1 if self.side else -1 #forwards 
+                distance_to_target = 1
+                m_s = self.jump_speed
             elif not tower_target is None:
                 direction_x = tower_target.position.x - self.position.x #set to directly move to tower
                 direction_y = tower_target.position.y - self.position.y
@@ -240,15 +246,15 @@ class Troop:
             direction_x /= distance_to_target
             direction_y /= distance_to_target
             # Move in the direction of the target
-            self.position.x += direction_x * self.move_speed
-            self.position.y += direction_y * self.move_speed
+            self.position.x += direction_x * m_s
+            self.position.y += direction_y * m_s
 
             angle = math.degrees(math.atan2(direction_y, direction_x))  # Get angle in degrees
             self.facing_dir = angle
 
             return False
 
-        if self.ground and not (same_sign(self.target.position.y, self.position.y) or math.isclose(self.position.y, 0, abs_tol=1e-2)):
+        if (self.ground and not self.cross_river) and not (same_sign(self.target.position.y, self.position.y) or math.isclose(self.position.y, 0, abs_tol=1e-2)):
             
             r_bridge = vector.distance(vector.Vector(5.5, 0), self.target.position)
             l_bridge = vector.distance(vector.Vector(-5.5, 0), self.target.position)
@@ -263,6 +269,11 @@ class Troop:
             direction_x = tar_bridge.x - self.position.x
             direction_y = tar_bridge.y - self.position.y
             distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
+        elif self.cross_river and (self.position.x <-6.5 or (self.position.x < 4.5 and self.position.x > -4.5) or self.position.x > 6.5)and ((self.side and (self.position.y > - 2 and self.position.y < 1)) or (not self.side and (self.position.y < 2 and self.position.y > -1))):
+            direction_x = 0
+            direction_y = 1 if self.side else -1 #forwards 
+            distance_to_target = 1
+            m_s = self.jump_speed
         else:
             direction_x = self.target.position.x - self.position.x
             direction_y = self.target.position.y - self.position.y
@@ -274,8 +285,9 @@ class Troop:
         direction_x /= distance_to_target
         direction_y /= distance_to_target
         # Move in the direction of the target
-        self.position.x += direction_x * self.move_speed
-        self.position.y += direction_y * self.move_speed
+
+        self.position.x += direction_x  * m_s
+        self.position.y += direction_y * m_s
         return False
             
         

@@ -3,6 +3,12 @@ import copy
 import vector
 from abstract_classes import TICK_TIME
 
+counters = {
+    "minipekka" : ["skeletons", vector.Vector(0, 0)],
+    "musketeer" : ["fireball", vector.Vector(0, -2)],
+    "valkyrie" : ["minipekka", vector.Vector(0, 0)]
+}
+
 class Bot:
     def __init__(self, cards):
         self.cards = cards
@@ -15,7 +21,10 @@ class Bot:
 
     def tick(self, elixir):
         if self.internal_timer <= 0 or elixir >= 9:
-            self.internal_timer = random.triangular(0, 14, 5.6)
+            if elixir >= 7:
+                self.internal_timer = 0
+            else:
+                self.internal_timer = random.triangular(0, 14, 5.6)
 
             if (elixir >= self.min_elixir):            
                 selected = random.choice(self.cards)
@@ -28,16 +37,68 @@ class Bot:
             self.internal_timer -= TICK_TIME
 
     def random_pos(isSpell = False, things = None):
-        if (isSpell):
-            if not things is None:
-                enemy = []
-                for each in things:
+        enemy = []
+        friendly = []
+        if not things is None:
+            for each in things:
                     if each.side:
                         enemy.append(each)
-                if len(enemy) > 0:
-                    return copy.deepcopy(random.choice(enemy).position)
-            return vector.Vector(random.randint(-9, 9), random.randint(-10, -7))
+                    else:
+                        friendly.append(each)
+        if (isSpell):
+            if len(enemy) > 0:
+                r = random.choice(enemy)
+                if r.cur_hp < 400: #cannot use rocket properly
+                    return copy.deepcopy(r.position)
+            return False
         else:
+            offensive_count = 0
+            left_count = 0
+            for each in enemy:
+                if each.position.y > 0:
+                    offensive_count += 1
+                if each.position.x < 0:
+                    left_count += 1
+
+            if offensive_count > len(enemy) - offensive_count: # if more offensive opps than defensive
+                if random.randint(0, 1) == 1 and len(friendly) > 0:
+                    friend_pos = random.choice(friendly).position
+                    friend_pos = friend_pos.added(vector.Vector(random.randint(-1, 1), random.randint(0, 4)))
+
+                    if friend_pos.x > 9:
+                        friend_pos.x = 9
+                    elif friend_pos.x < -9:
+                        friend_pos.x = -9
+                    
+                    
+                    if friend_pos.y >= 0:
+                        if friend_pos.y > 16:
+                            friend_pos.y = 16
+
+                        return friend_pos
+                
+                weight = -4.5 if left_count > len(enemy) - left_count else 4.5 #towards left if more troops on left else right
+                return vector.Vector(round(random.triangular(-9, 9, weight)), random.randint(0, 16))
+            elif offensive_count < len(enemy) - offensive_count: # if more defensive opps than offensive
+                if len(friendly) > 0:
+                    friend_pos = random.choice(friendly).position
+                    friend_pos = friend_pos.added(vector.Vector(random.randint(-1, 1), random.randint(0, 4)))
+
+                    if friend_pos.x > 9:
+                        friend_pos.x = 9
+                    elif friend_pos.x < -9:
+                        friend_pos.x = -9
+                    
+                    
+                    if friend_pos.y >= 0:
+                        if friend_pos.y > 16:
+                            friend_pos.y = 16
+
+                        return friend_pos
+                #if illegal friend pos for any reason
+                weight = -4.5 if left_count < len(enemy) - left_count else 4.5 #towards left if more troops on right else left
+                return vector.Vector(round(random.triangular(-9, 9, weight)), random.randint(0, 16))
+
             return vector.Vector(random.randint(-9, 9), random.randint(0, 16))
 
     

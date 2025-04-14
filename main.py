@@ -18,13 +18,13 @@ game_arena.towers = [towers.KingTower(True, 1),
                        towers.PrincessTower(False, 2, True), 
                        towers.PrincessTower(False, 2, False)
                        ]
-#player deck
+#player deck (mortar)
 deck = [Card(True, "mortar", 1), Card(True, "minipekka", 1), Card(True, "musketeer", 1), Card(True, "bomber", 1), 
         Card(True, "arrows", 1), Card(True, "skeletons", 1), Card(True, "zap", 1), Card(True, "cannon", 1)]
 
 #bot deck (duh)
-bot_deck = [Card(False, "electrospirit", 2), Card(False, "hogrider", 2), Card(False, "wizard", 3), Card(False, "valkyrie", 3), 
-        Card(False, "goblinhut", 5), Card(False, "skeletondragons", 3), Card(False, "minipekka", 2), Card(False, "arrows", 4)]
+bot_deck = [Card(False, "fireball", 2), Card(False, "hogrider", 2), Card(False, "wizard", 3), Card(False, "valkyrie", 3), 
+        Card(False, "battleram", 5), Card(False, "skeletondragons", 3), Card(False, "minipekka", 2), Card(False, "arrows", 4)]
 
 bot = Bot(bot_deck)
 #height comp screen ~ 800
@@ -255,6 +255,8 @@ drag_end_pos = None  # Ending position of the drag
 elixir_recharge = 2.8
 elixir_timer = elixir_recharge
 
+
+
 while running:
     clock.tick(60)  # 60 FPS
 
@@ -268,9 +270,11 @@ while running:
     bot_card = bot.tick(bot_elixir)
     if not bot_card is None:
         print(bot_card.name)
-        bot_elixir -= bot_card.elixir_cost
-        bot_card_type, bot_summon = bot_card.summon(Bot.random_pos(get_type(bot_card.name) == "spell", game_arena.troops + game_arena.buildings))
-        place(bot_card_type, bot_summon, game_arena)
+        bot_pos = Bot.random_pos(get_type(bot_card.name) == "spell", game_arena.troops + game_arena.buildings)
+        if bot_pos:
+            bot_elixir -= bot_card.elixir_cost
+            bot_card_type, bot_summon = bot_card.summon(bot_pos)
+            place(bot_card_type, bot_summon, game_arena)
 
     for event in pygame.event.get():
         if event.type == pygame.QUIT:

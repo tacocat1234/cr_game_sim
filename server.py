@@ -67,7 +67,7 @@ def handle_clients():
             err = None
             player_id = player_data["id"]  # Unique player ID
             action = player_data["action"]
-            arena_id = player_data["arena_id"]
+            arena_id = str(player_data["arena_id"])
 
             place_x = 0
             place_y = 0
@@ -97,7 +97,11 @@ def handle_clients():
                         arena_states[arena_id] = "queuing"  # One player waiting
                     side = True
                 case "join":
-                    if arena_id in player_map and len(player_map[arena_id]) == 1:
+                    if arena_id == "ez" or (arena_id in player_map and len(player_map[arena_id]) == 1):
+                        
+                        if arena_id == "ez":
+                            arena_id = id_map.keys[0]
+
                         player_map[arena_id].append(player_id)
                         id_map[arena_id].towers.extend([towers.KingTower(False, player_data["king_level"]), #send this data (king_level, princesselevel) only when action is create or join
                             towers.PrincessTower(False, player_data["princess_level"], True), 

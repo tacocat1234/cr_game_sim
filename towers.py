@@ -55,7 +55,7 @@ class PrincessTower(Tower):
         y = -10 if side else 10 #your side is true opp side is false
         super().__init__(
             s=side,
-            h_d=50 * pow(1.1, level - 1),
+            h_d=50 * pow(1.08, level - 1),
             h_r=7.5,
             h_s=0.8,
             l_t=0.81, #.01 extra so it stays below 0
@@ -115,7 +115,7 @@ class KingTower(Tower):
     def __init__(self, side, level):
         super().__init__(
             s=side,
-            h_d=50 * pow(1.1, level - 1),
+            h_d=50 * pow(1.08, level - 1),
             h_r=7,
             h_s=1,
             l_t=0.5,

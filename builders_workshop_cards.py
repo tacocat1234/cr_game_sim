@@ -201,5 +201,6 @@ class HogRider(Troop):
         class_name = self.__class__.__name__.lower()
         self.sprite_path = f"sprites/{class_name}/{class_name}_0.png"
         self.cross_river = True
+        self.jump_speed = 160 * TILES_PER_MIN
     def attack(self):
         return HogRiderAttackEntity(self.side, self.hit_damage, self.position, self.target)
