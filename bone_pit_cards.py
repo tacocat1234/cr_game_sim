@@ -1,4 +1,5 @@
 from abstract_classes import AttackEntity
+from abstract_classes import MeleeAttackEntity
 from abstract_classes import Troop
 from abstract_classes import Building
 from abstract_classes import Tower
@@ -8,39 +9,16 @@ import vector
 import copy
 import random
 
-class SkeletonAttackEntity(AttackEntity):
+class SkeletonAttackEntity(MeleeAttackEntity):
     HIT_RANGE = 0.5
     COLLISION_RADIUS = 0.5
     def __init__(self, side, damage, position, target):
         super().__init__(
-            s=side,
-            d=damage,
-            v=0,
-            l=0.5,
-            i_p=position
+            side=side,
+            damage=damage,
+            position=position,
+            target=target
             )
-        self.target = target
-        self.should_delete = False
-    
-    def detect_hits(self, arena):
-        
-        if (vector.distance(self.target.position, self.position) <= SkeletonAttackEntity.HIT_RANGE + SkeletonAttackEntity.COLLISION_RADIUS + self.target.collision_radius): #within hitrange of knight
-            return [self.target]
-        else:
-            return [] #theoretically should never trigger, when attack, should always be in range unless very strange circumstances
-        
-    def tick(self, arena):
-        hits = self.detect_hits(arena)
-        if len(hits) > 0:
-            hits[0].cur_hp -= self.damage
-            self.should_delete = True
-
-    def cleanup(self, arena): #also delete self if single target here in derived classes
-        self.duration -= TICK_TIME
-        if self.duration <= 0:
-            arena.active_attacks.remove(self)
-        if self.should_delete:
-            arena.active_attacks.remove(self)
         
             
 class Skeleton(Troop):
@@ -100,7 +78,7 @@ class BomberAttackEntity(AttackEntity):
             for each in hits:
                 new = not any(each is h for h in self.has_hit)
                 if (new):
-                    each.cur_hp -= self.damage
+                    each.damage(self.damage)
                     self.has_hit.append(each)
         else:
             direction = self.target_pos.subtracted(self.position)
@@ -236,7 +214,7 @@ class ValkyrieAttackEntity(AttackEntity):
                     new = False
                     break
             if (new):
-                each.cur_hp -= self.damage
+                each.damage(self.damage)
                 self.has_hit.append(each)
 
     def cleanup(self, arena):

@@ -66,7 +66,8 @@ class RangedAttackEntity(AttackEntity):
     def tick(self, arena):
         hits = self.detect_hits(arena)
         if len(hits) > 0:
-            hits[0].cur_hp -= self.damage
+            for each in hits:
+                each.damage(self.damage)
             self.should_delete = True
         else:
             direction = vector.Vector(
@@ -108,7 +109,8 @@ class MeleeAttackEntity(AttackEntity):
     def tick(self, arena):
         hits = self.detect_hits(arena)
         if len(hits) > 0:
-            hits[0].cur_hp -= self.damage
+            for each in hits:
+                each.damage(self.damage)
             self.should_delete = True
 
     def cleanup(self, arena): #also delete self if single target here in derived classes
@@ -156,11 +158,15 @@ class Troop:
         self.targetable = True
         self.invulnerable = False
         self.cross_river = False
+        self.has_shield = False
         self.should_delete = False #only for kamikaze troops
 
     def stun(self):
         self.stun_timer = 0.5
         self.target = None
+
+    def damage(self, amount):
+        self.cur_hp -= amount
         
     def attack(self): #override
         return None #return the correct attackentity object
@@ -356,6 +362,9 @@ class Tower:
         self.animation_cycle_frames = 1
         self.animation_cycle_cur = 1
 
+    def damage(self, amount):
+        self.cur_hp -= amount
+
     def stun(self):
         self.stun_timer = 0.5
         self.target = None
@@ -449,7 +458,7 @@ class Spell:
                 if (isinstance(each, Tower)):
                     each.cur_hp -= self.crown_tower_damage #crown tower damage
                 else:
-                    each.cur_hp -= self.damage; #end damage, start kb
+                    each.damage(self.damage); #end damage, start kb
                 if (isinstance(each, Troop)):
                     displacement = each.position.subtracted(self.position)
                     displacement.normalize()
@@ -500,6 +509,9 @@ class Building:
 
         self.targetable = True
         self.invulnerable = False
+
+    def damage(self, amount):
+        self.cur_hp -= amount
 
     def stun(self):
         self.stun_timer = 0.5

@@ -31,7 +31,7 @@ class Zap(Spell):
                 if (isinstance(each, Tower)):
                     each.cur_hp -= self.crown_tower_damage #crown tower damage
                 else:
-                    each.cur_hp -= self.damage
+                    each.damage(self.damage)
             self.waves -= 1
         else:
             self.should_delete = True #mark for deletion
@@ -63,7 +63,7 @@ class MortarAttackEntity(RangedAttackEntity):
             for each in hits:
                 new = not any(each is h for h in self.has_hit)
                 if (new):
-                    each.cur_hp -= self.damage
+                    each.damage(self.damage)
                     self.has_hit.append(each)
         else:
             direction = self.target.subtracted(self.position)

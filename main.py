@@ -19,12 +19,12 @@ game_arena.towers = [towers.KingTower(True, 1),
                        towers.PrincessTower(False, 2, False)
                        ]
 #player deck (mortar)
-deck = [Card(True, "mortar", 1), Card(True, "minipekka", 1), Card(True, "musketeer", 1), Card(True, "bomber", 1), 
-        Card(True, "arrows", 1), Card(True, "skeletons", 1), Card(True, "zap", 1), Card(True, "cannon", 1)]
+deck = [Card(True, "goblinbarrel", 1), Card(True, "knight", 1), Card(True, "electrospirit", 1), Card(True, "fireball", 1), 
+        Card(True, "archers", 1), Card(True, "minions", 1), Card(True, "arrows", 1), Card(True, "minipekka", 1)]
 
 #bot deck (duh)
-bot_deck = [Card(False, "fireball", 2), Card(False, "hogrider", 2), Card(False, "wizard", 3), Card(False, "valkyrie", 3), 
-        Card(False, "battleram", 5), Card(False, "skeletondragons", 3), Card(False, "minipekka", 2), Card(False, "arrows", 4)]
+bot_deck = [Card(False, "fireball", 2), Card(False, "witch", 2), Card(False, "wizard", 3), Card(False, "valkyrie", 3), 
+        Card(False, "speargoblins", 5), Card(False, "skeletondragons", 3), Card(False, "minipekka", 2), Card(False, "arrows", 4)]
 
 bot = Bot(bot_deck)
 #height comp screen ~ 800
@@ -120,14 +120,28 @@ def draw():
 
         if not troop.invulnerable:
             pygame.draw.rect(screen, BLACK, (hp_bar_x, hp_bar_y, hp_bar_width, hp_bar_height))
-            pygame.draw.rect(screen, GREEN, (hp_bar_x, hp_bar_y, int(hp_bar_width * (troop.cur_hp / troop.hit_points)), hp_bar_height))
+            if troop.has_shield and troop.shield_hp > 0:
+                pygame.draw.rect(screen, GREEN, (hp_bar_x, hp_bar_y, int(hp_bar_width * (troop.shield_hp / troop.shield_max_hp)), hp_bar_height))
+            else:
+                pygame.draw.rect(screen, GREEN, (hp_bar_x, hp_bar_y, int(hp_bar_width * (troop.cur_hp / troop.hit_points)), hp_bar_height))
+            
+            
 
         # Draw Level Indicator
         level_box_size = 10  # Square size for level indicator
         level_box_x = hp_bar_x - level_box_size - 2  # Slight padding to the left
         level_box_y = hp_bar_y - 2  # Align with HP bar
 
-        pygame.draw.rect(screen, troop_color, (level_box_x, level_box_y, level_box_size, level_box_size))
+        if troop.has_shield and troop.shield_hp > 0:
+            # Draw an upside-down triangle
+            point1 = (level_box_x + level_box_size / 2, level_box_y + level_box_size)  # bottom center
+            point2 = (level_box_x, level_box_y)  # top left
+            point3 = (level_box_x + level_box_size, level_box_y)  # top right
+            pygame.draw.polygon(screen, troop_color, [point1, point2, point3])
+        else:
+            # Draw square
+            pygame.draw.rect(screen, troop_color, (level_box_x, level_box_y, level_box_size, level_box_size))
+
 
         # Render level number text
         level_text = font.render(str(troop.level), True, WHITE)  # White text

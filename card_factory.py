@@ -15,10 +15,11 @@ troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer",
           "barbarians", "megaminion", "battleram",
           "firespirit", "electrospirit", "skeletondragons", "wizard",
           "bats", "hogrider", "flyingmachine",
-          "skeletonarmy", "babydragon", "pekka"]
+          "skeletonarmy", "guards", "babydragon", "witch", "pekka"]
 
 spells = ["fireball", "arrows",
-          "zap", "rocket"]
+          "zap", "rocket",
+          "goblinbarrel"]
 
 buildings = ["goblinhut", "goblincage", 
              "tombstone",
@@ -135,8 +136,18 @@ def troop_factory(side, position, name, level):
         for _ in range(15):
             out.append(bone_pit_cards.Skeleton(side, position.added(vector.Vector(random.uniform(-2, 2), random.uniform(-2, 2))), level))
         return out
+    elif name == "guards":
+        flip = 1 if side else -1
+        pos1 = vector.Vector(0, 1/2 * flip)
+        pos2 = vector.Vector(-math.sqrt(3)/4, -1/4 * flip)
+        pos3 = vector.Vector(math.sqrt(3)/4, -1/4 * flip)
+        return [pekkas_playhouse_cards.Guard(side, position.added(pos1), level), 
+                pekkas_playhouse_cards.Guard(side, position.added(pos2), level),
+                pekkas_playhouse_cards.Guard(side, position.added(pos3), level)]
     elif name == "babydragon":
         return pekkas_playhouse_cards.BabyDragon(side, position, level)
+    elif name == "witch":
+        return pekkas_playhouse_cards.Witch(side, position, level)
     elif name == "pekka":
         return pekkas_playhouse_cards.Pekka(side, position, level)
     else:
@@ -151,6 +162,8 @@ def spell_factory(side, position, name, level):
         return builders_workshop_cards.Zap(side, position, level)
     elif name == "rocket":
         return builders_workshop_cards.Rocket(side, position, level)
+    elif name == "goblinbarrel":
+        return pekkas_playhouse_cards.GoblinBarrel(side, position, level)
     else:
         raise Exception("Invalid spell name.")
 
@@ -209,6 +222,9 @@ elixir_map = {
     "flyingmachine" : 4,
     "rocket" : 6,
     "skeletonarmy" : 3,
+    "guards" : 3,
+    "goblinbarrel" : 3,
     "babydragon" : 4,
+    "witch" : 5,
     "pekka": 7
 }

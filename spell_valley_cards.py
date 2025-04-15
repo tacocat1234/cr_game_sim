@@ -38,7 +38,7 @@ class FireSpiritAttackEntity(AttackEntity):
             for each in hits:
                 new = not any(each is h for h in self.has_hit)
                 if (new):
-                    each.cur_hp -= self.damage
+                    each.damage(self.damage)
                     self.has_hit.append(each)
         else:
             direction = self.target.position.subtracted(self.position)
@@ -109,7 +109,7 @@ class ElectroSpiritAttackEntity(AttackEntity):
         hits = self.detect_hits(arena)
         if len(hits) > 0:
                 hits[0].stun()
-                hits[0].cur_hp -= self.damage
+                hits[0].damage(self.damage)
                 self.should_delete = True
                 if self.chain_count < ElectroSpiritAttackEntity.MAX_CHAIN_HITS: #if can still chain
                     min_dist = float("inf")
@@ -195,7 +195,7 @@ class WizardAttackEntity(AttackEntity):
             for each in hits:
                 new = not any(each is h for h in self.has_hit)
                 if (new):
-                    each.cur_hp -= self.damage
+                    each.damage(self.damage)
                     self.has_hit.append(each)
         else:
             direction = self.target.position.subtracted(self.position)
@@ -262,7 +262,7 @@ class SkeletonDragonAttackEntity(AttackEntity):
             for each in hits:
                 new = not any(each is h for h in self.has_hit)
                 if (new):
-                    each.cur_hp -= self.damage
+                    each.damage(self.damage)
                     self.has_hit.append(each)
         else:
             direction = self.target.position.subtracted(self.position)
@@ -321,7 +321,7 @@ class InfernoTowerAttackEntity(AttackEntity):
     def tick(self, arena):
         hits = self.detect_hits(arena)
         if len(hits) > 0:
-            hits[0].cur_hp -= self.damage
+            hits[0].damage(self.damage)
             self.should_delete = True
         else:
             direction = vector.Vector(
@@ -432,7 +432,7 @@ class BombTowerAttackEntity(AttackEntity):
             for each in hits:
                 new = not any(each is h for h in self.has_hit)
                 if (new):
-                    each.cur_hp -= self.damage
+                    each.damage(self.damage)
                     self.has_hit.append(each)
         else:
             direction = self.target_pos.subtracted(self.position)
@@ -497,7 +497,7 @@ class BombTowerDeathBombAttackEntity(AttackEntity):
         for each in hits:
             new = not any(each is h for h in self.has_hit)
             if (new):
-                each.cur_hp -= self.damage
+                each.damage(self.damage)
                 self.has_hit.append(each)
 
 
