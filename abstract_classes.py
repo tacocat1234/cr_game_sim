@@ -9,6 +9,9 @@ TILES_PER_MIN = 1/3600
 def same_sign(x, y):
     return (x >= 0 and y >= 0) or (x < 0 and y < 0)
 
+def on_bridge(x):
+    return x > 6.5 or x < -6.5 or (x < 4.5 and x > -4.5)
+
 class AttackEntity:
     def __init__(self, s, d, v, l, i_p):
         self.side = s
@@ -211,7 +214,7 @@ class Troop:
                         tower_target = tower
                         min_dist = vector.distance(tower.position, self.position)
 
-            if not tower_target is None and (self.ground and not self.cross_river) and not same_sign(tower_target.position.y, self.position.y): # if behind bridge and cant cross river
+            if not tower_target is None and (self.ground and not self.cross_river) and (not same_sign(tower_target.position.y, self.position.y) and ((self.position.y < -1 or self.position.y > 1) or not on_bridge(self.position.x))): # if behind bridge and cant cross river
                 r_bridge = vector.distance(vector.Vector(5.5, 0), self.position)
                 l_bridge = vector.distance(vector.Vector(-5.5, 0), self.position)
                 
@@ -259,8 +262,8 @@ class Troop:
             self.facing_dir = angle
 
             return False
-
-        if (self.ground and not self.cross_river) and not (same_sign(self.target.position.y, self.position.y) or math.isclose(self.position.y, 0, abs_tol=1e-2)):
+        #and (not same side) while also (not at bridge) 
+        if (self.ground and not self.cross_river) and (not same_sign(self.target.position.y, self.position.y) and ((self.position.y < -1 or self.position.y > 1) or not on_bridge(self.position.x))):
             
             r_bridge = vector.distance(vector.Vector(5.5, 0), self.target.position)
             l_bridge = vector.distance(vector.Vector(-5.5, 0), self.target.position)
@@ -275,7 +278,7 @@ class Troop:
             direction_x = tar_bridge.x - self.position.x
             direction_y = tar_bridge.y - self.position.y
             distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
-        elif self.cross_river and (self.position.x <-6.5 or (self.position.x < 4.5 and self.position.x > -4.5) or self.position.x > 6.5)and ((self.side and (self.position.y > - 2 and self.position.y < 1)) or (not self.side and (self.position.y < 2 and self.position.y > -1))):
+        elif self.cross_river and (not on_bridge(self.position.x)) and ((self.side and (self.position.y > - 2 and self.position.y < 1)) or (not self.side and (self.position.y < 2 and self.position.y > -1))):
             direction_x = 0
             direction_y = 1 if self.side else -1 #forwards 
             distance_to_target = 1

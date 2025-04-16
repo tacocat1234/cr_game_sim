@@ -20,11 +20,11 @@ game_arena.towers = [towers.KingTower(True, 1),
                        ]
 #player deck (mortar)
 deck = [Card(True, "goblinbarrel", 1), Card(True, "knight", 1), Card(True, "electrospirit", 1), Card(True, "fireball", 1), 
-        Card(True, "archers", 1), Card(True, "minions", 1), Card(True, "arrows", 1), Card(True, "minipekka", 1)]
+        Card(True, "musketeer", 1), Card(True, "megaminion", 1), Card(True, "zap", 1), Card(True, "minipekka", 1)]
 
 #bot deck (duh)
 bot_deck = [Card(False, "fireball", 2), Card(False, "witch", 2), Card(False, "wizard", 3), Card(False, "valkyrie", 3), 
-        Card(False, "speargoblins", 5), Card(False, "skeletondragons", 3), Card(False, "minipekka", 2), Card(False, "arrows", 4)]
+        Card(False, "speargoblins", 3), Card(False, "skeletondragons", 3), Card(False, "minipekka", 2), Card(False, "arrows", 4)]
 
 bot = Bot(bot_deck)
 #height comp screen ~ 800

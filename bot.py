@@ -61,9 +61,9 @@ class Bot:
                     left_count += 1
 
             if offensive_count > len(enemy) - offensive_count: # if more offensive opps than defensive
-                if random.randint(0, 1) == 1 and len(friendly) > 0:
+                if random.randint(0, 2) >= 1 and len(friendly) > 0:
                     friend_pos = random.choice(friendly).position
-                    friend_pos = friend_pos.added(vector.Vector(random.randint(-1, 1), random.randint(0, 4)))
+                    friend_pos = friend_pos.added(vector.Vector(random.randint(-2, 2), random.randint(1, 3)))
 
                     if friend_pos.x > 9:
                         friend_pos.x = 9
@@ -75,12 +75,12 @@ class Bot:
                         if friend_pos.y > 16:
                             friend_pos.y = 16
 
-                        return friend_pos
+                        return friend_pos # if legal friend pos
                 
                 weight = -4.5 if left_count > len(enemy) - left_count else 4.5 #towards left if more troops on left else right
                 return vector.Vector(round(random.triangular(-9, 9, weight)), random.randint(0, 16))
-            elif offensive_count < len(enemy) - offensive_count: # if more defensive opps than offensive
-                if len(friendly) > 0:
+            else: # if more defensive opps than offensive, or equal
+                if len(friendly) > 0 and random.random() < 0.8:
                     friend_pos = random.choice(friendly).position
                     friend_pos = friend_pos.added(vector.Vector(random.randint(-1, 1), random.randint(0, 4)))
 
@@ -90,16 +90,16 @@ class Bot:
                         friend_pos.x = -9
                     
                     
-                    if friend_pos.y >= 0:
-                        if friend_pos.y > 16:
-                            friend_pos.y = 16
+                    if friend_pos.y < 0:
+                        friend_pos.y = 0
+                    if friend_pos.y > 16:
+                        friend_pos.y = 16
 
-                        return friend_pos
+                    return friend_pos
                 #if illegal friend pos for any reason
                 weight = -4.5 if left_count < len(enemy) - left_count else 4.5 #towards left if more troops on right else left
                 return vector.Vector(round(random.triangular(-9, 9, weight)), random.randint(0, 16))
 
-            return vector.Vector(random.randint(-9, 9), random.randint(0, 16))
 
     
     

@@ -128,7 +128,7 @@ class WitchAttackEntity(RangedAttackEntity):
         hits = []
         if self.exploded:
             for each in arena.towers + arena.buildings + arena.troops:
-                if each.side != self.side and (isinstance(each, Tower) or (each.ground and not each.invulnerable)): # if different side
+                if each.side != self.side and (isinstance(each, Tower) or (not each.invulnerable)): # if different side
                     if vector.distance(self.position, each.position) < self.SPLASH_RADIUS + each.collision_radius:
                         hits.append(each)
         return hits
