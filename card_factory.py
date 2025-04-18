@@ -7,6 +7,7 @@ import barbarian_bowl_cards
 import spell_valley_cards
 import builders_workshop_cards
 import pekkas_playhouse_cards
+import royal_arena_cards
 import random
 
 troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer", 
@@ -15,7 +16,8 @@ troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer",
           "barbarians", "megaminion", "battleram",
           "firespirit", "electrospirit", "skeletondragons", "wizard",
           "bats", "hogrider", "flyingmachine",
-          "skeletonarmy", "guards", "babydragon", "witch", "pekka"]
+          "skeletonarmy", "guards", "babydragon", "witch", "pekka",
+          "darkprince", "royalhogs", "balloon", "prince", "royalgiant", "royalrecruits", "threemusketeers"]
 
 spells = ["fireball", "arrows",
           "zap", "rocket",
@@ -150,6 +152,32 @@ def troop_factory(side, position, name, level):
         return pekkas_playhouse_cards.Witch(side, position, level)
     elif name == "pekka":
         return pekkas_playhouse_cards.Pekka(side, position, level)
+    elif name == "darkprince":
+        return royal_arena_cards.DarkPrince(side, position, level)
+    elif name == "royalhogs":
+        out = []
+        for i in range(4):
+            out.append(royal_arena_cards.RoyalHog(side, position.added(vector.Vector(3.5/2 + (3.5/3 * i), 0)), level))
+        return out
+    elif name == "prince":
+        return royal_arena_cards.Prince(side, position, level)
+    elif name == "balloon":
+        return royal_arena_cards.Balloon(side, position, level)
+    elif name == "royalgiant":
+        return royal_arena_cards.RoyalGiant(side, position, level)
+    elif name == "royalrecruits":
+        out = []
+        for i in range(6):
+            out.append(royal_arena_cards.RoyalRecruit(side, position.added(vector.Vector(-7 + (14/5 * i), 0)), level))
+        return out
+    elif name == "threemusketeers":
+        flip = 1 if side else -1
+        pos1 = vector.Vector(0, 1/2 * flip)
+        pos2 = vector.Vector(-math.sqrt(3)/4, -1/4 * flip)
+        pos3 = vector.Vector(math.sqrt(3)/4, -1/4 * flip)
+        return [training_camp_cards.Musketeer(side, position.added(pos1), level), 
+                training_camp_cards.Musketeer(side, position.added(pos2), level),
+                training_camp_cards.Musketeer(side, position.added(pos3), level)]
     else:
         raise Exception("Invalid troop name.")
 
@@ -226,5 +254,12 @@ elixir_map = {
     "goblinbarrel" : 3,
     "babydragon" : 4,
     "witch" : 5,
-    "pekka": 7
+    "pekka": 7,
+    "darkprince" : 4,
+    "royalhogs" : 5,
+    "prince" : 5,
+    "balloon" : 5,
+    "royalgiant" : 6,
+    "royalrecruits" : 7,
+    "threemusketeers" : 9
 }

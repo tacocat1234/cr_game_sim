@@ -19,12 +19,12 @@ game_arena.towers = [towers.KingTower(True, 1),
                        towers.PrincessTower(False, 2, False)
                        ]
 #player deck (mortar)
-deck = [Card(True, "goblinbarrel", 1), Card(True, "knight", 1), Card(True, "electrospirit", 1), Card(True, "fireball", 1), 
-        Card(True, "musketeer", 1), Card(True, "megaminion", 1), Card(True, "zap", 1), Card(True, "minipekka", 1)]
+deck = [Card(True, "hogrider", 1), Card(True, "knight", 1), Card(True, "electrospirit", 1), Card(True, "fireball", 1), 
+        Card(True, "musketeer", 1), Card(True, "bats", 1), Card(True, "zap", 1), Card(True, "darkprince", 1)]
 
 #bot deck (duh)
 bot_deck = [Card(False, "fireball", 2), Card(False, "witch", 2), Card(False, "wizard", 3), Card(False, "valkyrie", 3), 
-        Card(False, "speargoblins", 3), Card(False, "skeletondragons", 3), Card(False, "minipekka", 2), Card(False, "arrows", 4)]
+        Card(False, "speargoblins", 3), Card(False, "skeletondragons", 3), Card(False, "prince", 2), Card(False, "arrows", 4)]
 
 bot = Bot(bot_deck)
 #height comp screen ~ 800
@@ -121,7 +121,7 @@ def draw():
         if not troop.invulnerable:
             pygame.draw.rect(screen, BLACK, (hp_bar_x, hp_bar_y, hp_bar_width, hp_bar_height))
             if troop.has_shield and troop.shield_hp > 0:
-                pygame.draw.rect(screen, GREEN, (hp_bar_x, hp_bar_y, int(hp_bar_width * (troop.shield_hp / troop.shield_max_hp)), hp_bar_height))
+                pygame.draw.rect(screen, GRAY, (hp_bar_x, hp_bar_y, int(hp_bar_width * (troop.shield_hp / troop.shield_max_hp)), hp_bar_height))
             else:
                 pygame.draw.rect(screen, GREEN, (hp_bar_x, hp_bar_y, int(hp_bar_width * (troop.cur_hp / troop.hit_points)), hp_bar_height))
             
@@ -134,10 +134,22 @@ def draw():
 
         if troop.has_shield and troop.shield_hp > 0:
             # Draw an upside-down triangle
-            point1 = (level_box_x + level_box_size / 2, level_box_y + level_box_size)  # bottom center
-            point2 = (level_box_x, level_box_y)  # top left
-            point3 = (level_box_x + level_box_size, level_box_y)  # top right
-            pygame.draw.polygon(screen, troop_color, [point1, point2, point3])
+            top_left = (level_box_x - 0.5, level_box_y - 0.5)
+            top_right = (level_box_x + level_box_size + 0.5, level_box_y - 0.5)
+            bottom_right = (level_box_x + level_box_size + 0.5, level_box_y + level_box_size + 0.5)
+            bottom_left = (level_box_x - 0.5, level_box_y + level_box_size + 0.5)
+
+            # Define the bottom triangle point
+            triangle_tip = (level_box_x + level_box_size / 2, level_box_y + level_box_size + level_box_size / 2)
+
+            # Draw pentagon (square + downward triangle)
+            pygame.draw.polygon(screen, troop_color, [
+                top_left,          # Top-left corner
+                top_right,         # Top-right corner
+                bottom_right,      # Bottom-right corner
+                triangle_tip,      # Bottom center triangle tip
+                bottom_left        # Bottom-left corner
+            ])
         else:
             # Draw square
             pygame.draw.rect(screen, troop_color, (level_box_x, level_box_y, level_box_size, level_box_size))
@@ -269,7 +281,7 @@ drag_end_pos = None  # Ending position of the drag
 elixir_recharge = 2.8
 elixir_timer = elixir_recharge
 
-
+#bot_elixir = -99 #disable bot for testing
 
 while running:
     clock.tick(60)  # 60 FPS

@@ -176,6 +176,7 @@ class Giant(Troop):
             c_r=0.75,
             p=position
         ) 
+        self.can_kb = False
         self.level = level
         self.walk_cycle_frames = 10
         class_name = self.__class__.__name__.lower()

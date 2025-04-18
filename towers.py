@@ -27,7 +27,7 @@ class PrincessTowerAttackEntity(AttackEntity):
     def tick(self, arena):
         hits = self.detect_hits(arena)
         if len(hits) > 0:
-            hits[0].cur_hp -= self.damage
+            hits[0].damage(self.damage)
             self.should_delete = True
         else:
             direction = vector.Vector(
@@ -89,7 +89,7 @@ class KingTowerAttackEntity(AttackEntity):
     def tick(self, arena):
         hits = self.detect_hits(arena)
         if len(hits) > 0:
-            hits[0].cur_hp -= self.damage
+            hits[0].damage(self.damage)
             self.should_delete = True
         else:
             direction = vector.Vector(

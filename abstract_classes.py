@@ -10,7 +10,7 @@ def same_sign(x, y):
     return (x >= 0 and y >= 0) or (x < 0 and y < 0)
 
 def on_bridge(x):
-    return x > 6.5 or x < -6.5 or (x < 4.5 and x > -4.5)
+    return (x > 4.5 and x < 6.5) or (x > -6.5 and x < -4.5)
 
 class AttackEntity:
     def __init__(self, s, d, v, l, i_p):
@@ -163,6 +163,7 @@ class Troop:
         self.cross_river = False
         self.has_shield = False
         self.should_delete = False #only for kamikaze troops
+        self.can_kb = True
 
     def stun(self):
         self.stun_timer = 0.5
@@ -170,7 +171,18 @@ class Troop:
 
     def damage(self, amount):
         self.cur_hp -= amount
-        
+    
+    def kb(self, vector):
+        if self.can_kb:
+            self.position.add(vector)
+
+    def die(self, arena):
+        self.cur_hp = -1
+        arena.troops.remove(self)
+
+    def tick_func(self, arena):
+        pass
+    
     def attack(self): #override
         return None #return the correct attackentity object
         
@@ -297,28 +309,32 @@ class Troop:
 
         self.position.x += direction_x  * m_s
         self.position.y += direction_y * m_s
+        angle = math.degrees(math.atan2(direction_y, direction_x))  # Get angle in degrees
+        self.facing_dir = angle
         return False
             
         
     def tick(self, arena):
         #update arena before
+        self.tick_func(arena)
         if self.stun_timer <= 0:
             if self.deploy_time <= 0:
                 if self.target is None or self.target.cur_hp <= 0:
+                    self.update_target(arena)
+                elif vector.distance(self.position, self.target.position) > self.sight_range:
                     self.update_target(arena)
                 if self.move(arena) and self.attack_cooldown <= 0: #move, then if within range, attack
                     atk = self.attack()
                     if isinstance(atk, list) and len(atk) > 0:
                         arena.active_attacks.extend(atk)
                     elif not atk is None:
-                        arena.active_attacks.append(self.attack())
+                        arena.active_attacks.append(atk)
                     self.attack_cooldown = self.hit_speed
             
     
     def cleanup(self, arena): # each troop runs this after ALL ticks are finished
         if self.cur_hp <= 0 or self.should_delete:
-            self.cur_hp = -1
-            arena.troops.remove(self)
+            self.die(arena)
         
         if self.deploy_time > 0: #if deploying, timer
             self.deploy_time -= TICK_TIME
@@ -465,8 +481,8 @@ class Spell:
                 if (isinstance(each, Troop)):
                     displacement = each.position.subtracted(self.position)
                     displacement.normalize()
-                    each.position.x += displacement.x * self.knock_back
-                    each.position.y += displacement.y * self.knock_back#end kb code
+                    displacement.scale(self.knock_back)
+                    each.kb(displacement)
             self.waves -= 1 #decrease waves
             self.damage_cd = self.time_between #reset cooldown
         elif self.damage_cd > 0:
