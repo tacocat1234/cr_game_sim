@@ -7,6 +7,7 @@ from abstract_classes import Building
 from abstract_classes import TILES_PER_MIN
 from abstract_classes import TICK_TIME
 import vector
+import copy
 import math
 
 class Zap(Spell):
@@ -113,7 +114,7 @@ class Mortar(Building):
                 self.facing_dir = angle
     
     def attack(self):
-        return MortarAttackEntity(self.side, self.hit_damage, self.position, self.target.position)
+        return MortarAttackEntity(self.side, self.hit_damage, self.position, copy.deepcopy(self.target.position))
     
 class BatAttackEntity(MeleeAttackEntity):
     HIT_RANGE = 1.2

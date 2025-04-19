@@ -5,6 +5,8 @@ from abstract_classes import TICK_TIME
 from bot import Bot
 from bot import place
 from card_factory import get_type
+from card_factory import get_radius
+from card_factory import can_anywhere
 import arena
 import towers
 import vector
@@ -18,13 +20,13 @@ game_arena.towers = [towers.KingTower(True, 1),
                        towers.PrincessTower(False, 2, True), 
                        towers.PrincessTower(False, 2, False)
                        ]
-#player deck (mortar)
-deck = [Card(True, "hogrider", 1), Card(True, "knight", 1), Card(True, "electrospirit", 1), Card(True, "fireball", 1), 
-        Card(True, "musketeer", 1), Card(True, "bats", 1), Card(True, "zap", 1), Card(True, "darkprince", 1)]
+#player deck 
+deck = [Card(True, "royalrecruits", 1), Card(True, "firespirit", 1), Card(True, "arrows", 1), Card(True, "zap", 1), 
+        Card(True, "royalhogs", 1), Card(True, "musketeer", 1), Card(True, "bats", 1), Card(True, "minipekka", 1)]
 
 #bot deck (duh)
-bot_deck = [Card(False, "fireball", 2), Card(False, "witch", 2), Card(False, "wizard", 3), Card(False, "valkyrie", 3), 
-        Card(False, "speargoblins", 3), Card(False, "skeletondragons", 3), Card(False, "prince", 2), Card(False, "arrows", 4)]
+bot_deck = [Card(False, "fireball", 2), Card(False, "witch", 4), Card(False, "wizard", 3), Card(False, "giant", 3), 
+        Card(False, "speargoblins", 3), Card(False, "skeletondragons", 3), Card(False, "prince", 3), Card(False, "arrows", 4)]
 
 bot = Bot(bot_deck)
 #height comp screen ~ 800
@@ -44,13 +46,13 @@ GRAY = (200, 200, 200)
 YELLOW = (255, 255, 0)
 PURPLE = (255, 0, 255)
 
-BG_TEMP = (0, 154, 23)
+BG_TEMP = (150, 150, 150)
 RIVER_TEMP = (79, 66, 181)
 BRIDGE_TEMP = (193, 154, 107)
 
 def convert_to_pygame(coordinate):
     pygame_x = int(WIDTH / 2 + coordinate.x * SCALE)
-    pygame_y = int(HEIGHT / 2 - 60 - coordinate.y * SCALE)  # Invert Y-axis 
+    pygame_y = int(HEIGHT / 2 - 64 - coordinate.y * SCALE)  # Invert Y-axis 
     return pygame_x, pygame_y
 
 def convert_from_pygame(pygame_x, pygame_y):
@@ -58,11 +60,18 @@ def convert_from_pygame(pygame_x, pygame_y):
     y = (HEIGHT / 2 - 60 - pygame_y) // SCALE + 0.5# Invert Y-axis back
     return vector.Vector(x, y)
 
+def in_pocket(x, y, isRight): #360 + 128, 640 + 128
+    if isRight:
+        return (x > 244 and x < 424 and y > 11 * SCALE and y < 15 * SCALE) or (x > 334 and x < 374 and y > 300 and y < 340)
+    else:
+        return (x > 64 and x < 244 and y > 11 * SCALE and y < 15 * SCALE) or (x > 114 and x < 154 and y > 300 and y < 340)
 
 pygame.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Crash Royale Arena")    
 font = pygame.font.Font(None, 12) 
+background_img = pygame.image.load("sprites/background.png").convert_alpha()
+select_img = pygame.image.load("sprites/tileselect.png").convert_alpha()
 
 #temp
 #game_arena.troops.append(training_camp_cards.Giant(True, vector.Vector(-2, -3), 1))
@@ -77,16 +86,41 @@ def cycle(hand, index, queue):
 
 def draw():
     screen.fill(BG_TEMP)
-
+    bg_rect = background_img.get_rect(center=(WIDTH / 2, (HEIGHT - 128) / 2))
+    screen.blit(background_img, bg_rect)
     # Draw river
-    pygame.draw.rect(screen, RIVER_TEMP, (0, HEIGHT/2 - 60 - SCALE, WIDTH, SCALE * 2)) 
+    pygame.draw.rect(screen, RIVER_TEMP, (0, HEIGHT/2 - 64 - SCALE, WIDTH, SCALE * 2)) 
    
     #draw card area
     pygame.draw.rect(screen, GRAY, (0, HEIGHT - 128, WIDTH, 128))
 
     #Draw bridges
-    pygame.draw.rect(screen, BRIDGE_TEMP, (64 + 2.5 * SCALE, HEIGHT/2 - 60 - 1.5 * SCALE, SCALE * 2, SCALE * 3)) 
-    pygame.draw.rect(screen, BRIDGE_TEMP, (WIDTH - (64 + 4.5 * SCALE), HEIGHT/2 - 60 - 1.5 *SCALE, SCALE * 2, SCALE * 3)) 
+    pygame.draw.rect(screen, BRIDGE_TEMP, (64 + 2.5 * SCALE, HEIGHT/2 - 64 - 1.5 * SCALE, SCALE * 2, SCALE * 3)) 
+    pygame.draw.rect(screen, BRIDGE_TEMP, (WIDTH - (64 + 4.5 * SCALE), HEIGHT/2 - 64 - 1.5 *SCALE, SCALE * 2, SCALE * 3)) 
+
+    #draw hovered
+
+    if not hovered is None:
+        screen.blit(select_img, (hovered[0], hovered[1]))
+        if not select_radius is None:
+            if isinstance(select_radius, list):
+                for each in select_radius:
+                    pygame.draw.circle(screen, (224, 255, 232), (hovered[0] + 10, hovered[1] + 10), each * SCALE, width=1)
+            else:
+                pygame.draw.circle(screen, (224, 255, 232), (hovered[0] + 10, hovered[1] + 10), select_radius * SCALE, width=1)
+        
+    if not drag_start_pos is None:
+        cur_name = deck[hand[click_quarter - 1]].name
+
+        if not can_anywhere(cur_name):
+            place_surface = pygame.Surface((488, 340), pygame.SRCALPHA)
+
+            pygame.draw.rect(place_surface, (238, 75, 43, 128), pygame.Rect(64, 0, 360, 220))
+            if enemy_right:
+                pygame.draw.rect(place_surface, (238, 75, 43, 128), pygame.Rect(244, 220, 180, 120))
+            if enemy_left:
+                pygame.draw.rect(place_surface, (238, 75, 43, 128), pygame.Rect(64, 220, 180, 120))
+            screen.blit(place_surface, (0,0))
 
     # Draw Towers
     for tower in game_arena.towers:
@@ -95,8 +129,8 @@ def draw():
         # Adjust position so that the rectangle is centered at the tower's coordinates
         tower_rect_width = 3 * SCALE
         tower_rect_height = 3 * SCALE
-        tower_x -= tower_rect_width // 2
-        tower_y -= tower_rect_height // 2
+        tower_x -= tower_rect_width / 2
+        tower_y -= tower_rect_height / 2
         
         pygame.draw.rect(screen, GRAY, (tower_x, tower_y, tower_rect_width, tower_rect_height))  # Tower square
 
@@ -121,7 +155,7 @@ def draw():
         if not troop.invulnerable:
             pygame.draw.rect(screen, BLACK, (hp_bar_x, hp_bar_y, hp_bar_width, hp_bar_height))
             if troop.has_shield and troop.shield_hp > 0:
-                pygame.draw.rect(screen, GRAY, (hp_bar_x, hp_bar_y, int(hp_bar_width * (troop.shield_hp / troop.shield_max_hp)), hp_bar_height))
+                pygame.draw.rect(screen, (250, 250, 250), (hp_bar_x, hp_bar_y, int(hp_bar_width * (troop.shield_hp / troop.shield_max_hp)), hp_bar_height))
             else:
                 pygame.draw.rect(screen, GREEN, (hp_bar_x, hp_bar_y, int(hp_bar_width * (troop.cur_hp / troop.hit_points)), hp_bar_height))
             
@@ -167,7 +201,7 @@ def draw():
 
         # Draw building square
         building_size = building.collision_radius * 2 * SCALE
-        pygame.draw.rect(screen, building_color, (building_x - building_size // 2, building_y - building_size // 2, building_size, building_size))
+        pygame.draw.rect(screen, building_color, (building_x - building_size / 2, building_y - building_size / 2, building_size, building_size))
 
         # Health bar
         hp_bar_x = building_x - 10
@@ -281,7 +315,12 @@ drag_end_pos = None  # Ending position of the drag
 elixir_recharge = 2.8
 elixir_timer = elixir_recharge
 
-#bot_elixir = -99 #disable bot for testing
+hovered = None
+select_radius = None
+win = None
+#bot_elixir = -999 #disable bot for testing
+enemy_left = True
+enemy_right = True
 
 while running:
     clock.tick(60)  # 60 FPS
@@ -307,6 +346,7 @@ while running:
             running = False
         # Detect mouse click in the bottom 128 pixels
         if event.type == pygame.MOUSEBUTTONDOWN:
+            hovered = None
             mouse_x, mouse_y = pygame.mouse.get_pos()
 
             # Check if the click is in the bottom 128 pixels
@@ -329,18 +369,27 @@ while running:
         # Detect mouse drag movement
         elif event.type == pygame.MOUSEMOTION:
             if drag_start_pos is not None:
-                # add code to animate thign at mouse pos later
-                pass
+                mouse_x, mouse_y = pygame.mouse.get_pos()
+
+                cur_name = deck[hand[click_quarter - 1]].name
+
+                if mouse_x > 64 and mouse_x < WIDTH - 64 and mouse_y < HEIGHT - 128 and (get_type(cur_name) == "spell" or mouse_y > 340) or (not enemy_right and in_pocket(mouse_x, mouse_y, True)) or (not enemy_left and in_pocket(mouse_x, mouse_y, False)):
+                    hovered = (((mouse_x - 64)// SCALE) * SCALE + 64, (mouse_y // SCALE) * SCALE)
+                    select_radius = get_radius(cur_name)
+
+                else:
+                    hovered = None
 
         # Detect when the player releases the mouse button
         elif event.type == pygame.MOUSEBUTTONUP:
+            hovered = None
             if drag_start_pos is not None:
                 mouse_x, mouse_y = pygame.mouse.get_pos()
 
                 # Store the ending position of the drag
                 drag_end_pos = (mouse_x, mouse_y)
                 cur_card = deck[hand[click_quarter - 1]]
-                if mouse_y < HEIGHT - 128 and (get_type(cur_card.name) == "spell" or mouse_y > 320):
+                if mouse_x > 64 and mouse_x < WIDTH - 64 and mouse_y < HEIGHT - 128 and (get_type(cur_card.name) == "spell" or mouse_y > 340) or (not enemy_right and in_pocket(mouse_x, mouse_y, True)) or (not enemy_left and in_pocket(mouse_x, mouse_y, False)):
                     if (cur_card.elixir_cost <= elixir):
                         card_type, card = deck[hand[click_quarter - 1]].summon(convert_from_pygame(mouse_x, mouse_y))
 
@@ -366,38 +415,31 @@ while running:
                 # Reset drag start position after the release
                 drag_start_pos = None
 
-
-        a = 0
-    b = 0
-    for tower in game_arena.towers:
-        if tower.side:
-            a += 1
-        else:
-            b += 1
-    
-    if a == 0 or b == 0:
-        break
+    enemy_left = False
+    enemy_right = False
+    for each in game_arena.towers:
+        if not each.side:
+            if each.position.x > 0: #is positive
+                enemy_right = True
+            elif each.position.x < 0: #is negative
+                enemy_left = True
 
     game_arena.tick()  # Update game logic
-    game_arena.cleanup()
+    fin = game_arena.cleanup()
+    if fin is not None:
+        win = fin
+        break
     draw()  # Redraw screen
 
 winfont = pygame.font.Font(None, 100)  # Adjust font size as needed
 text = None
-a = 0
-b = 0
-for tower in game_arena.towers:
-    if tower.side:
-        a += 1
-    else:
-        b += 1
-
-if b == 0:
-    text = winfont.render("YOU WIN", True, WHITE)
-elif a == 0:
-    text = winfont.render("YOU LOSE", True, WHITE)
-else:
+if win is None:
     text = winfont.render("quit_screen_text", True, WHITE)
+elif win:
+    text = winfont.render("YOU WIN", True, WHITE)
+else:
+    text = winfont.render("YOU LOSE", True, WHITE)
+    
 
 # Get text rectangle and center it
 text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))

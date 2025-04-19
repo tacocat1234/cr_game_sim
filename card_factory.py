@@ -29,6 +29,27 @@ buildings = ["goblinhut", "goblincage",
              "bombtower", "infernotower",
              "mortar"]
 
+effect_radius = {
+    "arrows" : 4,
+    "fireball" : 2.5,
+    "cannon" : 5.5,
+    "bombtower" : 6,
+    "infernotower" : 5.5,
+    "mortar" : [11.5, 3.5],
+    "zap" : 2.5,
+    "rocket" : 2,
+    "goblinbarrel" : 1.5
+}
+
+def get_radius(name):
+    if name in effect_radius:
+        return effect_radius[name]
+    else:
+        return None
+
+def can_anywhere(name):
+    return get_type(name) == "spell"
+
 def get_type(name):
     if name in troops:
         return "troop"
@@ -157,7 +178,7 @@ def troop_factory(side, position, name, level):
     elif name == "royalhogs":
         out = []
         for i in range(4):
-            out.append(royal_arena_cards.RoyalHog(side, position.added(vector.Vector(3.5/2 + (3.5/3 * i), 0)), level))
+            out.append(royal_arena_cards.RoyalHog(side, position.added(vector.Vector(-3.5/2 + (3.5/3 * i), 0)), level))
         return out
     elif name == "prince":
         return royal_arena_cards.Prince(side, position, level)

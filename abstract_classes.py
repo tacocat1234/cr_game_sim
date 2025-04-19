@@ -194,22 +194,20 @@ class Troop:
             for each in arena.troops: #for each troop
                 if each.targetable and not each.invulnerable and each.side != self.side and (not self.ground_only or (self.ground_only and each.ground)): #targets air or is ground only and each is ground troup
                     dist = vector.distance(each.position, self.position)
-                    if  dist < min_dist and dist < self.sight_range:
+                    if  dist < min_dist and dist < self.sight_range + self.collision_radius + each.collision_radius:
                         self.target = each
                         min_dist = vector.distance(each.position, self.position)
         for each in arena.buildings: #for each building, so if any building is closer then non tower targeting switches, or if tower targeting then finds closest building
             if each.side != self.side:
                 dist = vector.distance(each.position, self.position)
-                if  dist < min_dist and dist < self.sight_range:
+                if  dist < min_dist and dist < self.sight_range + self.collision_radius + each.collision_radius:
                     self.target = each
                     min_dist = vector.distance(each.position, self.position)
         
         for tower in arena.towers: #check for towers that it can currently hit
             if tower.side != self.side:
                 dist = vector.distance(tower.position, self.position)
-                if not self.target is None and dist < vector.distance(self.target.position, self.position):
-                    self.target = None
-                if dist <= self.hit_range and dist < min_dist: #iff can hit tower, then it locks on.
+                if dist <= self.hit_range + self.collision_radius + tower.collision_radius and dist < min_dist: #iff can hit tower, then it locks on.
                     self.target = tower #ensures only locks when activel attacking tower, so giant at bridge doesnt immediatly lock onto tower and ruin everyones day
                     min_dist = vector.distance(tower.position, self.position)
     
@@ -321,7 +319,7 @@ class Troop:
             if self.deploy_time <= 0:
                 if self.target is None or self.target.cur_hp <= 0:
                     self.update_target(arena)
-                elif vector.distance(self.position, self.target.position) > self.sight_range:
+                elif vector.distance(self.position, self.target.position) > self.sight_range + self.collision_radius + self.target.collision_radius: #add 0.2 so there is tiny buffer for ranged troops
                     self.update_target(arena)
                 if self.move(arena) and self.attack_cooldown <= 0: #move, then if within range, attack
                     atk = self.attack()
@@ -396,7 +394,7 @@ class Tower:
         min_dist = float('inf')
         for each in arena.troops + arena.buildings:
             dist = vector.distance(each.position, self.position)
-            if not each.invulnerable and each.targetable and each.side != self.side and dist < min_dist and dist < self.hit_range + each.collision_radius:
+            if not each.invulnerable and each.targetable and each.side != self.side and dist < min_dist and dist < self.hit_range + self.collision_radius + each.collision_radius:
                 self.target = each
                 min_dist = vector.distance(each.position, self.position)
     

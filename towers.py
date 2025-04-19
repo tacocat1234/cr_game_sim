@@ -52,7 +52,7 @@ class PrincessTowerAttackEntity(AttackEntity):
 class PrincessTower(Tower):
     def __init__(self, side, level, l_or_r):
         x = 5.5 if l_or_r else -5.5 #right is true left is false
-        y = -10 if side else 10 #your side is true opp side is false
+        y = -10.5 if side else 10.5 #your side is true opp side is false
         super().__init__(
             s=side,
             h_d=50 * pow(1.08, level - 1),
@@ -121,7 +121,7 @@ class KingTower(Tower):
             l_t=0.5,
             h_p=2400 * pow(1.1, level - 1),
             c_r=1.4,
-            p=vector.Vector(0, -13 if side else 13)
+            p=vector.Vector(0, -13.5 if side else 13.5)
         )
         self.activated = False
         self.activation_timer = 4
