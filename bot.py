@@ -19,6 +19,9 @@ class Bot:
             if each.elixir_cost < self.min_elixir:
                 self.min_elixir = each.elixir_cost
 
+        self.buffer_check = 2
+        self.buffer = []
+
     def tick(self, elixir):
         if self.internal_timer <= 0 or elixir >= 9:
             if elixir >= 7:
@@ -26,10 +29,20 @@ class Bot:
             else:
                 self.internal_timer = random.triangular(0, 14, 5.6)
 
-            if (elixir >= self.min_elixir):            
+            cur_min = 11
+            for each in self.cards:
+                if each.name not in self.buffer and each.elixir_cost < cur_min:
+                    cur_min = each.elixir_cost
+            if elixir >= cur_min:
                 selected = random.choice(self.cards)
-                while selected.elixir_cost > elixir:
+                while selected.elixir_cost > elixir or selected.name in self.buffer:
                     selected = random.choice(self.cards)
+                
+                if len(self.buffer) < self.buffer_check:
+                    self.buffer.append(selected.name)
+                else:
+                    self.buffer.pop(0)
+                    self.buffer.append(selected.name)
                 return selected
             else:
                 return None
