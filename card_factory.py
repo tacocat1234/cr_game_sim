@@ -8,6 +8,7 @@ import spell_valley_cards
 import builders_workshop_cards
 import pekkas_playhouse_cards
 import royal_arena_cards
+import frozen_peak_cards
 import random
 
 troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer", 
@@ -17,11 +18,13 @@ troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer",
           "firespirit", "electrospirit", "skeletondragons", "wizard",
           "bats", "hogrider", "flyingmachine",
           "skeletonarmy", "guards", "babydragon", "witch", "pekka",
-          "darkprince", "royalhogs", "balloon", "prince", "royalgiant", "royalrecruits", "threemusketeers"]
+          "darkprince", "royalhogs", "balloon", "prince", "royalgiant", "royalrecruits", "threemusketeers",
+          "icespirit", "icegolem"]
 
 spells = ["fireball", "arrows",
           "zap", "rocket",
-          "goblinbarrel"]
+          "goblinbarrel",
+          "giantsnowball", "freeze"]
 
 buildings = ["goblinhut", "goblincage", 
              "tombstone",
@@ -38,7 +41,9 @@ effect_radius = {
     "mortar" : [11.5, 3.5],
     "zap" : 2.5,
     "rocket" : 2,
-    "goblinbarrel" : 1.5
+    "goblinbarrel" : 1.5,
+    "giantsnowball" : 2.5,
+    "freeze" : 4
 }
 
 def get_radius(name):
@@ -199,6 +204,10 @@ def troop_factory(side, position, name, level):
         return [training_camp_cards.Musketeer(side, position.added(pos1), level), 
                 training_camp_cards.Musketeer(side, position.added(pos2), level),
                 training_camp_cards.Musketeer(side, position.added(pos3), level)]
+    elif name == "icespirit":
+        return frozen_peak_cards.IceSpirit(side, position, level)
+    elif name == "icegolem":
+        return frozen_peak_cards.IceGolem(side, position, level)
     else:
         raise Exception("Invalid troop name.")
 
@@ -213,6 +222,10 @@ def spell_factory(side, position, name, level):
         return builders_workshop_cards.Rocket(side, position, level)
     elif name == "goblinbarrel":
         return pekkas_playhouse_cards.GoblinBarrel(side, position, level)
+    elif name == "giantsnowball":
+        return frozen_peak_cards.GiantSnowball(side, position, level)
+    elif name == "freeze":
+        return frozen_peak_cards.Freeze(side, position, level)
     else:
         raise Exception("Invalid spell name.")
 
@@ -282,5 +295,9 @@ elixir_map = {
     "balloon" : 5,
     "royalgiant" : 6,
     "royalrecruits" : 7,
-    "threemusketeers" : 9
+    "threemusketeers" : 9,
+    "icespirit" : 1,
+    "giantsnowball" : 2,
+    "icegolem" : 2,
+    "freeze" : 4
 }

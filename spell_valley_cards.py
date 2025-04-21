@@ -49,7 +49,7 @@ class FireSpiritAttackEntity(AttackEntity):
             
             if vector.distance(self.position, self.target.position) < self.target.collision_radius:
                 self.display_size = FireSpiritAttackEntity.DAMAGE_RADIUS 
-                self.duration =  0.5
+                self.duration = 0.25
                 self.exploded = True
     
 class FireSpirit(Troop):

@@ -24,9 +24,13 @@ class AttackEntity:
         self.has_hit = []
         self.sprite_path = ""
         self.display_size = 0.25
-        
+    
+    def apply_effect(self, target):
+        pass
+
     def tick(self, arena):
-        self.position.add(self.velocity)
+        if self.velocity != 0:
+            self.position.add(self.velocity)
         hits = self.detect_hits(arena)
         for each in hits:
             new = True
@@ -35,7 +39,8 @@ class AttackEntity:
                     new = False
                     break
             if (new):
-                each.hp -= self.damage
+                each.damage(self.damage)
+                self.apply_effect(each)
                 self.has_hit.append(each)
         
         
@@ -156,7 +161,7 @@ class Troop:
         self.walk_cycle_frames = 1
         self.walk_cycle_cur = 0
 
-        self.move_vector = None
+        self.move_vector = vector.Vector(0, 0)
         
         class_name = self.__class__.__name__.lower()
         self.sprite_path = f"sprites/{class_name}/{class_name}.png"
@@ -185,6 +190,10 @@ class Troop:
     def stun(self):
         self.stun_timer = 0.5
         self.target = None
+
+    def freeze(self, duration):
+        self.stun_timer = duration
+        self.attack_cooldown = self.hit_speed
 
     def damage(self, amount):
         self.cur_hp -= amount
@@ -266,7 +275,7 @@ class Troop:
                 distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
             elif self.cross_river and ((self.side and (self.position.y > - 2 and self.position.y < 1)) or (not self.side and (self.position.y < 2 and self.position.y > -1))):
                 direction_x = 0
-                direction_y = 1 if self.target.position.y - self.position.y > 0 else -1 #forwards 
+                direction_y = 1 if (self.side if self.target is None else self.target.position.y - self.position.y) > 0 else -1 #forwards 
                 distance_to_target = 1
                 m_s = self.jump_speed
             elif not tower_target is None:
@@ -280,6 +289,7 @@ class Troop:
                 return #exit
             elif min_dist < self.hit_range + self.collision_radius + tower_target.collision_radius: #within hit range, locks on
                 self.target = tower_target
+                self.move_vector = vector.Vector(0, 0)
                 return True
             
             direction_x /= distance_to_target
@@ -290,7 +300,7 @@ class Troop:
 
             angle = math.degrees(math.atan2(direction_y, direction_x))  # Get angle in degrees
             self.facing_dir = angle
-
+            self.move_vector = vector.Vector(direction_x * m_s, direction_y * m_s)
             return False
         #and (not same side) while also (not at bridge) 
         if (self.ground and not self.cross_river) and (not same_sign(self.target.position.y, self.position.y) and ((self.position.y < -1 or self.position.y > 1) or not on_bridge(self.position.x))):
@@ -310,7 +320,7 @@ class Troop:
             distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
         elif self.cross_river and (not on_bridge(self.position.x)) and ((self.target.position.y - self.position.y > 0 and (self.position.y > - 2 and self.position.y < 1)) or (not self.target.position.y - self.position.y > 0 and (self.position.y < 2 and self.position.y > -1))):
             direction_x = 0
-            direction_y = 1 if self.target.position.y - self.position.y > 0 else -1 #forwards 
+            direction_y = 1 if (self.side if self.target is None else self.target.position.y - self.position.y) > 0 else -1 #forwards 
             distance_to_target = 1
             m_s = self.jump_speed
         else:
@@ -319,6 +329,7 @@ class Troop:
             distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
         
         if vector.distance(self.target.position, self.position) < self.hit_range + self.collision_radius + self.target.collision_radius: #within hit range, then dont move just attack
+            self.move_vector = vector.Vector(0, 0)
             return True
         
         direction_x /= distance_to_target
@@ -329,6 +340,7 @@ class Troop:
         self.position.y += direction_y * m_s
         angle = math.degrees(math.atan2(direction_y, direction_x))  # Get angle in degrees
         self.facing_dir = angle
+        self.move_vector = vector.Vector(direction_x * m_s, direction_y * m_s)
         return False
             
         
@@ -428,6 +440,10 @@ class Tower:
         self.stun_timer = 0.5
         self.target = None
 
+    def freeze(self, duration):
+        self.stun_timer = duration
+        self.attack_cooldown = self.hit_speed
+
     def tick_func(self, arena):
         pass
     
@@ -506,6 +522,7 @@ class Spell:
         self.king_pos = (vector.Vector(0, -12) if s else vector.Vector(0, 12))
         self.spawn_timer = 0 if v == 0 else vector.distance(tar, self.king_pos) / v #number of ticks
         self.should_delete = False
+        self.display_duration = 0
 
         self.total_time = self.spawn_timer #number of ticks
         
@@ -520,6 +537,9 @@ class Spell:
             if (isinstance(each, Tower) or not each.invulnerable) and each.side != self.side and (vector.distance(each.position, self.position) <= self.radius + each.collision_radius):
                 out.append(each)
         return out
+    
+    def apply_effect(self, target):
+        pass
         
     def tick(self, arena):
         if self.spawn_timer > 0:
@@ -539,16 +559,18 @@ class Spell:
                     displacement.normalize()
                     displacement.scale(self.knock_back)
                     each.kb(displacement)
+                self.apply_effect(each)
             self.waves -= 1 #decrease waves
             self.damage_cd = self.time_between #reset cooldown
         elif self.damage_cd > 0:
             self.damage_cd -= TICK_TIME #decrement cooldown
-        else:
+        elif self.display_duration <= 0:
             self.should_delete = True #mark for deletion
             
     def cleanup(self, arena):
         if self.should_delete:
             arena.spells.remove(self) #delete
+        self.display_duration -= TICK_TIME
         
 class Building:
     def __init__(self, s, h_p, h_d, h_s, l_t, h_r, s_r, g, t_g_o, t_o, l, d_t, c_r, d_s_c, d_s: type, p):
@@ -604,6 +626,10 @@ class Building:
     def stun(self):
         self.stun_timer = 0.5
         self.target = None
+
+    def freeze(self, duration):
+        self.stun_timer = duration
+        self.attack_cooldown = self.hit_speed
 
     def tick_func(self, arena):
         pass
