@@ -167,6 +167,20 @@ class BattleRam(Troop):
         self.stun_timer = 0.5
         self.move_speed = 60 * TILES_PER_MIN
         self.target = None
+    
+    def die(self, arena):
+        arena.troops.append(Barbarian(self.side, self.position.added(vector.Vector(0, 0.3)), self.level))
+        arena.troops.append(Barbarian(self.side, self.position.added(vector.Vector(0, -0.3)), self.level))
+        arena.troops.remove(self)
+        self.cur_hp = -1
+
+    def tick_func(self, arena):
+        if self.stun_timer <= 0 and not self.charging and self.charge_charge_distance >= 3:
+            self.charging = True
+            self.move_speed = self.charge_speed
+            self.charge_charge_distance = 0
+        if self.stun_timer <= 0 and self.deploy_time <= 0 and not self.charging: #if not in range
+            self.charge_charge_distance += self.move_speed
 
     def attack(self):
         self.should_delete = True
@@ -174,41 +188,4 @@ class BattleRam(Troop):
             return BattleRamAttackEntity(self.side, self.charge_damage, self.position, self.target)  
         else:
             return BattleRamAttackEntity(self.side, self.hit_damage, self.position, self.target)  
-    
-    def tick(self, arena):
-        if self.stun_timer <= 0 and not self.charging and self.charge_charge_distance >= 3:
-            self.charging = True
-            self.move_speed = self.charge_speed
-            self.charge_charge_distance = 0
-
-        if self.stun_timer <= 0 and self.deploy_time <= 0:
-            if self.target is None or self.target.cur_hp <= 0:
-                self.update_target(arena)
-            if self.move(arena) and self.attack_cooldown <= 0: #move, then if within range, attack
-                atk = self.attack()
-                if isinstance(atk, list) and len(atk) > 0:
-                    arena.active_attacks.extend(atk)
-                elif not atk is None:
-                    arena.active_attacks.append(self.attack())
-                self.attack_cooldown = self.hit_speed
-            if not self.charging:
-                self.charge_charge_distance += self.move_speed
-    
-    def cleanup(self, arena): # each troop runs this after ALL ticks are finished
-        if self.cur_hp <= 0 or self.should_delete:
-            self.cur_hp = -1
-            arena.troops.append(Barbarian(self.side, self.position.added(vector.Vector(0, 0.3)), self.level))
-            arena.troops.append(Barbarian(self.side, self.position.added(vector.Vector(0, -0.3)), self.level))
-            arena.troops.remove(self)
-        
-        if self.deploy_time > 0: #if deploying, timer
-            self.deploy_time -= TICK_TIME
-        elif self.stun_timer <= 0:
-            if not self.target is None and not vector.distance(self.target.position, self.position) < self.hit_range + self.target.collision_radius + self.collision_radius and (self.attack_cooldown <= self.hit_speed - self.load_time):
-                if not self.charging:
-                    self.attack_cooldown = self.hit_speed - self.load_time #if not currently attacking but cooldown is less than first hit delay
-            else: #otherwise
-                self.attack_cooldown -= TICK_TIME #decrement time if eithe
-        else:
-            self.stun_timer -= TICK_TIME
 

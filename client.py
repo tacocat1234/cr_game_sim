@@ -20,7 +20,7 @@ from abstract_classes import TICK_TIME
 # modify the below to set deck and tower levels
 DECK = []
 KING_LEVEL = PRINCESS_LEVEL = 11
-with open("deck.txt", "r") as file:
+with open("decks/deck.txt", "r") as file:
     for _ in range(8):
         line = file.readline().strip()
         if line:  # Ensure line is not empty

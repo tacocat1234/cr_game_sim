@@ -387,21 +387,13 @@ class InfernoTower(Building):
                 arena.active_attacks.append(self.attack())
             self.attack_cooldown = self.hit_speed
 
-    def cleanup(self, arena):
-        #print(self.cur_hp) #temp
-        self.cur_hp -= self.hit_points * TICK_TIME / self.lifespan
-        if self.cur_hp <= 0:
-            arena.buildings.remove(self)
-        
+    def cleanup_func(self, arena):
         if self.stun_timer <= 0:
-            self.attack_cooldown -= TICK_TIME
             if self.stage_duration <= 0:
                 self.stage = self.stage + 1 if self.stage < 3 else self.stage
                 self.stage_duration = 2
             else:
                 self.stage_duration -= TICK_TIME
-        else:
-            self.stun_timer -= TICK_TIME
 
 class BombTowerAttackEntity(AttackEntity):
     DAMAGE_RADIUS = 1.5

@@ -146,17 +146,23 @@ class Troop:
         self.target = None
         self.attack_cooldown = h_s - l_t
 
+        self.normal_load_time = l_t
+        self.normal_hit_speed = h_s
+        self.normal_move_speed = m_s
+
         self.facing_dir = 0
         self.ticks_per_frame = 6
         self.cur_ticks_per_frame = 0
         self.walk_cycle_frames = 1
         self.walk_cycle_cur = 0
+
+        self.move_vector = None
         
         class_name = self.__class__.__name__.lower()
         self.sprite_path = f"sprites/{class_name}/{class_name}.png"
 
         self.stun_timer = 0
-        self.move_modifier = 1
+        self.slow_timer = 0
 
         self.targetable = True
         self.invulnerable = False
@@ -164,6 +170,17 @@ class Troop:
         self.has_shield = False
         self.should_delete = False #only for kamikaze troops
         self.can_kb = True
+
+    def slow(self, duration):
+        self.slow_timer = duration
+        self.hit_speed = 0.35 * self.normal_hit_speed
+        self.load_time = 0.35 * self.normal_load_time
+        self.move_speed = 0.35 * self.normal_move_speed
+
+    def unslow(self):
+        self.hit_speed = self.normal_hit_speed
+        self.load_time = self.normal_load_time
+        self.move_speed = self.normal_move_speed
 
     def stun(self):
         self.stun_timer = 0.5
@@ -182,7 +199,10 @@ class Troop:
 
     def tick_func(self, arena):
         pass
-    
+
+    def cleanup_func(self, arena):
+        pass
+
     def attack(self): #override
         return None #return the correct attackentity object
         
@@ -246,7 +266,7 @@ class Troop:
                 distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
             elif self.cross_river and ((self.side and (self.position.y > - 2 and self.position.y < 1)) or (not self.side and (self.position.y < 2 and self.position.y > -1))):
                 direction_x = 0
-                direction_y = 1 if self.side else -1 #forwards 
+                direction_y = 1 if self.target.position.y - self.position.y > 0 else -1 #forwards 
                 distance_to_target = 1
                 m_s = self.jump_speed
             elif not tower_target is None:
@@ -331,9 +351,18 @@ class Troop:
             
     
     def cleanup(self, arena): # each troop runs this after ALL ticks are finished
+        
+        self.cleanup_func(arena)
+
         if self.cur_hp <= 0 or self.should_delete:
             self.die(arena)
         
+        if self.slow_timer < 0 :
+            self.slow_timer = 0
+            self.unslow()
+        elif self.slow_timer > 0:
+            self.slow_timer -= TICK_TIME
+
         if self.deploy_time > 0: #if deploying, timer
             self.deploy_time -= TICK_TIME
         elif self.stun_timer <= 0:
@@ -374,6 +403,10 @@ class Tower:
         self.position = p
         self.target = None
 
+        self.normal_load_time = l_t
+        self.normal_hit_speed = h_s
+
+        self.slow_timer = 0
         self.stun_timer = 0
         self.sprite_path = ""
         self.animation_cycle_frames = 1
@@ -381,10 +414,25 @@ class Tower:
 
     def damage(self, amount):
         self.cur_hp -= amount
+    
+    def slow(self, duration):
+        self.slow_timer = duration
+        self.load_time = 0.35 * self.normal_load_time
+        self.hit_speed = 0.35 * self.normal_hit_speed
+
+    def unslow(self):
+        self.hit_speed = self.normal_hit_speed
+        self.load_time = self.normal_load_time
 
     def stun(self):
         self.stun_timer = 0.5
         self.target = None
+
+    def tick_func(self, arena):
+        pass
+    
+    def cleanup_func(self, arena):
+        pass
 
     def attack(self):
         return None
@@ -399,6 +447,8 @@ class Tower:
                 min_dist = vector.distance(each.position, self.position)
     
     def tick(self, arena):
+        self.tick_func(arena)
+
         if self.stun_timer <= 0:
         #print(self.target) #temp
             if self.target is None or self.target.cur_hp <= 0:
@@ -418,9 +468,17 @@ class Tower:
                 self.sprite_path = f"sprites/{class_name}/{class_name}.png"
     
     def cleanup(self, arena):
+        self.cleanup_func(arena)
         #print(self.cur_hp) #temp
         if self.cur_hp <= 0:
             arena.towers.remove(self)
+
+        if self.slow_timer < 0 :
+            self.slow_timer = 0
+            self.unslow()
+        elif self.slow_timer > 0:
+            self.slow_timer -= TICK_TIME
+
 
         if self.stun_timer <= 0:
             if self.target is None or (vector.distance(self.target.position, self.position) > self.hit_range + self.target.collision_radius and (self.attack_cooldown <= self.hit_speed - self.load_time)):
@@ -513,19 +571,32 @@ class Building:
         self.death_spawn_count = d_s_c
         self.death_spawn = d_s
 
+        self.normal_hit_speed = h_s
+        self.normal_load_time = l_t
         self.cur_hp = h_p
         self.target = None
         self.attack_cooldown = 0
         self.position = p
 
         self.stun_timer = 0
+        self.slow_timer = 0
 
         self.facing_dir = 0
         class_name = self.__class__.__name__.lower()
         self.sprite_path_front = f"sprites/{class_name}/{class_name}" # + "_base.png" or + "_top.png"
 
+        self.is_spawner = False
         self.targetable = True
         self.invulnerable = False
+
+    def slow(self, duration):
+        self.slow_timer = duration
+        self.hit_speed = 0.35 * self.normal_hit_speed
+        self.load_timer = 0.35 * self.normal_load_time
+
+    def unslow(self):
+        self.hit_speed = self.normal_hit_speed
+        self.load_timer = self.normal_load_time
 
     def damage(self, amount):
         self.cur_hp -= amount
@@ -533,6 +604,12 @@ class Building:
     def stun(self):
         self.stun_timer = 0.5
         self.target = None
+
+    def tick_func(self, arena):
+        pass
+    
+    def cleanup_func(self, arena):
+        pass
 
     def attack(self):
         return None
@@ -550,6 +627,7 @@ class Building:
                 self.facing_dir = angle
     
     def tick(self, arena):
+        self.tick_func(arena)
         #print(self.target) #temp
         if self.target is None or self.target.cur_hp <= 0:
             self.update_target(arena)
@@ -562,6 +640,8 @@ class Building:
             self.attack_cooldown = self.hit_speed
     
     def cleanup(self, arena):
+        self.cleanup_func(arena)
+
         #print(self.cur_hp) #temp
         self.cur_hp -= self.hit_points * TICK_TIME / self.lifespan
         if self.cur_hp <= 0:
@@ -572,8 +652,14 @@ class Building:
                         self.position.added(vector.Vector(random.uniform(-self.collision_radius, self.collision_radius), random.uniform(-self.collision_radius, self.collision_radius))), 
                         self.level))
         
+        if self.slow_timer < 0 :
+            self.slow_timer = 0
+            self.unslow()
+        elif self.slow_timer > 0:
+            self.slow_timer -= TICK_TIME
+        
         if self.stun_timer <= 0:
-            if self.target is None or (vector.distance(self.target.position, self.position) > self.hit_range + self.target.collision_radius and (self.attack_cooldown <= self.hit_speed - self.load_time)):
+            if not self.is_spawner and (self.target is None or (vector.distance(self.target.position, self.position) > self.hit_range + self.target.collision_radius and (self.attack_cooldown <= self.hit_speed - self.load_time))):
                     self.attack_cooldown = self.hit_speed - self.load_time #if not currently attacking but cooldown is less than first hit delay
             else: #otherwise
                 self.attack_cooldown -= TICK_TIME

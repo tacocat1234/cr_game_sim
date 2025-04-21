@@ -143,7 +143,13 @@ class Tombstone(Building):
         )
         self.next_spawn = None
         self.remaining_spawn_count = 0
+        self.is_spawner = True
         self.level = level
+    
+    def cleanup_func(self, arena):
+        if self.stun_timer <= 0:
+            if not self.next_spawn is None and self.next_spawn > 0:
+                self.next_spawn -= TICK_TIME
     
     def tick(self, arena):
         if self.stun_timer <= 0:
@@ -154,7 +160,7 @@ class Tombstone(Building):
                 self.remaining_spawn_count = 1
                 self.attack_cooldown = self.hit_speed
         
-        if self.remaining_spawn_count > 0 and self.next_spawn <= 0: #remaining 2 gobs
+        if self.remaining_spawn_count > 0 and self.next_spawn <= 0: #remaining skeleton
             front = vector.Vector(0, 1.5) if self.side else vector.Vector(0, -1.5)
             arena.troops.append(Skeleton(self.side, self.position.added(front), self.level))
             self.remaining_spawn_count -= 1 #one less spawn
@@ -163,24 +169,6 @@ class Tombstone(Building):
             elif not self.next_spawn is None:
                 self.next_spawn = None #no more
                 self.remaining_spawn_count = 0 #no more
-
-    def cleanup(self, arena):
-        
-        if self.cur_hp <= 0:
-            arena.buildings.remove(self)
-            for i in range(self.death_spawn_count):
-                arena.troops.append(self.death_spawn(self.side, 
-                    self.position.added(vector.Vector(random.uniform(-self.collision_radius, self.collision_radius), random.uniform(-self.collision_radius, self.collision_radius))), 
-                    self.level))
-            
-        if self.stun_timer <= 0:
-            self.cur_hp -= self.hit_points * TICK_TIME / self.lifespan
-            if not self.next_spawn is None and self.next_spawn > 0:
-                self.next_spawn -= TICK_TIME
-            
-            self.attack_cooldown -= TICK_TIME
-        else:
-            self.stun_timer -= TICK_TIME
 
 class ValkyrieAttackEntity(AttackEntity):
     HIT_RANGE = 2.0

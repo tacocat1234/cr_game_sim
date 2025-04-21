@@ -13,21 +13,64 @@ import vector
 
 game_arena = arena.Arena()
 
-game_arena.towers = [towers.KingTower(True, 1), 
-                       towers.PrincessTower(True, 1, True), 
-                       towers.PrincessTower(True, 1, False), 
-                       towers.KingTower(False, 3), 
-                       towers.PrincessTower(False, 2, True), 
-                       towers.PrincessTower(False, 2, False)
+
+deck = []
+KING_LEVEL = PRINCESS_LEVEL = BOT_K_L = BOT_P_L = 0
+
+with open("decks/deck.txt", "r") as file:
+    for _ in range(8):
+        line = file.readline().strip()
+        if line:  # Ensure line is not empty
+            card, level = line.rsplit(" ", 1)  # Split at the last space
+            deck.append(Card(True, card, int(level)))
+            
+    line = file.readline().strip()
+    if line:
+        _, KING_LEVEL = line.rsplit(" ", 1)
+        KING_LEVEL = int(KING_LEVEL)
+
+    line = file.readline().strip()
+    if line:
+        _, PRINCESS_LEVEL = line.rsplit(" ", 1)
+        PRINCESS_LEVEL = int(PRINCESS_LEVEL)
+
+bot_deck = []
+
+with open("decks/bot_deck.txt", "r") as file:
+    for _ in range(8):
+        line = file.readline().strip()
+        if line:  # Ensure line is not empty
+            card, level = line.rsplit(" ", 1)  # Split at the last space
+            bot_deck.append(Card(False, card, int(level)))
+            
+    line = file.readline().strip()
+    if line:
+        _, BOT_K_L = line.rsplit(" ", 1)
+        BOT_K_L = int(BOT_K_L)
+
+    line = file.readline().strip()
+    if line:
+        _, BOT_P_L = line.rsplit(" ", 1)
+        BOT_P_L = int(BOT_P_L)
+
+game_arena.towers = [towers.KingTower(True, PRINCESS_LEVEL), 
+                       towers.PrincessTower(True, PRINCESS_LEVEL, True), 
+                       towers.PrincessTower(True, PRINCESS_LEVEL, False), 
+                       towers.KingTower(False, BOT_K_L), 
+                       towers.PrincessTower(False, BOT_P_L, True), 
+                       towers.PrincessTower(False, BOT_P_L, False)
                        ]
+
+
 #player deck 
+'''
 deck = [Card(True, "balloon", 1), Card(True, "firespirit", 1), Card(True, "arrows", 1), Card(True, "zap", 1), 
         Card(True, "mortar", 1), Card(True, "archers", 1), Card(True, "bats", 1), Card(True, "giant", 1)]
 
 #bot deck (duh)
 bot_deck = [Card(False, "fireball", 2), Card(False, "witch", 4), Card(False, "wizard", 3), Card(False, "royalgiant", 3), 
         Card(False, "speargoblins", 3), Card(False, "skeletondragons", 3), Card(False, "prince", 3), Card(False, "arrows", 4)]
-
+'''
 bot = Bot(bot_deck)
 #height comp screen ~ 800
 #20x20 per tile

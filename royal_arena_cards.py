@@ -292,7 +292,7 @@ class Prince(Troop):
             self.charging = True
             self.move_speed = self.charge_speed
             self.charge_charge_distance = 0
-        if self.stun_timer <= 0 and self.deploy_time <= 0 and not self.charging: #if not in range
+        if self.stun_timer <= 0 and self.deploy_time <= 0 and not self.charging and self.move_vector.magnitude() == 0: #if not in range
             self.charge_charge_distance += self.move_speed
 
     def attack(self):
@@ -378,7 +378,7 @@ class DarkPrince(Troop):
             self.charging = True
             self.move_speed = self.charge_speed
             self.charge_charge_distance = 0
-        if self.stun_timer <= 0 and self.deploy_time <= 0 and not self.charging: #if not in range
+        if self.stun_timer <= 0 and self.deploy_time <= 0 and not self.charging and self.move_vector.magnitude() == 0: #if not in range
             self.charge_charge_distance += self.move_speed
 
     def attack(self):
