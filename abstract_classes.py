@@ -288,9 +288,9 @@ class Troop:
             direction_x = tar_bridge.x - self.position.x
             direction_y = tar_bridge.y - self.position.y
             distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
-        elif self.cross_river and (not on_bridge(self.position.x)) and ((self.side and (self.position.y > - 2 and self.position.y < 1)) or (not self.side and (self.position.y < 2 and self.position.y > -1))):
+        elif self.cross_river and (not on_bridge(self.position.x)) and ((self.target.position.y - self.position.y > 0 and (self.position.y > - 2 and self.position.y < 1)) or (not self.target.position.y - self.position.y > 0 and (self.position.y < 2 and self.position.y > -1))):
             direction_x = 0
-            direction_y = 1 if self.side else -1 #forwards 
+            direction_y = 1 if self.target.position.y - self.position.y > 0 else -1 #forwards 
             distance_to_target = 1
             m_s = self.jump_speed
         else:

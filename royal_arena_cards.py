@@ -173,7 +173,7 @@ class Balloon(Troop):
     def die(self, arena):
         damage = 150 * pow(1.1, self.level - 6)
         self.cur_hp = -1
-        arena.troops.append(BalloonDeathBombAttackEntity(self.side, damage, copy.deepcopy(self.position)))
+        arena.troops.append(BalloonDeathBomb(self.side, copy.deepcopy(self.position), self.level))
         arena.troops.remove(self)
     
 class BalloonDeathBombAttackEntity(AttackEntity):
@@ -236,7 +236,7 @@ class BalloonDeathBomb(Troop):
             self.cur_hp = -1
     
     def attack(self):
-        return BalloonDeathBombAttackEntity(self.side, self.hit_damage, self.position, self.target)
+        return BalloonDeathBombAttackEntity(self.side, self.hit_damage, self.position)
     
 class PrinceAttackEntity(MeleeAttackEntity):
     HIT_RANGE = 1.6

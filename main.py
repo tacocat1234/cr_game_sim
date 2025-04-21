@@ -21,11 +21,11 @@ game_arena.towers = [towers.KingTower(True, 1),
                        towers.PrincessTower(False, 2, False)
                        ]
 #player deck 
-deck = [Card(True, "royalrecruits", 1), Card(True, "firespirit", 1), Card(True, "arrows", 1), Card(True, "zap", 1), 
-        Card(True, "royalhogs", 1), Card(True, "musketeer", 1), Card(True, "bats", 1), Card(True, "minipekka", 1)]
+deck = [Card(True, "balloon", 1), Card(True, "firespirit", 1), Card(True, "arrows", 1), Card(True, "zap", 1), 
+        Card(True, "mortar", 1), Card(True, "archers", 1), Card(True, "bats", 1), Card(True, "giant", 1)]
 
 #bot deck (duh)
-bot_deck = [Card(False, "fireball", 2), Card(False, "witch", 4), Card(False, "wizard", 3), Card(False, "giant", 3), 
+bot_deck = [Card(False, "fireball", 2), Card(False, "witch", 4), Card(False, "wizard", 3), Card(False, "royalgiant", 3), 
         Card(False, "speargoblins", 3), Card(False, "skeletondragons", 3), Card(False, "prince", 3), Card(False, "arrows", 4)]
 
 bot = Bot(bot_deck)
