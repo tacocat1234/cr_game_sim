@@ -161,6 +161,11 @@ class BattleRam(Troop):
 
         self.sprite_path = "sprites/battleram/battleram.png"
 
+    def kb(self):
+        self.charging = False
+        self.charge_charge_distance = 0
+        self.move_speed = 60 * TILES_PER_MIN
+
     def stun(self):
         self.charging = False
         self.charge_charge_distance = 0

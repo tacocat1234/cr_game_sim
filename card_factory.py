@@ -19,18 +19,20 @@ troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer",
           "bats", "hogrider", "flyingmachine",
           "skeletonarmy", "guards", "babydragon", "witch", "pekka",
           "darkprince", "royalhogs", "balloon", "prince", "royalgiant", "royalrecruits", "threemusketeers",
-          "icespirit", "icegolem"]
+          "icespirit", "icegolem", "battlehealer", "giantskeleton"]
 
 spells = ["fireball", "arrows",
           "zap", "rocket",
           "goblinbarrel",
-          "giantsnowball", "freeze"]
+          "giantsnowball", "freeze", "lightning"]
 
 buildings = ["goblinhut", "goblincage", 
              "tombstone",
              "cannon",
              "bombtower", "infernotower",
              "mortar"]
+#total 127
+#print(len(troops) + len(spells) + len(buildings))
 
 effect_radius = {
     "arrows" : 4,
@@ -43,7 +45,8 @@ effect_radius = {
     "rocket" : 2,
     "goblinbarrel" : 1.5,
     "giantsnowball" : 2.5,
-    "freeze" : 4
+    "freeze" : 4,
+    "lightning" : 3.5
 }
 
 def get_radius(name):
@@ -208,6 +211,10 @@ def troop_factory(side, position, name, level):
         return frozen_peak_cards.IceSpirit(side, position, level)
     elif name == "icegolem":
         return frozen_peak_cards.IceGolem(side, position, level)
+    elif name == "battlehealer":
+        return frozen_peak_cards.BattleHealer(side, position, level)
+    elif name == "giantskeleton":
+        return frozen_peak_cards.GiantSkeleton(side, position, level)
     else:
         raise Exception("Invalid troop name.")
 
@@ -226,6 +233,8 @@ def spell_factory(side, position, name, level):
         return frozen_peak_cards.GiantSnowball(side, position, level)
     elif name == "freeze":
         return frozen_peak_cards.Freeze(side, position, level)
+    elif name == "lightning":
+        return frozen_peak_cards.Lightning(side, position, level)
     else:
         raise Exception("Invalid spell name.")
 
@@ -299,5 +308,8 @@ elixir_map = {
     "icespirit" : 1,
     "giantsnowball" : 2,
     "icegolem" : 2,
-    "freeze" : 4
+    "freeze" : 4,
+    "battlehealer" : 4,
+    "giantskeleton" : 6,
+    "lightning" : 6
 }

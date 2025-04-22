@@ -1,10 +1,10 @@
-balloon 11
+mortar 11
 icespirit 11
 arrows 11
 giantsnowball 11
-tombstone 11
+bats 11
 archers 11
 bats 11
-icegolem 11
+knight 11
 kingtower 11
 princesstower 11

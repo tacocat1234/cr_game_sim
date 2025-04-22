@@ -280,6 +280,11 @@ class Prince(Troop):
         class_name = self.__class__.__name__.lower()
         self.sprite_path = f"sprites/{class_name}/{class_name}_0.png"
 
+    def kb(self):
+        self.charging = False
+        self.charge_charge_distance = 0
+        self.move_speed = 60 * TILES_PER_MIN
+    
     def stun(self):
         self.charging = False
         self.charge_charge_distance = 0
@@ -359,6 +364,11 @@ class DarkPrince(Troop):
         self.shield_hp = self.shield_max_hp
         class_name = self.__class__.__name__.lower()
         self.sprite_path = f"sprites/{class_name}/{class_name}_0.png"
+    
+    def kb(self):
+        self.charging = False
+        self.charge_charge_distance = 0
+        self.move_speed = 60 * TILES_PER_MIN
 
     def damage(self, amount):
         if self.shield_hp > 0:

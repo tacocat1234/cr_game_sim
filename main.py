@@ -361,7 +361,7 @@ elixir_timer = elixir_recharge
 hovered = None
 select_radius = None
 win = None
-#bot_elixir = -999 #disable bot for testing
+bot_elixir = -999 #disable bot for testing
 enemy_left = True
 enemy_right = True
 

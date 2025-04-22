@@ -28,16 +28,15 @@ class AttackEntity:
     def apply_effect(self, target):
         pass
 
+    def cleanup_func(self, arena):
+        pass
+
     def tick(self, arena):
         if self.velocity != 0:
             self.position.add(self.velocity)
         hits = self.detect_hits(arena)
         for each in hits:
-            new = True
-            for h in self.has_hit:
-                if each is h:
-                    new = False
-                    break
+            new = each in self.has_hit
             if (new):
                 each.damage(self.damage)
                 self.apply_effect(each)
@@ -45,6 +44,9 @@ class AttackEntity:
         
         
     def cleanup(self, arena): #also delete self if single target here in derived classes
+
+        self.cleanup_func(arena)
+
         self.duration -= TICK_TIME
         if self.duration <= 0:
             arena.active_attacks.remove(self)
@@ -177,10 +179,11 @@ class Troop:
         self.can_kb = True
 
     def slow(self, duration):
-        self.slow_timer = duration
-        self.hit_speed = 0.35 * self.normal_hit_speed
-        self.load_time = 0.35 * self.normal_load_time
-        self.move_speed = 0.35 * self.normal_move_speed
+        if not self.invulnerable:
+            self.slow_timer = duration
+            self.hit_speed = 1.35 * self.normal_hit_speed
+            self.load_time = 1.35 * self.normal_load_time
+            self.move_speed = 0.65 * self.normal_move_speed
 
     def unslow(self):
         self.hit_speed = self.normal_hit_speed
@@ -188,15 +191,23 @@ class Troop:
         self.move_speed = self.normal_move_speed
 
     def stun(self):
-        self.stun_timer = 0.5
-        self.target = None
+        if not self.invulnerable:
+            self.stun_timer = 0.5
+            self.target = None
 
     def freeze(self, duration):
-        self.stun_timer = duration
-        self.attack_cooldown = self.hit_speed
+        if not self.invulnerable:
+            self.stun_timer = duration
+            self.attack_cooldown = self.hit_speed
 
     def damage(self, amount):
         self.cur_hp -= amount
+
+    def heal(self, amount):
+        self.cur_hp = min(self.cur_hp + amount, self.hit_points)
+
+    def on_deploy(self, arena):
+        pass
     
     def kb(self, vector):
         if self.can_kb:
@@ -215,8 +226,8 @@ class Troop:
     def attack(self): #override
         return None #return the correct attackentity object
         
-    def update_target(self, arena): #note: need to change code such that cannot lock onto tower when in sight range, only in attack range
-        self.target = None #i.e. target may change (self.target = None) while towers are only targets, except when vector.distance to tower < attack range
+    def update_target(self, arena):
+        self.target = None 
         
         min_dist = float('inf')
         if not self.tower_only: #if not tower targeting
@@ -236,6 +247,8 @@ class Troop:
         for tower in arena.towers: #check for towers that it can currently hit
             if tower.side != self.side:
                 dist = vector.distance(tower.position, self.position)
+                if dist < min_dist:
+                    self.target = None #ensures that it doesnt lock on to troops farther away than tower
                 if dist <= self.hit_range + self.collision_radius + tower.collision_radius and dist < min_dist: #iff can hit tower, then it locks on.
                     self.target = tower #ensures only locks when activel attacking tower, so giant at bridge doesnt immediatly lock onto tower and ruin everyones day
                     min_dist = vector.distance(tower.position, self.position)
@@ -377,6 +390,8 @@ class Troop:
 
         if self.deploy_time > 0: #if deploying, timer
             self.deploy_time -= TICK_TIME
+            if self.deploy_time <= 0:
+                self.on_deploy(arena)
         elif self.stun_timer <= 0:
             if not self.target is None and not vector.distance(self.target.position, self.position) < self.hit_range + self.target.collision_radius + self.collision_radius and (self.attack_cooldown <= self.hit_speed - self.load_time):
                 self.attack_cooldown = self.hit_speed - self.load_time #if not currently attacking but cooldown is less than first hit delay
@@ -429,8 +444,8 @@ class Tower:
     
     def slow(self, duration):
         self.slow_timer = duration
-        self.load_time = 0.35 * self.normal_load_time
-        self.hit_speed = 0.35 * self.normal_hit_speed
+        self.load_time = 1.35 * self.normal_load_time
+        self.hit_speed = 1.35 * self.normal_hit_speed
 
     def unslow(self):
         self.hit_speed = self.normal_hit_speed
@@ -613,12 +628,12 @@ class Building:
 
     def slow(self, duration):
         self.slow_timer = duration
-        self.hit_speed = 0.35 * self.normal_hit_speed
-        self.load_timer = 0.35 * self.normal_load_time
+        self.hit_speed = 1.35 * self.normal_hit_speed
+        self.load_time = 1.35 * self.normal_load_time
 
     def unslow(self):
         self.hit_speed = self.normal_hit_speed
-        self.load_timer = self.normal_load_time
+        self.load_time = self.normal_load_time
 
     def damage(self, amount):
         self.cur_hp -= amount
@@ -628,8 +643,9 @@ class Building:
         self.target = None
 
     def freeze(self, duration):
-        self.stun_timer = duration
-        self.attack_cooldown = self.hit_speed
+        if not self.invulnerable:
+            self.stun_timer = duration
+            self.attack_cooldown = self.hit_speed
 
     def tick_func(self, arena):
         pass

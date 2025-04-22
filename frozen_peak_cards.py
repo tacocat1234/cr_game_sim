@@ -4,6 +4,7 @@ from abstract_classes import AttackEntity
 from abstract_classes import Troop
 from abstract_classes import Tower
 from abstract_classes import Spell
+from abstract_classes import Building
 from abstract_classes import TILES_PER_MIN
 from abstract_classes import TICK_TIME
 import vector
@@ -125,7 +126,7 @@ class IceGolemDeathAttackEntity(AttackEntity):
         self.display_size = self.SPLASH_RADIUS
 
     def apply_effect(self, target):
-        target.slow(1)
+        target.slow(2.5)
     
     def detect_hits(self, arena):
         hits = []
@@ -183,3 +184,270 @@ class Freeze(Spell):
 
     def apply_effect(self, target):
         target.freeze(4)
+
+class Lightning(Spell):
+    def __init__(self, side, target, level):
+        super().__init__(
+            s=side,
+            d=660 * pow(1.1, level - 6),
+            c_t_d=198 * pow(1.1, level - 6),
+            w=3,
+            t=0.46,
+            kb=0,
+            r=3.5,
+            v=0,
+            tar=target
+        )
+        self.has_hit = []
+    
+    def detect_hits(self, arena): #override
+        max = None
+        for each in arena.troops + arena.buildings + arena.towers:
+            if not each in self.has_hit:
+                if (isinstance(each, Tower) or not each.invulnerable) and each.side != self.side and (vector.distance(each.position, self.position) <= self.radius + each.collision_radius):
+                    if max is None or each.cur_hp > max.cur_hp:
+                        max = each
+        self.has_hit.append(max)
+        return [max]
+
+    def apply_effect(self, target):
+        target.stun()
+
+class BattleHealerSpawnHealAttackEntity(AttackEntity):
+    TICK_PERIOD = 0.25
+    RADIUS = 2.5
+    def __init__(self, side, heal_amount, pos):
+        super().__init__(
+            s=side,
+            d=0,
+            v=0,
+            l=2.01,
+            i_p=pos
+            )
+        self.heal_amount = heal_amount
+        self.display_size = self.RADIUS
+        self.wave_timer = 0
+
+    def cleanup_func(self, arena):
+        if self.wave_timer <= 0:
+            self.has_hit = []
+            self.wave_timer = self.TICK_PERIOD
+        else:
+            self.wave_timer -= TICK_TIME
+
+    def detect_hits(self, arena):
+        hits = []
+        for each in arena.troops:
+            if each is not self and each.side == self.side and not each in self.has_hit and vector.distance(self.position, each.position) < self.RADIUS:
+                self.has_hit.append(each)
+                hits.append(each)
+        return hits
+
+    def apply_effect(self, target):
+        target.heal(self.heal_amount)
+
+class BattleHealerActiveHealAttackEntity(AttackEntity):
+    TICK_PERIOD = 0.25
+    RADIUS = 4
+    def __init__(self, side, heal_amount, pos):
+        super().__init__(
+            s=side,
+            d=0,
+            v=0,
+            l=1.05,
+            i_p=pos
+            )
+        self.heal_amount = heal_amount
+        self.wave_timer = 0
+        self.has_hit = []
+        self.display_size = self.RADIUS
+
+    def cleanup_func(self, arena):
+        if self.wave_timer <= 0:
+            self.has_hit = []
+            self.wave_timer = self.TICK_PERIOD
+        else:
+            self.wave_timer -= TICK_TIME
+
+    def detect_hits(self, arena):
+        hits = []
+        for each in arena.troops:
+            if each is not self and each.side == self.side and not each in self.has_hit and vector.distance(self.position, each.position) < self.RADIUS:
+                self.has_hit.append(each)
+                hits.append(each)
+        return hits
+    
+    def apply_effect(self, target):
+        target.heal(self.heal_amount)
+
+class BattleHealerAttackEntity(MeleeAttackEntity):
+    HIT_RANGE = 1.6
+    COLLISION_RADIUS = 0.5
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            side=side,
+            damage=damage,
+            position=position,
+            target=target
+            )
+
+class BattleHealer(Troop):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 810 * pow(1.1, level - 3),         # Hit points (Example value)
+            h_d= 70 * pow(1.1, level - 3),          # Hit damage (Example value)
+            h_s=1.5,          # Hit speed (Seconds per hit)
+            l_t=1.2,            # First hit cooldown
+            h_r=0.75,            # Hit range
+            s_r=7,            # Sight Range
+            g=True,           # Ground troop
+            t_g_o=True,       # Targets ground-only
+            t_o=False,        # Not tower-only
+            m_s=60*TILES_PER_MIN,          # Movement speed 
+            d_t=1,            # Deploy time
+            m=6,            #mass
+            c_r=0.5,        #collision radius
+            p=position               # Position (vector.Vector object)
+        )
+        self.level = level
+        self.ticks_per_frame = 6
+        self.walk_cycle_frames = 6
+        class_name = self.__class__.__name__.lower()
+
+        self.cross_river = True
+        self.jump_speed = 60*TILES_PER_MIN
+
+        self.spawn_heal = 95 * pow(1.1, level - 3) / 4
+        self.active_heal = 48 * pow(1.1, level - 3) / 4
+        self.self_heal = 16 * pow(1.1, level - 3) # per second
+        self.self_heal_timer = 0
+
+        self.sprite_path = f"sprites/{class_name}/{class_name}_0.png"
+
+    def cleanup_func(self, arena):
+        if self.self_heal_timer <= 0:
+            self.heal(self.self_heal)
+            self.self_heal_timer = 1
+        else:
+            self.self_heal_timer -= TICK_TIME
+
+    def on_deploy(self, arena):
+        arena.active_attacks.append(BattleHealerSpawnHealAttackEntity(self.side, self.spawn_heal, self.position))
+
+    def attack(self):
+        return [BattleHealerAttackEntity(self.side, self.hit_damage, self.position, self.target),
+                BattleHealerActiveHealAttackEntity(self.side, self.active_heal, self.position)]
+
+class GiantSkeletonAttackEntity(MeleeAttackEntity):
+    HIT_RANGE = 0.8
+    COLLISION_RADIUS = 1
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            side=side,
+            damage=damage,
+            position=position,
+            target=target
+            )
+
+class GiantSkeleton(Troop):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 2140 * pow(1.1, level - 6),         # Hit points (Example value)
+            h_d= 167 * pow(1.1, level - 6),          # Hit damage (Example value)
+            h_s=1.4,          # Hit speed (Seconds per hit)
+            l_t=1.1,            # First hit cooldown
+            h_r=0.8,            # Hit range
+            s_r=5,            # Sight Range
+            g=True,           # Ground troop
+            t_g_o=True,       # Targets ground-only
+            t_o=False,        # Not tower-only
+            m_s=60*TILES_PER_MIN,          # Movement speed 
+            d_t=1,            # Deploy time
+            m=18,            #mass
+            c_r=1,        #collision radius
+            p=position               # Position (vector.Vector object)
+        )
+        self.level = level
+        self.ticks_per_frame = 6
+        self.walk_cycle_frames = 6
+        class_name = self.__class__.__name__.lower()
+        self.sprite_path = f"sprites/{class_name}/{class_name}_0.png"
+    
+    def attack(self):
+        return GiantSkeletonAttackEntity(self.side, self.hit_damage, self.position, self.target)
+
+    def die(self, arena):
+        arena.troops.append(GiantSkeletonDeathBomb(self.side, self.position, self.level))
+        arena.troops.remove(self)
+        self.cur_hp = -1
+
+class GiantSkeletonDeathBombAttackEntity(AttackEntity):
+    DAMAGE_RADIUS = 3
+    def __init__(self, side, damage, position):
+        super().__init__(
+            s=side,
+            d=damage,
+            v=0,
+            l=0.25,
+            i_p=copy.deepcopy(position)
+        )
+        self.display_size = GiantSkeletonDeathBombAttackEntity.DAMAGE_RADIUS
+        self.has_hit = []
+
+    def detect_hits(self, arena):
+        hits = []
+        for each in arena.towers + arena.buildings + arena.troops:
+            if each.side != self.side and (isinstance(each, Tower) or not each.invulnerable): # if different side
+                if vector.distance(self.position, each.position) < GiantSkeletonDeathBombAttackEntity.DAMAGE_RADIUS + each.collision_radius:
+                    hits.append(each)
+        return hits
+            
+    def tick(self, arena):
+        hits = self.detect_hits(arena)
+        for each in hits:
+            new = not any(each is h for h in self.has_hit)
+            if (new):
+                if isinstance(each, Tower) or isinstance(each, Building):
+                    each.damage(self.damage * 2)
+                else:
+                    each.damage(self.damage)
+                    vec = each.position.subtracted(self.position)
+                    vec.normalize()
+                    vec.scale(1.8)
+                    each.kb(vec)
+                self.has_hit.append(each)
+
+
+class GiantSkeletonDeathBomb(Troop):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p=  float('inf'),         # Hit points (Example value)
+            h_d= 167 * pow(1.1, level - 6),          # Hit damage (Example value)
+            h_s=0,          # Hit speed (Seconds per hit)
+            l_t=0,            # First hit cooldown
+            h_r=0,            # Hit range
+            s_r=0,            # Sight Range
+            g=True,           # Ground troop
+            t_g_o=False,       # Targets ground-only
+            t_o=False,        # Not tower-only
+            m_s=0,          # Movement speed 
+            d_t=3,            # Deploy time
+            m=float('inf'),            #mass
+            c_r=0.45,        #collision radius
+            p=position               # Position (vector.Vector object)
+        ) 
+        self.level = level
+        self.invulnerable=True
+        self.targetable=False
+        self.target=None
+
+    def tick(self, arena):
+        if self.deploy_time <= 0:
+            arena.active_attacks.append(self.attack())
+            self.cur_hp = -1
+    
+    def attack(self):
+        return GiantSkeletonDeathBombAttackEntity(self.side, self.hit_damage, self.position)

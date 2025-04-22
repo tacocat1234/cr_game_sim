@@ -1,7 +1,7 @@
 witch 13
 wizard 13
 prince 13
-royalgiant 13
+battleram 13
 speargoblins 13
 fireball 13
 arrows 13
