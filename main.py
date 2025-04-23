@@ -16,6 +16,7 @@ game_arena = arena.Arena()
 
 deck = []
 KING_LEVEL = PRINCESS_LEVEL = BOT_K_L = BOT_P_L = 0
+TOWER_TYPE = BOT_TOWER_TYPE = ""
 
 with open("decks/deck.txt", "r") as file:
     for _ in range(8):
@@ -31,7 +32,7 @@ with open("decks/deck.txt", "r") as file:
 
     line = file.readline().strip()
     if line:
-        _, PRINCESS_LEVEL = line.rsplit(" ", 1)
+        TOWER_TYPE, PRINCESS_LEVEL = line.rsplit(" ", 1)
         PRINCESS_LEVEL = int(PRINCESS_LEVEL)
 
 bot_deck = []
@@ -50,15 +51,30 @@ with open("decks/bot_deck.txt", "r") as file:
 
     line = file.readline().strip()
     if line:
-        _, BOT_P_L = line.rsplit(" ", 1)
+        BOT_TOWER_TYPE, BOT_P_L = line.rsplit(" ", 1)
         BOT_P_L = int(BOT_P_L)
 
+if TOWER_TYPE.lower() == "princesstower":
+    player_tower_a = towers.PrincessTower(True, PRINCESS_LEVEL, True)
+    player_tower_b = towers.PrincessTower(True, PRINCESS_LEVEL, False)
+elif TOWER_TYPE.lower() == "cannoneer":
+    # Replace with whatever alternative tower type is appropriate
+    player_tower_a = towers.Cannoneer(True, PRINCESS_LEVEL, True)
+    player_tower_b = towers.Cannoneer(True, PRINCESS_LEVEL, False)
+
+if BOT_TOWER_TYPE.lower() == "princesstower":
+    bot_tower_a = towers.PrincessTower(False, BOT_P_L, True)
+    bot_tower_b = towers.PrincessTower(False, BOT_P_L, False)
+elif BOT_TOWER_TYPE.lower() == "cannoneer":
+    bot_tower_a = towers.Cannoneer(False, BOT_P_L, True)
+    bot_tower_b = towers.Cannoneer(False, BOT_P_L, False)
+
 game_arena.towers = [towers.KingTower(True, PRINCESS_LEVEL), 
-                       towers.PrincessTower(True, PRINCESS_LEVEL, True), 
-                       towers.PrincessTower(True, PRINCESS_LEVEL, False), 
-                       towers.KingTower(False, BOT_K_L), 
-                       towers.PrincessTower(False, BOT_P_L, True), 
-                       towers.PrincessTower(False, BOT_P_L, False)
+                        player_tower_a,  # a
+                        player_tower_b,  # b
+                        towers.KingTower(False, BOT_K_L), 
+                        bot_tower_a,
+                        bot_tower_b
                        ]
 
 
@@ -269,7 +285,7 @@ def draw():
 
     for attack in game_arena.active_attacks:
         attack_x, attack_y= convert_to_pygame(attack.position)
-        if attack.display_size != 0.25:
+        if attack.display_size != 0.25 and attack.resize == False:
             # Create a transparent surface
             attack_size = attack.display_size * SCALE
             attack_surface = pygame.Surface((attack_size * 2, attack_size * 2), pygame.SRCALPHA)
@@ -361,7 +377,7 @@ elixir_timer = elixir_recharge
 hovered = None
 select_radius = None
 win = None
-bot_elixir = -999 #disable bot for testing
+#bot_elixir = -999 #disable bot for testing
 enemy_left = True
 enemy_right = True
 

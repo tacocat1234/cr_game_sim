@@ -2,6 +2,7 @@ import vector
 import math
 import copy
 from abstract_classes import AttackEntity
+from abstract_classes import RangedAttackEntity
 from abstract_classes import Tower
 from abstract_classes import TILES_PER_MIN
 from abstract_classes import TICK_TIME
@@ -173,3 +174,34 @@ class KingTower(Tower):
                 self.activation_timer -= TICK_TIME
         else:
             self.stun_timer -= TICK_TIME
+
+class CannoneerAttackEntity(RangedAttackEntity):
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            side=side,
+            damage=damage,
+            velocity=1000*TILES_PER_MIN,
+            position=position,
+            target=target,
+        )
+        self.display_size = 0.35
+        self.resize = True
+
+class Cannoneer(Tower):
+    def __init__(self, side, level, l_or_r):
+        x = 5.5 if l_or_r else -5.5 #right is true left is false
+        y = -10.5 if side else 10.5 #your side is true opp side is false
+        super().__init__(
+            s=side,
+            h_d=241 * pow(1.08, level - 6),
+            h_r=7.5,
+            h_s=2.4,
+            l_t=1.6, #.01 extra so it stays below 0
+            h_p=1940 * pow(1.1, level - 6),
+            c_r=1,
+            p=vector.Vector(x, y)
+        )
+
+        self.level = level
+    def attack(self):
+        return CannoneerAttackEntity(self.side, self.hit_damage, self.position, self.target)

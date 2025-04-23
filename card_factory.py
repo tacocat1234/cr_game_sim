@@ -9,6 +9,7 @@ import builders_workshop_cards
 import pekkas_playhouse_cards
 import royal_arena_cards
 import frozen_peak_cards
+import jungle_arena_cards
 import random
 
 troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer", 
@@ -19,7 +20,8 @@ troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer",
           "bats", "hogrider", "flyingmachine",
           "skeletonarmy", "guards", "babydragon", "witch", "pekka",
           "darkprince", "royalhogs", "balloon", "prince", "royalgiant", "royalrecruits", "threemusketeers",
-          "icespirit", "icegolem", "battlehealer", "giantskeleton"]
+          "icespirit", "icegolem", "battlehealer", "giantskeleton",
+          "beserker", "goblingang"]
 
 spells = ["fireball", "arrows",
           "zap", "rocket",
@@ -215,6 +217,22 @@ def troop_factory(side, position, name, level):
         return frozen_peak_cards.BattleHealer(side, position, level)
     elif name == "giantskeleton":
         return frozen_peak_cards.GiantSkeleton(side, position, level)
+    elif name == "beserker":
+        return jungle_arena_cards.Beserker(side, position, level)
+    elif name == "goblingang":
+        flip = 1 if side else -1
+        radius = 1
+        angles = [(2 * math.pi * k / 6) + (math.pi / 2) for k in range(6)]
+        positions = [vector.Vector(radius * math.cos(a), radius * math.sin(a) * flip) for a in angles]
+        out = []
+        i = 0
+        for each in positions:
+            if i < 3:
+                out.append(goblin_stadium_cards.Goblin(side, position.added(each), level))
+            else:
+                out.append(goblin_stadium_cards.SpearGoblin(side, position.added(each), level))
+            i += 1
+        return out
     else:
         raise Exception("Invalid troop name.")
 
@@ -311,5 +329,7 @@ elixir_map = {
     "freeze" : 4,
     "battlehealer" : 4,
     "giantskeleton" : 6,
-    "lightning" : 6
+    "lightning" : 6,
+    "beserker" : 2,
+    "goblingang" : 3
 }

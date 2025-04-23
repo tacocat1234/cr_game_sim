@@ -24,6 +24,7 @@ class AttackEntity:
         self.has_hit = []
         self.sprite_path = ""
         self.display_size = 0.25
+        self.resize = False
     
     def apply_effect(self, target):
         pass

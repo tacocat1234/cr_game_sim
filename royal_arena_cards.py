@@ -280,10 +280,18 @@ class Prince(Troop):
         class_name = self.__class__.__name__.lower()
         self.sprite_path = f"sprites/{class_name}/{class_name}_0.png"
 
-    def kb(self):
+    def kb(self, vec):
+        if vec.magnitude() > 0:
+            self.charging = False
+            self.charge_charge_distance = 0
+            self.move_speed = 60 * TILES_PER_MIN
+    
+    def freeze(self, duration):
+        self.stun_timer = duration
         self.charging = False
         self.charge_charge_distance = 0
         self.move_speed = 60 * TILES_PER_MIN
+        self.attack_cooldown = self.hit_speed
     
     def stun(self):
         self.charging = False
@@ -365,10 +373,18 @@ class DarkPrince(Troop):
         class_name = self.__class__.__name__.lower()
         self.sprite_path = f"sprites/{class_name}/{class_name}_0.png"
     
-    def kb(self):
+    def kb(self, vec):
+        if vec.magnitude() > 0:
+            self.charging = False
+            self.charge_charge_distance = 0
+            self.move_speed = 60 * TILES_PER_MIN
+    
+    def freeze(self, duration):
+        self.stun_timer = duration
         self.charging = False
         self.charge_charge_distance = 0
         self.move_speed = 60 * TILES_PER_MIN
+        self.attack_cooldown = self.hit_speed
 
     def damage(self, amount):
         if self.shield_hp > 0:

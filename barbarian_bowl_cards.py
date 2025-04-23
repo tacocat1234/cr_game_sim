@@ -161,10 +161,11 @@ class BattleRam(Troop):
 
         self.sprite_path = "sprites/battleram/battleram.png"
 
-    def kb(self):
-        self.charging = False
-        self.charge_charge_distance = 0
-        self.move_speed = 60 * TILES_PER_MIN
+    def kb(self, vec):
+        if vec.magnitude() > 0:
+            self.charging = False
+            self.charge_charge_distance = 0
+            self.move_speed = 60 * TILES_PER_MIN
 
     def stun(self):
         self.charging = False
@@ -172,6 +173,13 @@ class BattleRam(Troop):
         self.stun_timer = 0.5
         self.move_speed = 60 * TILES_PER_MIN
         self.target = None
+
+    def freeze(self, duration):
+        self.stun_timer = duration
+        self.charging = False
+        self.charge_charge_distance = 0
+        self.move_speed = 60 * TILES_PER_MIN
+        self.attack_cooldown = self.hit_speed
     
     def die(self, arena):
         arena.troops.append(Barbarian(self.side, self.position.added(vector.Vector(0, 0.3)), self.level))
