@@ -133,7 +133,9 @@ class IceGolemDeathAttackEntity(AttackEntity):
         for each in arena.towers + arena.buildings + arena.troops:
             if each.side != self.side and (isinstance(each, Tower) or (each.ground and not each.invulnerable)): # if different side
                 if vector.distance(self.position, each.position) < self.SPLASH_RADIUS + each.collision_radius:
+                        print("hit " + each.__class__.__name__)
                         hits.append(each)
+
         return hits
 
 class IceGolem(Troop):
@@ -216,7 +218,7 @@ class Lightning(Spell):
 class BattleHealerSpawnHealAttackEntity(AttackEntity):
     TICK_PERIOD = 0.25
     RADIUS = 2.5
-    def __init__(self, side, heal_amount, pos):
+    def __init__(self, side, heal_amount, pos, parent):
         super().__init__(
             s=side,
             d=0,
@@ -227,6 +229,7 @@ class BattleHealerSpawnHealAttackEntity(AttackEntity):
         self.heal_amount = heal_amount
         self.display_size = self.RADIUS
         self.wave_timer = 0
+        self.parent = parent
 
     def cleanup_func(self, arena):
         if self.wave_timer <= 0:
@@ -238,7 +241,7 @@ class BattleHealerSpawnHealAttackEntity(AttackEntity):
     def detect_hits(self, arena):
         hits = []
         for each in arena.troops:
-            if each is not self and each.side == self.side and not each in self.has_hit and vector.distance(self.position, each.position) < self.RADIUS:
+            if each is not self.parent and each.side == self.side and not each in self.has_hit and vector.distance(self.position, each.position) < self.RADIUS:
                 self.has_hit.append(each)
                 hits.append(each)
         return hits
@@ -249,7 +252,7 @@ class BattleHealerSpawnHealAttackEntity(AttackEntity):
 class BattleHealerActiveHealAttackEntity(AttackEntity):
     TICK_PERIOD = 0.25
     RADIUS = 4
-    def __init__(self, side, heal_amount, pos):
+    def __init__(self, side, heal_amount, pos, parent):
         super().__init__(
             s=side,
             d=0,
@@ -261,6 +264,7 @@ class BattleHealerActiveHealAttackEntity(AttackEntity):
         self.wave_timer = 0
         self.has_hit = []
         self.display_size = self.RADIUS
+        self.parent = parent
 
     def cleanup_func(self, arena):
         if self.wave_timer <= 0:
@@ -272,7 +276,7 @@ class BattleHealerActiveHealAttackEntity(AttackEntity):
     def detect_hits(self, arena):
         hits = []
         for each in arena.troops:
-            if each is not self and each.side == self.side and not each in self.has_hit and vector.distance(self.position, each.position) < self.RADIUS:
+            if each is not self.parent and each.side == self.side and not each in self.has_hit and vector.distance(self.position, each.position) < self.RADIUS:
                 self.has_hit.append(each)
                 hits.append(each)
         return hits
@@ -333,11 +337,11 @@ class BattleHealer(Troop):
             self.self_heal_timer -= TICK_TIME
 
     def on_deploy(self, arena):
-        arena.active_attacks.append(BattleHealerSpawnHealAttackEntity(self.side, self.spawn_heal, self.position))
+        arena.active_attacks.append(BattleHealerSpawnHealAttackEntity(self.side, self.spawn_heal, self.position, self))
 
     def attack(self):
         return [BattleHealerAttackEntity(self.side, self.hit_damage, self.position, self.target),
-                BattleHealerActiveHealAttackEntity(self.side, self.active_heal, self.position)]
+                BattleHealerActiveHealAttackEntity(self.side, self.active_heal, self.position, self)]
 
 class GiantSkeletonAttackEntity(MeleeAttackEntity):
     HIT_RANGE = 0.8
@@ -415,7 +419,7 @@ class GiantSkeletonDeathBombAttackEntity(AttackEntity):
                     each.damage(self.damage)
                     vec = each.position.subtracted(self.position)
                     vec.normalize()
-                    vec.scale(1.8)
+                    vec.scale
                     each.kb(vec)
                 self.has_hit.append(each)
 

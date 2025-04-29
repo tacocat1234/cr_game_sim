@@ -37,7 +37,7 @@ class AttackEntity:
             self.position.add(self.velocity)
         hits = self.detect_hits(arena)
         for each in hits:
-            new = each in self.has_hit
+            new = not each in self.has_hit
             if (new):
                 each.damage(self.damage)
                 self.apply_effect(each)
@@ -186,6 +186,10 @@ class Troop:
             self.load_time = 1.35 * self.normal_load_time
             self.move_speed = 0.65 * self.normal_move_speed
 
+    def move_slow(self, percent, duration):
+        self.slow_timer = duration
+        self.move_speed = (1 - percent) * self.normal_move_speed
+
     def unslow(self):
         self.hit_speed = self.normal_hit_speed
         self.load_time = self.normal_load_time
@@ -250,7 +254,7 @@ class Troop:
                 dist = vector.distance(tower.position, self.position)
                 if dist < min_dist:
                     self.target = None #ensures that it doesnt lock on to troops farther away than tower
-                if dist <= self.hit_range + self.collision_radius + tower.collision_radius and dist < min_dist: #iff can hit tower, then it locks on.
+                if dist < self.hit_range + self.collision_radius + tower.collision_radius and dist < min_dist: #iff can hit tower, then it locks on.
                     self.target = tower #ensures only locks when activel attacking tower, so giant at bridge doesnt immediatly lock onto tower and ruin everyones day
                     min_dist = vector.distance(tower.position, self.position)
     
@@ -546,6 +550,8 @@ class Spell:
         
         self.class_name = self.__class__.__name__.lower()
         self.sprite_path = f"sprites/{self.class_name}/{self.class_name}_travel.png"
+        self.pulse_timer = 0
+        self.pulse_time = float('inf')
 
     def detect_hits(self, arena): #override
         out = []
@@ -582,6 +588,17 @@ class Spell:
             self.damage_cd -= TICK_TIME #decrement cooldown
         elif self.display_duration <= 0:
             self.should_delete = True #mark for deletion
+        
+        if self.pulse_timer <= 0:
+            self.pulse_timer = self.pulse_time
+            hits = self.detect_hits(arena)
+            for each in hits:
+                self.passive_effect(each)
+        else:
+            self.pulse_timer -= TICK_TIME
+
+    def passive_effect(self, each):
+        pass
             
     def cleanup(self, arena):
         if self.should_delete:

@@ -53,19 +53,23 @@ class PrincessTowerAttackEntity(AttackEntity):
 class PrincessTower(Tower):
     def __init__(self, side, level, l_or_r):
         x = 5.5 if l_or_r else -5.5 #right is true left is false
-        y = -10.5 if side else 10.5 #your side is true opp side is false
+        y = -9.5 if side else 9.5 #your side is true opp side is false
         super().__init__(
             s=side,
             h_d=50 * pow(1.08, level - 1),
             h_r=7.5,
             h_s=0.8,
-            l_t=0.81, #.01 extra so it stays below 0
+            l_t=0.867, #.0166... extra so it stays below 0
             h_p=1400 * pow(1.1, level - 1),
             c_r=1,
             p=vector.Vector(x, y)
         )
 
         self.level = level
+
+
+        print(self.hit_damage)
+
     def attack(self):
         return PrincessTowerAttackEntity(self.side, self.hit_damage, self.position, self.target)
 
@@ -122,7 +126,7 @@ class KingTower(Tower):
             l_t=0.5,
             h_p=2400 * pow(1.1, level - 1),
             c_r=1.4,
-            p=vector.Vector(0, -13.5 if side else 13.5)
+            p=vector.Vector(0, -13 if side else 13)
         )
         self.activated = False
         self.activation_timer = 4
@@ -190,7 +194,7 @@ class CannoneerAttackEntity(RangedAttackEntity):
 class Cannoneer(Tower):
     def __init__(self, side, level, l_or_r):
         x = 5.5 if l_or_r else -5.5 #right is true left is false
-        y = -10.5 if side else 10.5 #your side is true opp side is false
+        y = -9.5 if side else 9.5 #your side is true opp side is false
         super().__init__(
             s=side,
             h_d=241 * pow(1.08, level - 6),

@@ -62,7 +62,7 @@ class Bot:
             if len(enemy) > 0:
                 r = random.choice(enemy)
                 if r.cur_hp < 400: #cannot use rocket properly
-                    return copy.deepcopy(r.position)
+                    return r.position.added(vector.Vector(0, 1.5))
             return False
         else:
             offensive_count = 0

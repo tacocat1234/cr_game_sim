@@ -21,18 +21,20 @@ troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer",
           "skeletonarmy", "guards", "babydragon", "witch", "pekka",
           "darkprince", "royalhogs", "balloon", "prince", "royalgiant", "royalrecruits", "threemusketeers",
           "icespirit", "icegolem", "battlehealer", "giantskeleton",
-          "beserker", "goblingang"]
+          "beserker", "goblingang", "dartgoblin", "skeletonbarrel"]
 
 spells = ["fireball", "arrows",
           "zap", "rocket",
           "goblinbarrel",
-          "giantsnowball", "freeze", "lightning"]
+          "giantsnowball", "freeze", "lightning",
+          "poison"]
 
 buildings = ["goblinhut", "goblincage", 
              "tombstone",
              "cannon",
              "bombtower", "infernotower",
-             "mortar"]
+             "mortar",
+             "barbarianhut"]
 #total 127
 #print(len(troops) + len(spells) + len(buildings))
 
@@ -48,7 +50,8 @@ effect_radius = {
     "goblinbarrel" : 1.5,
     "giantsnowball" : 2.5,
     "freeze" : 4,
-    "lightning" : 3.5
+    "lightning" : 3.5,
+    "poison" : 3.5
 }
 
 def get_radius(name):
@@ -222,7 +225,7 @@ def troop_factory(side, position, name, level):
     elif name == "goblingang":
         flip = 1 if side else -1
         radius = 1
-        angles = [(2 * math.pi * k / 6) + (math.pi / 2) for k in range(6)]
+        angles = [(2 * math.pi * k / 6) + (math.pi / 6) for k in range(6)]
         positions = [vector.Vector(radius * math.cos(a), radius * math.sin(a) * flip) for a in angles]
         out = []
         i = 0
@@ -233,6 +236,10 @@ def troop_factory(side, position, name, level):
                 out.append(goblin_stadium_cards.SpearGoblin(side, position.added(each), level))
             i += 1
         return out
+    elif name == "dartgoblin":
+        return jungle_arena_cards.DartGoblin(side, position, level)
+    elif name == "skeletonbarrel":
+        return jungle_arena_cards.SkeletonBarrel(side, position, level)
     else:
         raise Exception("Invalid troop name.")
 
@@ -253,6 +260,8 @@ def spell_factory(side, position, name, level):
         return frozen_peak_cards.Freeze(side, position, level)
     elif name == "lightning":
         return frozen_peak_cards.Lightning(side, position, level)
+    elif name == "poison":
+        return jungle_arena_cards.Poison(side, position, level)
     else:
         raise Exception("Invalid spell name.")
 
@@ -271,6 +280,8 @@ def building_factory(side, position, name, level):
         return spell_valley_cards.InfernoTower(side, position, level)
     elif name == "mortar":
         return builders_workshop_cards.Mortar(side, position, level)
+    elif name == "barbarianhut":
+        return jungle_arena_cards.BarbarianHut(side, position, level)
     else:
         raise Exception("Invalid building name")
 
@@ -331,5 +342,9 @@ elixir_map = {
     "giantskeleton" : 6,
     "lightning" : 6,
     "beserker" : 2,
-    "goblingang" : 3
+    "goblingang" : 3,
+    "dartgoblin" : 3,
+    "skeletonbarrel" : 3,
+    "poison" : 4,
+    "barbarianhut" : 6
 }
