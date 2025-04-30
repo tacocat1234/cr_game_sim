@@ -2,9 +2,9 @@ witch 13
 goblingiant 13
 prince 13
 battlehealer 13
-mortar 13
-poison 13
+elitebarbarians 13
+fireball 13
 arrows 13
-flyingmachine 13
+furnace 13
 kingtower 13
 princesstower 13

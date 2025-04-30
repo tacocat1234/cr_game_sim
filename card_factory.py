@@ -267,7 +267,7 @@ def troop_factory(side, position, name, level):
         return out
     elif name == "elitebarbarians":
         pos1 = vector.Vector(0.35, 0)
-        pos2 = vector.Vector(0.35, 0)
+        pos2 = vector.Vector(-0.35, 0)
         return [hog_mountain_cards.EliteBarbarian(side, position.added(pos1), level),
                 hog_mountain_cards.EliteBarbarian(side, position.added(pos2), level)]
     else:

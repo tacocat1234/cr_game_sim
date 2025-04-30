@@ -240,7 +240,6 @@ class BattleHealerSpawnHealAttackEntity(AttackEntity):
         hits = []
         for each in arena.troops:
             if each is not self.parent and each.side == self.side and not each in self.has_hit and vector.distance(self.position, each.position) < self.RADIUS:
-                self.has_hit.append(each)
                 hits.append(each)
         return hits
 
@@ -275,7 +274,6 @@ class BattleHealerActiveHealAttackEntity(AttackEntity):
         hits = []
         for each in arena.troops:
             if each is not self.parent and each.side == self.side and not each in self.has_hit and vector.distance(self.position, each.position) < self.RADIUS:
-                self.has_hit.append(each)
                 hits.append(each)
         return hits
     

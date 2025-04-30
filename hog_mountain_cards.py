@@ -218,7 +218,6 @@ class Hunter(Troop):
             p=position               # Position (vector.Vector object)
         )
         self.level = level
-        self.attack_cooldown = 0.3
     
     def attack(self):
         attacks = []

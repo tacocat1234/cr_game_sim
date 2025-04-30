@@ -1,4 +1,4 @@
-giant 11
+battlehealer 11
 hunter 11
 goblins 11
 arrows 11

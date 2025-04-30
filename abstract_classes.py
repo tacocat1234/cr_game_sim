@@ -492,7 +492,7 @@ class Tower:
         min_dist = float('inf')
         for each in arena.troops + arena.buildings:
             dist = vector.distance(each.position, self.position)
-            if not each.invulnerable and each.targetable and each.side != self.side and dist < min_dist and dist < self.hit_range + self.collision_radius + each.collision_radius:
+            if not each.invulnerable and each.targetable and each.side != self.side and dist < min_dist and dist < self.hit_range + each.collision_radius:
                 self.target = each
                 min_dist = vector.distance(each.position, self.position)
     
@@ -500,7 +500,6 @@ class Tower:
         self.tick_func(arena)
 
         if self.stun_timer <= 0:
-        #print(self.target) #temp
             if self.target is None or self.target.cur_hp <= 0:
                 self.update_target(arena)
             if not self.target is None and self.attack_cooldown <= 0:
@@ -519,7 +518,6 @@ class Tower:
     
     def cleanup(self, arena):
         self.cleanup_func(arena)
-        #print(self.cur_hp) #temp
         if self.cur_hp <= 0:
             arena.towers.remove(self)
 
@@ -702,7 +700,6 @@ class Building:
     
     def tick(self, arena):
         self.tick_func(arena)
-        #print(self.target) #temp
         if self.target is None or self.target.cur_hp <= 0:
             self.update_target(arena)
         if not self.target is None and self.attack_cooldown <= 0:
@@ -716,7 +713,6 @@ class Building:
     def cleanup(self, arena):
         self.cleanup_func(arena)
 
-        #print(self.cur_hp) #temp
         self.cur_hp -= self.hit_points * TICK_TIME / self.lifespan
         if self.cur_hp <= 0:
             arena.buildings.remove(self)
