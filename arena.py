@@ -44,7 +44,7 @@ class Arena:
         for troop, c_troop in itertools.combinations(self.troops, 2):
             if (troop.ground == c_troop.ground):
                 dist = vector.distance(c_troop.position, troop.position)
-                if dist < (c_troop.collision_radius + troop.collision_radius):
+                if troop.collideable and c_troop.collideable and dist < (c_troop.collision_radius + troop.collision_radius):
                     if c_troop.invulnerable:
                         dist = vector.distance(troop.position, c_troop.position)
                         if dist < (c_troop.collision_radius + troop.collision_radius):
@@ -76,7 +76,7 @@ class Arena:
         for troop in self.troops:
             for building in self.buildings + self.towers:
                 dist = vector.distance(troop.position, building.position)
-                if dist < (building.collision_radius + troop.collision_radius):
+                if troop.collideable and dist < (building.collision_radius + troop.collision_radius):
                     vec = troop.position.subtracted(building.position)  # building to troop vector
                     if vec.magnitude() > 0:
                         vec.scale(((building.collision_radius + troop.collision_radius) / vec.magnitude()) - 1)

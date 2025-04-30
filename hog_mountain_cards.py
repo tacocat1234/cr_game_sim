@@ -4,7 +4,6 @@ from abstract_classes import AttackEntity
 from abstract_classes import Troop
 from abstract_classes import Tower
 from abstract_classes import Building
-from abstract_classes import Spell
 from spell_valley_cards import FireSpirit
 from abstract_classes import TILES_PER_MIN
 from abstract_classes import TICK_TIME
@@ -279,8 +278,155 @@ class Tesla(Building):
             self.targetable = not self.targetable
             self.switch_timer = -99 #settled
         elif self.switch_timer != -99:
+            self.attack_cooldown = self.switch_timer
             self.switch_timer -= TICK_TIME
 
 
     def attack(self):
         return TeslaAttackEntity(self.side, self.hit_damage, self.position, self.target)
+
+class GolemAttackEntity(MeleeAttackEntity):
+    HIT_RANGE = 0.75
+    COLLISION_RADIUS = 0.7
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            side=side,
+            damage=damage,
+            position=position,
+            target=target
+            )
+
+class GolemDeathAttackEntity(AttackEntity):
+    SPLASH_RADIUS = 2
+    def __init__(self, side, damage, position, tar):
+        super().__init__(
+            s=side,
+            d=damage,
+            v=0,
+            l=0.25,
+            i_p=copy.deepcopy(position)
+        )
+        self.display_size = self.SPLASH_RADIUS
+
+    def apply_effect(self, target):
+        if isinstance(target, Troop):
+            vec = target.position.subtracted(self.position)
+            vec.normalize()
+            vec.scale(1.8)
+            target.kb(vec)
+    
+    def detect_hits(self, arena):
+        hits = []
+        for each in arena.towers + arena.buildings + arena.troops:
+            if each.side != self.side and (isinstance(each, Tower) or (each.ground and not each.invulnerable)): # if different side
+                if vector.distance(self.position, each.position) < self.SPLASH_RADIUS + each.collision_radius:
+                        hits.append(each)
+
+        return hits
+
+class Golem(Troop):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 3200 * pow(1.1, level - 6),         # Hit points (Example value)
+            h_d= 195 * pow(1.1, level - 6),          # Hit damage (Example value)
+            h_s=2.5,          # Hit speed (Seconds per hit)
+            l_t=1.5,            # First hit cooldown
+            h_r=0.75,            # Hit range
+            s_r=7,            # Sight Range
+            g=True,           # Ground troop
+            t_g_o=True,       # Targets ground-only
+            t_o=True,        # Not tower-only
+            m_s=45*TILES_PER_MIN,          # Movement speed 
+            d_t=3,            # Deploy time
+            m=20,            #mass
+            c_r=0.75,        #collision radius
+            p=position               # Position (vector.Vector object)
+        )
+        self.level = level
+        self.can_kb = False
+
+        self.death_damage = 140 * pow(1.1, level - 6)
+
+
+
+    def attack(self):
+        return GolemAttackEntity(self.side, self.hit_damage, self.position, self.target)
+    def die(self, arena):
+        self.cur_hp = -1
+        arena.active_attacks.append(GolemDeathAttackEntity(self.side, self.death_damage, self.position, self.target))
+        arena.troops.append(Golemite(self.side, self.position.added(vector.Vector(1.5, 0)), self.level))
+        arena.troops.append(Golemite(self.side, self.position.added(vector.Vector(-1.5, 0)), self.level))
+        arena.troops.remove(self)
+
+class GolemiteAttackEntity(MeleeAttackEntity):
+    HIT_RANGE = 0.75
+    COLLISION_RADIUS = 0.7
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            side=side,
+            damage=damage,
+            position=position,
+            target=target
+            )
+
+class GolemiteDeathAttackEntity(AttackEntity):
+    SPLASH_RADIUS = 2
+    def __init__(self, side, damage, position, target_pos):
+        super().__init__(
+            s=side,
+            d=damage,
+            v=0,
+            l=0.25,
+            i_p=copy.deepcopy(position)
+        )
+        self.display_size = self.SPLASH_RADIUS
+
+    def apply_effect(self, target):
+        if isinstance(target, Troop):
+            vec = target.position.subtracted(self.position)
+            vec.normalize()
+            vec.scale(0.9)
+            target.kb(vec)
+    
+    def detect_hits(self, arena):
+        hits = []
+        for each in arena.towers + arena.buildings + arena.troops:
+            if each.side != self.side and (isinstance(each, Tower) or (each.ground and not each.invulnerable)): # if different side
+                if vector.distance(self.position, each.position) < self.SPLASH_RADIUS + each.collision_radius:
+                        hits.append(each)
+
+        return hits
+
+class Golemite(Troop):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 650 * pow(1.1, level - 6),         # Hit points (Example value)
+            h_d= 31 * pow(1.1, level - 6),          # Hit damage (Example value)
+            h_s=2.5,          # Hit speed (Seconds per hit)
+            l_t=1.5,            # First hit cooldown
+            h_r=0.75,            # Hit range
+            s_r=7,            # Sight Range
+            g=True,           # Ground troop
+            t_g_o=True,       # Targets ground-only
+            t_o=True,        # Not tower-only
+            m_s=45*TILES_PER_MIN,          # Movement speed 
+            d_t=1,            # Deploy time
+            m=6,            #mass
+            c_r=0.5,        #collision radius
+            p=position               # Position (vector.Vector object)
+        )
+        self.level = level
+        self.can_kb = False
+
+        self.death_damage= 62 * pow(1.1, level - 6)
+
+
+
+    def attack(self):
+        return GolemAttackEntity(self.side, self.hit_damage, self.position, self.target)
+    def die(self, arena):
+        self.cur_hp = -1
+        arena.active_attacks.append(GolemiteDeathAttackEntity(self.side, self.death_damage, self.position, self.target))
+        arena.troops.remove(self)

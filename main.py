@@ -11,6 +11,9 @@ import arena
 import towers
 import vector
 
+from electro_valley_cards import Log
+from jungle_arena_cards import BarbarianBarrel
+
 game_arena = arena.Arena()
 
 
@@ -203,7 +206,14 @@ def draw():
         troop_color = BLUE if troop.side else RED
 
         # Draw troop circle
-        pygame.draw.circle(screen, troop_color, (troop_x, troop_y), troop.collision_radius * SCALE)
+        if isinstance(troop, Log) or isinstance(troop, BarbarianBarrel):
+            width = troop.collision_radius * SCALE
+            height = 1.2 * SCALE
+            rect_x = troop_x - width / 2
+            rect_y = troop_y - height / 2
+            pygame.draw.rect(screen, troop_color, pygame.Rect(rect_x, rect_y, width, height))
+        else:
+            pygame.draw.circle(screen, troop_color, (troop_x, troop_y), troop.collision_radius * SCALE)
 
         # Health bar
         hp_bar_x = troop_x - 10
@@ -362,7 +372,7 @@ random.shuffle(deck)
 
 hand = [0, 1, 2, 3]
 cycler = [4, 5, 6, 7]
-elixir = 5
+elixir = 7
 bot_elixir = 9 #for bot
 
 # Main Loop

@@ -11,6 +11,7 @@ import royal_arena_cards
 import frozen_peak_cards
 import jungle_arena_cards
 import hog_mountain_cards
+import electro_valley_cards
 import random
 
 troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer", 
@@ -22,8 +23,9 @@ troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer",
           "skeletonarmy", "guards", "babydragon", "witch", "pekka",
           "darkprince", "royalhogs", "balloon", "prince", "royalgiant", "royalrecruits", "threemusketeers",
           "icespirit", "icegolem", "battlehealer", "giantskeleton",
-          "beserker", "goblingang", "dartgoblin", "skeletonbarrel", "goblingiant",
-          "zappies", "hunter", "minionhorde", "elitebarbarians"]
+          "barbarianbarrel", "beserker", "goblingang", "dartgoblin", "skeletonbarrel", "goblingiant",
+          "zappies", "hunter", "minionhorde", "elitebarbarians", "golem",
+          "log"]
 
 spells = ["fireball", "arrows",
           "zap", "rocket",
@@ -227,6 +229,8 @@ def troop_factory(side, position, name, level):
         return frozen_peak_cards.GiantSkeleton(side, position, level)
     elif name == "beserker":
         return jungle_arena_cards.Beserker(side, position, level)
+    elif name == "barbarianbarrel":
+        return jungle_arena_cards.BarbarianBarrel(side, position, level)
     elif name == "goblingang":
         flip = 1 if side else -1
         radius = 1
@@ -272,6 +276,10 @@ def troop_factory(side, position, name, level):
         pos2 = vector.Vector(-0.35, 0)
         return [hog_mountain_cards.EliteBarbarian(side, position.added(pos1), level),
                 hog_mountain_cards.EliteBarbarian(side, position.added(pos2), level)]
+    elif name == "golem":
+        return hog_mountain_cards.Golem(side, position, level)
+    elif name == "log":
+        return electro_valley_cards.Log(side, position, level)
     else:
         raise Exception("Invalid troop name.")
 
@@ -379,6 +387,7 @@ elixir_map = {
     "battlehealer" : 4,
     "giantskeleton" : 6,
     "lightning" : 6,
+    "barbarianbarrel" : 2,
     "beserker" : 2,
     "goblingang" : 3,
     "dartgoblin" : 3,
@@ -392,5 +401,7 @@ elixir_map = {
     "tesla" : 4,
     "minionhorde" : 5,
     "elitebarbarians" : 6,
-    "xbow" : 6
+    "xbow" : 6,
+    "golem" : 8,
+    "log" : 2
 }

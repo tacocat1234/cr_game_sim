@@ -186,6 +186,7 @@ class Troop:
         self.has_shield = False
         self.should_delete = False #only for kamikaze troops
         self.can_kb = True
+        self.collideable = True
 
     def slow(self, duration):
         if not self.invulnerable:
@@ -458,6 +459,8 @@ class Tower:
         self.animation_cycle_frames = 1
         self.animation_cycle_cur = 1
         self.targetable = True
+        self.invulnerable = False
+        self.ground = True
 
     def damage(self, amount):
         self.cur_hp -= amount
