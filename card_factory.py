@@ -10,6 +10,7 @@ import pekkas_playhouse_cards
 import royal_arena_cards
 import frozen_peak_cards
 import jungle_arena_cards
+import hog_mountain_cards
 import random
 
 troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer", 
@@ -21,7 +22,8 @@ troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer",
           "skeletonarmy", "guards", "babydragon", "witch", "pekka",
           "darkprince", "royalhogs", "balloon", "prince", "royalgiant", "royalrecruits", "threemusketeers",
           "icespirit", "icegolem", "battlehealer", "giantskeleton",
-          "beserker", "goblingang", "dartgoblin", "skeletonbarrel"]
+          "beserker", "goblingang", "dartgoblin", "skeletonbarrel", "goblingiant",
+          "zappies", "hunter", "minionhorde", "elitebarbarians"]
 
 spells = ["fireball", "arrows",
           "zap", "rocket",
@@ -34,7 +36,8 @@ buildings = ["goblinhut", "goblincage",
              "cannon",
              "bombtower", "infernotower",
              "mortar",
-             "barbarianhut"]
+             "barbarianhut",
+             "furnace", "xbow"]
 #total 127
 #print(len(troops) + len(spells) + len(buildings))
 
@@ -240,6 +243,33 @@ def troop_factory(side, position, name, level):
         return jungle_arena_cards.DartGoblin(side, position, level)
     elif name == "skeletonbarrel":
         return jungle_arena_cards.SkeletonBarrel(side, position, level)
+    elif name == "goblingiant":
+        return jungle_arena_cards.GoblinGiant(side, position, level)
+    elif name == "zappies":
+        flip = 1 if side else -1
+        radius = 1
+        angles = [(2 * math.pi * k / 3) + (math.pi / 2) for k in range(3)]
+        positions = [vector.Vector(radius * math.cos(a), radius * math.sin(a) * flip) for a in angles]
+        out = []
+        for each in positions:
+            out.append(hog_mountain_cards.Zappy(side, position.added(each), level))
+        return out
+    elif name == "hunter":
+        return hog_mountain_cards.Hunter(side, position, level)
+    elif name == "minionhorde":
+        flip = 1 if side else -1
+        radius = 0.6
+        angles = [(2 * math.pi * k / 6) + (math.pi / 2) for k in range(6)]
+        positions = [vector.Vector(radius * math.cos(a), radius * math.sin(a) * flip) for a in angles]
+        out = []
+        for each in positions:
+            out.append(training_camp_cards.Minion(side, position.added(each), level))
+        return out
+    elif name == "elitebarbarians":
+        pos1 = vector.Vector(0.35, 0)
+        pos2 = vector.Vector(0.35, 0)
+        return [hog_mountain_cards.EliteBarbarian(side, position.added(pos1), level),
+                hog_mountain_cards.EliteBarbarian(side, position.added(pos2), level)]
     else:
         raise Exception("Invalid troop name.")
 
@@ -282,6 +312,10 @@ def building_factory(side, position, name, level):
         return builders_workshop_cards.Mortar(side, position, level)
     elif name == "barbarianhut":
         return jungle_arena_cards.BarbarianHut(side, position, level)
+    elif name == "furnace":
+        return hog_mountain_cards.Furnace(side, position, level)
+    elif name == "xbow":
+        return hog_mountain_cards.XBow(side, position, level)
     else:
         raise Exception("Invalid building name")
 
@@ -346,5 +380,12 @@ elixir_map = {
     "dartgoblin" : 3,
     "skeletonbarrel" : 3,
     "poison" : 4,
-    "barbarianhut" : 6
+    "barbarianhut" : 6,
+    "goblingiant" : 6,
+    "furnace" : 4,
+    "zappies" : 4,
+    "hunter" : 4,
+    "minionhorde" : 5,
+    "elitebarbarians" : 6,
+    "xbow" : 6
 }

@@ -1,10 +1,10 @@
 witch 13
-skeletonarmy 13
+goblingiant 13
 prince 13
 battlehealer 13
-goblingang 13
-fireball 13
+mortar 13
+poison 13
 arrows 13
 flyingmachine 13
 kingtower 13
-cannoneer 13
+princesstower 13

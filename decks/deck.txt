@@ -1,9 +1,9 @@
-goblinhut 11
-barbarianhut 11
-archers 11
-fireball 11
+giant 11
+hunter 11
+goblins 11
+arrows 11
 icegolem 11
-skeletons 11
+musketeer 11
 icespirit 11
 giantsnowball 11
 kingtower 11

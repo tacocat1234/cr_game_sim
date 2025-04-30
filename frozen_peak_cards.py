@@ -1,4 +1,3 @@
-from abstract_classes import RangedAttackEntity
 from abstract_classes import MeleeAttackEntity
 from abstract_classes import AttackEntity
 from abstract_classes import Troop
@@ -133,7 +132,6 @@ class IceGolemDeathAttackEntity(AttackEntity):
         for each in arena.towers + arena.buildings + arena.troops:
             if each.side != self.side and (isinstance(each, Tower) or (each.ground and not each.invulnerable)): # if different side
                 if vector.distance(self.position, each.position) < self.SPLASH_RADIUS + each.collision_radius:
-                        print("hit " + each.__class__.__name__)
                         hits.append(each)
 
         return hits

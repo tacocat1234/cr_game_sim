@@ -34,6 +34,14 @@ class Vector:
         if (mg > 0):
             self.scale(1/mg)
 
+    def rotated(self, degrees):
+        angle_radians = math.radians(degrees)
+        cos_theta = math.cos(angle_radians)
+        sin_theta = math.sin(angle_radians)
+        x_new = self.x * cos_theta - self.y * sin_theta
+        y_new = self.x * sin_theta + self.y * cos_theta
+        return Vector(x_new, y_new)
+
     def toString(self):
         return str(self.x) + ", " + str(self.y)
 

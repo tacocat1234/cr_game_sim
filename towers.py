@@ -67,9 +67,6 @@ class PrincessTower(Tower):
 
         self.level = level
 
-
-        print(self.hit_damage)
-
     def attack(self):
         return PrincessTowerAttackEntity(self.side, self.hit_damage, self.position, self.target)
 

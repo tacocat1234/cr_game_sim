@@ -9,6 +9,7 @@ from abstract_classes import TILES_PER_MIN
 from abstract_classes import TICK_TIME
 from bone_pit_cards import Skeleton
 from barbarian_bowl_cards import Barbarian
+from goblin_stadium_cards import SpearGoblin
 import vector
 import copy
 import math
@@ -101,8 +102,6 @@ class SkeletonBarrel(Troop):
         ) 
         self.level = level
 
-        print(self.hit_points)
-
         self.sprite_path = "sprites/skeletonbarrel/skeletonbarrel_full.png"
     
     def attack(self):
@@ -134,7 +133,6 @@ class SkeletonBarrelDeathBarrelAttackEntity(AttackEntity):
             if each.side != self.side and (isinstance(each, Tower) or not each.invulnerable): # if different side
                 if vector.distance(self.position, each.position) < SkeletonBarrelDeathBarrelAttackEntity.DAMAGE_RADIUS + each.collision_radius:
                     hits.append(each)
-                    print("hit")
         return hits
             
     def tick(self, arena):
@@ -259,4 +257,114 @@ class Poison(Spell):
 
     def passive_effect(self, each):
         if isinstance(each, Troop):
-            each.move_slow(0.15)
+            each.move_slow(0.15, 0.25)
+
+class GoblinGiantAttackEntity(MeleeAttackEntity):
+    HIT_RANGE = 1.2
+    COLLISION_RADIUS = 0.75
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            side, 
+            damage, 
+            position, 
+            target
+        )
+
+class GoblinGiant(Troop):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 1967 * pow(1.1, level - 6),         # Hit points (Example value)
+            h_d= 110 * pow(1.1, level - 6),          # Hit damage (Example value)
+            h_s=1.5,          # Hit speed (Seconds per hit)
+            l_t=0.7,            # First hit cooldown
+            h_r=1.2,            # Hit range
+            s_r=7.5,            # Sight Range
+            g=True,           # Ground troop
+            t_g_o=False,       # Targets ground-only
+            t_o=True,        # Not tower-only
+            m_s=60*TILES_PER_MIN,          # Movement speed 
+            d_t=1,            # Deploy time
+            m=18,            #mass
+            c_r=0.75,        #collision radius
+            p=position               # Position (vector.Vector object)
+        )
+        self.level = level
+        self.ticks_per_frame = 6
+        self.walk_cycle_frames = 6
+        class_name = self.__class__.__name__.lower()
+        self.can_kb = False
+
+        self.sprite_path = f"sprites/{class_name}/{class_name}_0.png"
+
+        v1 = vector.Vector(-0.2, 0.45).rotated(self.facing_dir)
+        v2 = vector.Vector(-0.2, -0.45).rotated(self.facing_dir)
+
+        self.backpack_goblins = [BackpackSpearGoblin(self.side, self.position.added(v1), self.level),
+                                 BackpackSpearGoblin(self.side, self.position.added(v2), self.level)]
+        
+
+    def tick_func(self, arena):
+        v1 = vector.Vector(-0.2, 0.45).rotated(self.facing_dir)
+        v2 = vector.Vector(-0.2, -0.45).rotated(self.facing_dir)
+        self.backpack_goblins[0].position = self.position.added(v1)
+        self.backpack_goblins[1].position = self.position.added(v2)
+
+        self.backpack_goblins[0].tick(arena)
+        self.backpack_goblins[1].tick(arena)
+
+    def cleanup_func(self, arena):
+        self.backpack_goblins[0].cleanup(arena)
+        self.backpack_goblins[1].cleanup(arena)
+
+    def die(self, arena):
+        v1 = vector.Vector(-0.2, 0.45).rotated(self.facing_dir)
+        v2 = vector.Vector(-0.2, -0.45).rotated(self.facing_dir)
+        self.cur_hp = -1
+        arena.troops.append(SpearGoblin(self.side, self.position.added(v1), self.level))
+        arena.troops.append(SpearGoblin(self.side, self.position.added(v2), self.level))
+        arena.troops.remove(self)
+
+    def attack(self):
+        return GoblinGiantAttackEntity(self.side, self.hit_damage, self.position, self.target)
+    
+class BackpackSpearGoblinAttackEntity(RangedAttackEntity):
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            side=side, 
+            damage=damage, 
+            velocity=500*TILES_PER_MIN, 
+            position=position, 
+            target=target
+        )
+    
+class BackpackSpearGoblin(Troop):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 52 * pow(1.1, level - 1),         # Hit points (Example value)
+            h_d= 32 * pow(1.1, level - 1),          # Hit damage (Example value)
+            h_s=1.5,          # Hit speed (Seconds per hit)
+            l_t=1,            # First hit cooldown
+            h_r=5.5,            # Hit range
+            s_r=5.5,            # Sight Range
+            g=True,           # Ground troop
+            t_g_o=False,       # Targets ground-only
+            t_o=False,        # Not tower-only
+            m_s=120*TILES_PER_MIN,          # Movement speed 
+            d_t=1,            # Deploy time
+            m=1,            #mass
+            c_r=0.5,        #collision radius
+            p=position               # Position (vector.Vector object)
+        ) 
+        self.level = level
+        self.walk_cycle_frames = 8
+        class_name = self.__class__.__name__.lower()
+        self.sprite_path = f"sprites/{class_name}/{class_name}_{self.walk_cycle_cur}.png"
+
+    def move(self, arena):
+        if self.target is not None:
+            return vector.distance(self.target.position, self.position) < self.collision_radius + self.target.collision_radius + self.hit_range
+
+    def attack(self):
+        return BackpackSpearGoblinAttackEntity(self.side, self.hit_damage, self.position, self.target)

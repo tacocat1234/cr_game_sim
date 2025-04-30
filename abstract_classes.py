@@ -65,6 +65,7 @@ class RangedAttackEntity(AttackEntity):
             l=float('inf'),
             i_p=copy.deepcopy(position)
         )
+        self.homing = True
         self.target = target
         self.should_delete = False
 
@@ -81,10 +82,17 @@ class RangedAttackEntity(AttackEntity):
                 each.damage(self.damage)
             self.should_delete = True
         else:
-            direction = vector.Vector(
-                self.target.position.x - self.position.x, 
-                self.target.position.y - self.position.y
-            )
+            direction = None
+            if self.homing:
+                direction = vector.Vector(
+                    self.target.position.x - self.position.x, 
+                    self.target.position.y - self.position.y
+                )
+            else:
+                direction = vector.Vector(
+                    self.target.x - self.position.x, 
+                    self.target.y - self.position.y
+                )
             direction.normalize()
 
             movement = direction.scaled(self.velocity)
@@ -308,6 +316,9 @@ class Troop:
             elif min_dist < self.hit_range + self.collision_radius + tower_target.collision_radius: #within hit range, locks on
                 self.target = tower_target
                 self.move_vector = vector.Vector(0, 0)
+                direction_x = tower_target.position.x - self.position.x #set to directly move to tower
+                direction_y = tower_target.position.y - self.position.y
+                self.facing_dir = math.degrees(math.atan2(direction_y, direction_x))  # Get angle in degrees
                 return True
             
             direction_x /= distance_to_target
@@ -348,6 +359,9 @@ class Troop:
         
         if vector.distance(self.target.position, self.position) < self.hit_range + self.collision_radius + self.target.collision_radius: #within hit range, then dont move just attack
             self.move_vector = vector.Vector(0, 0)
+            direction_x = self.target.position.x - self.position.x #set to directly move to tower
+            direction_y = self.target.position.y - self.position.y
+            self.facing_dir = math.degrees(math.atan2(direction_y, direction_x))  # Get angle in degrees
             return True
         
         direction_x /= distance_to_target
