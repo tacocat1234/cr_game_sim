@@ -37,7 +37,7 @@ buildings = ["goblinhut", "goblincage",
              "bombtower", "infernotower",
              "mortar",
              "barbarianhut",
-             "furnace", "xbow"]
+             "furnace", "tesla", "xbow"]
 #total 127
 #print(len(troops) + len(spells) + len(buildings))
 
@@ -54,7 +54,9 @@ effect_radius = {
     "giantsnowball" : 2.5,
     "freeze" : 4,
     "lightning" : 3.5,
-    "poison" : 3.5
+    "poison" : 3.5,
+    "tesla" : 5.5,
+    "xbow" : 11.5
 }
 
 def get_radius(name):
@@ -314,6 +316,8 @@ def building_factory(side, position, name, level):
         return jungle_arena_cards.BarbarianHut(side, position, level)
     elif name == "furnace":
         return hog_mountain_cards.Furnace(side, position, level)
+    elif name == "tesla":
+        return hog_mountain_cards.Tesla(side, position, level)
     elif name == "xbow":
         return hog_mountain_cards.XBow(side, position, level)
     else:
@@ -385,6 +389,7 @@ elixir_map = {
     "furnace" : 4,
     "zappies" : 4,
     "hunter" : 4,
+    "tesla" : 4,
     "minionhorde" : 5,
     "elitebarbarians" : 6,
     "xbow" : 6

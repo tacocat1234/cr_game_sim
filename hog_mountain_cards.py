@@ -152,22 +152,9 @@ class XBow(Building):
             p=position
         )
         self.level = level
-        self.min_hit_range = 3.5
-
-    def update_target(self, arena):
-        self.target = None
-        min_dist = float('inf')
-        for each in arena.troops + arena.buildings + arena.towers:
-            dist = vector.distance(each.position, self.position)
-            if (isinstance(each, Tower) or ((not each.invulnerable and each.targetable) and (not self.ground_only or (self.ground_only and each.ground)))) and each.side != self.side and dist < min_dist and dist < self.hit_range + self.collision_radius  + each.collision_radius and dist > self.min_hit_range + self.collision_radius - each.collision_radius:
-                self.target = each
-                min_dist = vector.distance(each.position, self.position)
-
-                angle = math.degrees(math.atan2(each.position.y - self.position.y, each.position.x - self.position.x))  # Get angle in degrees
-                self.facing_dir = angle
     
     def attack(self):
-        return XBowAttackEntity(self.side, self.hit_damage, self.position, copy.deepcopy(self.target.position))
+        return XBowAttackEntity(self.side, self.hit_damage, self.position, self.target)
 
 
 class HunterAttackEntity(RangedAttackEntity):
@@ -242,3 +229,58 @@ class Hunter(Troop):
             attacks.append(HunterAttackEntity(self.side, self.hit_damage, self.position, target_position))
 
         return attacks
+    
+class TeslaAttackEntity(RangedAttackEntity):
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            side=side,
+            damage=damage,
+            velocity=2000*TILES_PER_MIN,
+            position=position,
+            target=target,
+        )
+        
+
+
+class Tesla(Building):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,
+            h_p=450 * pow(1.1, level - 1),
+            h_d=90 * pow(1.1, level - 1),
+            h_s = 1.2,
+            l_t = 0.7,
+            h_r = 5.5,
+            s_r = 5.5,
+            g = True,
+            t_g_o = True,
+            t_o = False,
+            l=30,
+            d_t=1,
+            c_r=0.5,
+            d_s_c=0,
+            d_s=None,
+            p=position
+        )
+        self.next_spawn = None
+        self.remaining_spawn_count = 0
+        self.level = level
+        
+        self.targetable = True
+        self.switch_timer = -99
+    
+    def tick_func(self, arena):
+        if self.targetable and (self.target is None) and self.switch_timer == -99:
+            self.switch_timer = 0.8
+        if not self.targetable and (self.target is not None) and self.switch_timer == -99:
+            self.switch_timer = 0.8
+
+        if self.switch_timer <= 0 and self.switch_timer != -99:
+            self.targetable = not self.targetable
+            self.switch_timer = -99 #settled
+        elif self.switch_timer != -99:
+            self.switch_timer -= TICK_TIME
+
+
+    def attack(self):
+        return TeslaAttackEntity(self.side, self.hit_damage, self.position, self.target)

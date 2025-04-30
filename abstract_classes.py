@@ -251,7 +251,7 @@ class Troop:
                         self.target = each
                         min_dist = vector.distance(each.position, self.position)
         for each in arena.buildings: #for each building, so if any building is closer then non tower targeting switches, or if tower targeting then finds closest building
-            if each.side != self.side:
+            if each.side != self.side and each.targetable:
                 dist = vector.distance(each.position, self.position)
                 if  dist < min_dist and dist < self.sight_range + self.collision_radius + each.collision_radius:
                     self.target = each
@@ -381,7 +381,7 @@ class Troop:
         self.tick_func(arena)
         if self.stun_timer <= 0:
             if self.deploy_time <= 0:
-                if self.target is None or self.target.cur_hp <= 0:
+                if self.target is None or self.target.cur_hp <= 0 or not self.target.targetable:
                     self.update_target(arena)
                 elif vector.distance(self.position, self.target.position) > self.sight_range + self.collision_radius + self.target.collision_radius: #add 0.2 so there is tiny buffer for ranged troops
                     self.update_target(arena)
@@ -457,6 +457,7 @@ class Tower:
         self.sprite_path = ""
         self.animation_cycle_frames = 1
         self.animation_cycle_cur = 1
+        self.targetable = True
 
     def damage(self, amount):
         self.cur_hp -= amount

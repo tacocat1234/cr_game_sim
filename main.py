@@ -258,6 +258,9 @@ def draw():
         building_x, building_y = convert_to_pygame(building.position)
         building_color = BLUE if building.side else RED
 
+        if not building.targetable:
+            building_color = (255, 127, 127)
+
         # Draw building square
         building_size = building.collision_radius * 2 * SCALE
         pygame.draw.rect(screen, building_color, (building_x - building_size / 2, building_y - building_size / 2, building_size, building_size))
