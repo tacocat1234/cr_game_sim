@@ -180,7 +180,7 @@ class HunterAttackEntity(RangedAttackEntity):
 
     def detect_hits(self, arena):
         for each in arena.troops + arena.towers + arena.buildings:
-            if not each.side == self.side and (vector.distance(each.position, self.position) < each.collision_radius + (0.95 if self.duration - self.random_delay < 0.2 else 0.35)):
+            if not each.side == self.side and not each.invulnerable and (vector.distance(each.position, self.position) < each.collision_radius + (0.95 if self.duration - self.random_delay < 0.2 else 0.35)):
                 return [each] # has hit
         return [] #hasnt hit yet
 

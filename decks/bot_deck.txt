@@ -7,4 +7,4 @@ fireball 13
 arrows 13
 balloon 13
 kingtower 13
-princesstower 13
+daggerduchess 13

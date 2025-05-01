@@ -206,3 +206,46 @@ class Cannoneer(Tower):
         self.level = level
     def attack(self):
         return CannoneerAttackEntity(self.side, self.hit_damage, self.position, self.target)
+    
+class DaggerDuchessAttackEntity(RangedAttackEntity):
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            side=side,
+            damage=damage,
+            velocity=1000*TILES_PER_MIN,
+            position=position,
+            target=target,
+        )
+
+class DaggerDuchess(Tower):
+    def __init__(self, side, level, l_or_r):
+        x = 5.5 if l_or_r else -5.5 #right is true left is false
+        y = -9.5 if side else 9.5 #your side is true opp side is false
+        super().__init__(
+            s=side,
+            h_d=96 * pow(1.08, level - 9),
+            h_r=7.5,
+            h_s=0.45,
+            l_t=0.45, #.01 extra so it stays below 0
+            h_p=2298 * pow(1.1, level - 9),
+            c_r=1,
+            p=vector.Vector(x, y)
+        )
+
+        self.level = level
+
+        self.ammo = 8
+        self.dagger_regen_timer = 0.9
+        self.type = "dd" #for animation purposes
+
+    def attack(self):
+        if self.ammo > 0:
+            self.ammo -= 1
+            return DaggerDuchessAttackEntity(self.side, self.hit_damage, self.position, self.target)
+    
+    def tick_func(self, arena):
+        if self.ammo < 8 and self.target is None or self.ammo == 0:
+            self.dagger_regen_timer -= TICK_TIME
+            if self.dagger_regen_timer <= 0:
+                self.ammo += 1
+                self.dagger_regen_timer = 0.9

@@ -461,6 +461,7 @@ class Tower:
         self.targetable = True
         self.invulnerable = False
         self.ground = True
+        self.type = None
 
     def damage(self, amount):
         self.cur_hp -= amount
@@ -504,14 +505,14 @@ class Tower:
         self.tick_func(arena)
 
         if self.stun_timer <= 0:
-            if self.target is None or self.target.cur_hp <= 0:
+            if self.target is None or self.target.cur_hp <= 0 or vector.distance(self.target.position, self.position) > self.hit_range + 0.5:
                 self.update_target(arena)
             if not self.target is None and self.attack_cooldown <= 0:
                 atk = self.attack()
                 if isinstance(atk, list) and len(atk) > 0:
                     arena.active_attacks.extend(atk)
                 elif not atk is None:
-                    arena.active_attacks.append(self.attack())
+                    arena.active_attacks.append(atk)
                 self.attack_cooldown = self.hit_speed
             
             class_name = self.__class__.__name__.lower()

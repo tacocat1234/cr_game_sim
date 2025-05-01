@@ -1,10 +1,10 @@
-battlehealer 11
+balloon 11
+babydragon 11
+knight 11
+icegolem 11
 icespirit 11
-golem 11
-electrospirit 11
-witch 11
 log 11
-fireball 11
+freeze 11
 bats 11
 kingtower 11
-princesstower 11
+cannoneer 11

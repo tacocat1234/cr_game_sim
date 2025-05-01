@@ -64,6 +64,9 @@ elif TOWER_TYPE.lower() == "cannoneer":
     # Replace with whatever alternative tower type is appropriate
     player_tower_a = towers.Cannoneer(True, PRINCESS_LEVEL, True)
     player_tower_b = towers.Cannoneer(True, PRINCESS_LEVEL, False)
+elif TOWER_TYPE.lower() == "daggerduchess":
+    player_tower_a = towers.DaggerDuchess(True, PRINCESS_LEVEL, True)
+    player_tower_b = towers.DaggerDuchess(True, PRINCESS_LEVEL, False)
 
 if BOT_TOWER_TYPE.lower() == "princesstower":
     bot_tower_a = towers.PrincessTower(False, BOT_P_L, True)
@@ -71,6 +74,9 @@ if BOT_TOWER_TYPE.lower() == "princesstower":
 elif BOT_TOWER_TYPE.lower() == "cannoneer":
     bot_tower_a = towers.Cannoneer(False, BOT_P_L, True)
     bot_tower_b = towers.Cannoneer(False, BOT_P_L, False)
+elif BOT_TOWER_TYPE.lower() == "daggerduchess":
+    bot_tower_a = towers.DaggerDuchess(False, PRINCESS_LEVEL, True)
+    bot_tower_b = towers.DaggerDuchess(False, PRINCESS_LEVEL, False)
 
 game_arena.towers = [towers.KingTower(True, PRINCESS_LEVEL), 
                         player_tower_a,  # a
@@ -79,7 +85,6 @@ game_arena.towers = [towers.KingTower(True, PRINCESS_LEVEL),
                         bot_tower_a,
                         bot_tower_b
                        ]
-
 
 #player deck 
 '''
@@ -134,6 +139,7 @@ pygame.display.set_caption("Crash Royale Arena")
 font = pygame.font.Font(None, 12) 
 background_img = pygame.image.load("sprites/background.png").convert_alpha()
 select_img = pygame.image.load("sprites/tileselect.png").convert_alpha()
+dd_symbol_img = pygame.image.load("sprites/daggerduchess/duchess_symbol.png").convert_alpha()
 
 #temp
 #game_arena.troops.append(training_camp_cards.Giant(True, vector.Vector(-2, -3), 1))
@@ -198,7 +204,13 @@ def draw():
 
         # Health bar
         pygame.draw.rect(screen, BLACK, (tower_x, tower_y - 5, tower_rect_width, 3))
-        pygame.draw.rect(screen, GREEN, (tower_x, tower_y - 5, int(tower_rect_width * (tower.cur_hp / tower.hit_points)), 3))
+        pygame.draw.rect(screen, GREEN, (tower_x, tower_y - 5, (tower_rect_width * (tower.cur_hp / tower.hit_points)), 3))
+
+        if tower.type == "dd":
+            ammo_ratio = tower.ammo / 8
+            pygame.draw.rect(screen, BLACK, (tower_x + 9, tower_y + 5, tower_rect_width - 12, 4))  # Background
+            pygame.draw.rect(screen, YELLOW, (tower_x + 9, tower_y + 5, ((tower_rect_width - 12) * ammo_ratio), 4))  # Ammo bar
+            screen.blit(dd_symbol_img, (tower_x - 3, tower_y))
 
     # Draw Troops
     for troop in game_arena.troops:
