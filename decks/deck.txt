@@ -1,10 +1,10 @@
-balloon 11
-babydragon 11
+sparky 11
+electrowizard 11
 knight 11
 icegolem 11
 icespirit 11
 log 11
-freeze 11
+fireball 11
 bats 11
 kingtower 11
 cannoneer 11

@@ -244,7 +244,7 @@ class DaggerDuchess(Tower):
             return DaggerDuchessAttackEntity(self.side, self.hit_damage, self.position, self.target)
     
     def tick_func(self, arena):
-        if self.ammo < 8 and self.target is None or self.ammo == 0:
+        if self.stun_timer <= 0 and self.ammo < 8 and self.target is None or self.ammo == 0:
             self.dagger_regen_timer -= TICK_TIME
             if self.dagger_regen_timer <= 0:
                 self.ammo += 1

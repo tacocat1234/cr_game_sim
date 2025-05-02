@@ -457,7 +457,7 @@ while running:
 
                 cur_name = deck[hand[click_quarter - 1]].name
 
-                if mouse_x > 64 and mouse_x < WIDTH - 64 and mouse_y < HEIGHT - 128 and (get_type(cur_name) == "spell" or mouse_y > 340) or (not enemy_right and in_pocket(mouse_x, mouse_y, True)) or (not enemy_left and in_pocket(mouse_x, mouse_y, False)):
+                if mouse_x > 64 and mouse_x < WIDTH - 64 and mouse_y < HEIGHT - 128 and (get_type(cur_name) == "spell" or cur_name == "miner" or mouse_y > 340) or (not enemy_right and in_pocket(mouse_x, mouse_y, True)) or (not enemy_left and in_pocket(mouse_x, mouse_y, False)):
                     hovered = (((mouse_x - 64)// SCALE) * SCALE + 64, (mouse_y // SCALE) * SCALE)
                     select_radius = get_radius(cur_name)
 
@@ -473,7 +473,7 @@ while running:
                 # Store the ending position of the drag
                 drag_end_pos = (mouse_x, mouse_y)
                 cur_card = deck[hand[click_quarter - 1]]
-                if mouse_x > 64 and mouse_x < WIDTH - 64 and mouse_y < HEIGHT - 128 and (get_type(cur_card.name) == "spell" or mouse_y > 340) or (not enemy_right and in_pocket(mouse_x, mouse_y, True)) or (not enemy_left and in_pocket(mouse_x, mouse_y, False)):
+                if mouse_x > 64 and mouse_x < WIDTH - 64 and mouse_y < HEIGHT - 128 and (get_type(cur_card.name) == "spell" or cur_card.name == "miner" or mouse_y > 340) or (not enemy_right and in_pocket(mouse_x, mouse_y, True)) or (not enemy_left and in_pocket(mouse_x, mouse_y, False)):
                     if (cur_card.elixir_cost <= elixir):
                         card_type, card = deck[hand[click_quarter - 1]].summon(convert_from_pygame(mouse_x, mouse_y))
 

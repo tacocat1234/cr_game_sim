@@ -1,10 +1,10 @@
 wizard 13
-hunter 13
-giantskeleton 13
+minipekka 13
+electrowizard 13
 darkprince 13
 elitebarbarians 13
 fireball 13
 arrows 13
-balloon 13
+princess 13
 kingtower 13
 daggerduchess 13

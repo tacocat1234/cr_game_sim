@@ -25,7 +25,7 @@ troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer",
           "icespirit", "icegolem", "battlehealer", "giantskeleton",
           "barbarianbarrel", "beserker", "goblingang", "dartgoblin", "skeletonbarrel", "goblingiant",
           "zappies", "hunter", "minionhorde", "elitebarbarians", "golem",
-          "log"]
+          "log", "miner", "princess", "electrowizard", "sparky"]
 
 spells = ["fireball", "arrows",
           "zap", "rocket",
@@ -58,7 +58,8 @@ effect_radius = {
     "lightning" : 3.5,
     "poison" : 3.5,
     "tesla" : 5.5,
-    "xbow" : 11.5
+    "xbow" : 11.5,
+    "electrowizard" : 2.5
 }
 
 def get_radius(name):
@@ -68,7 +69,7 @@ def get_radius(name):
         return None
 
 def can_anywhere(name):
-    return get_type(name) == "spell"
+    return get_type(name) == "spell" or name == "miner"
 
 def get_type(name):
     if name in troops:
@@ -280,6 +281,14 @@ def troop_factory(side, position, name, level):
         return hog_mountain_cards.Golem(side, position, level)
     elif name == "log":
         return electro_valley_cards.Log(side, position, level)
+    elif name == "miner":
+        return electro_valley_cards.Miner(side, position, level)
+    elif name == "princess":
+        return electro_valley_cards.Princess(side, position, level)
+    elif name == "electrowizard":
+        return electro_valley_cards.ElectroWizard(side, position, level)
+    elif name == "sparky":
+        return electro_valley_cards.Sparky(side, position, level)
     else:
         raise Exception("Invalid troop name.")
 
@@ -403,5 +412,9 @@ elixir_map = {
     "elitebarbarians" : 6,
     "xbow" : 6,
     "golem" : 8,
-    "log" : 2
+    "log" : 2,
+    "miner" : 3,
+    "princess" : 3,
+    "electrowizard" : 4,
+    "sparky" : 6
 }
