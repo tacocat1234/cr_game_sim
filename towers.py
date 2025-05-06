@@ -118,7 +118,7 @@ class KingTower(Tower):
         super().__init__(
             s=side,
             h_d=50 * pow(1.08, level - 1),
-            h_r=8.4,
+            h_r=7,
             h_s=1,
             l_t=0.5,
             h_p=2400 * pow(1.1, level - 1),

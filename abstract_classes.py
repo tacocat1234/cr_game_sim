@@ -189,6 +189,8 @@ class Troop:
         self.can_kb = True
         self.collideable = True
 
+        self.placed = True
+
     def slow(self, duration):
         if not self.invulnerable:
             self.slow_timer = duration
@@ -397,8 +399,11 @@ class Troop:
             
     
     def cleanup(self, arena): # each troop runs this after ALL ticks are finished
-        
         self.cleanup_func(arena)
+
+        if self.placed:
+            self.on_deploy(arena)
+            self.placed = False
 
         if self.cur_hp <= 0 or self.should_delete:
             self.die(arena)
@@ -411,8 +416,7 @@ class Troop:
 
         if self.deploy_time > 0: #if deploying, timer
             self.deploy_time -= TICK_TIME
-            if self.deploy_time <= 0:
-                self.on_deploy(arena)
+                
         elif self.stun_timer <= 0:
             if not self.target is None and not vector.distance(self.target.position, self.position) < self.hit_range + self.target.collision_radius + self.collision_radius and (self.attack_cooldown <= self.hit_speed - self.load_time):
                 self.attack_cooldown = self.hit_speed - self.load_time #if not currently attacking but cooldown is less than first hit delay
@@ -498,7 +502,7 @@ class Tower:
         min_dist = float('inf')
         for each in arena.troops + arena.buildings:
             dist = vector.distance(each.position, self.position)
-            if not each.invulnerable and each.targetable and each.side != self.side and dist < min_dist and dist < self.hit_range + each.collision_radius:
+            if not each.invulnerable and each.targetable and each.side != self.side and dist < min_dist and dist < self.hit_range + self.collision_radius + each.collision_radius:
                 self.target = each
                 min_dist = vector.distance(each.position, self.position)
     
@@ -506,7 +510,7 @@ class Tower:
         self.tick_func(arena)
 
         if self.stun_timer <= 0:
-            if self.target is None or self.target.cur_hp <= 0 or vector.distance(self.target.position, self.position) > self.hit_range + 0.5:
+            if self.target is None or self.target.cur_hp <= 0 or vector.distance(self.target.position, self.position) > self.hit_range + self.target.collision_radius + self.collision_radius + 4:
                 self.update_target(arena)
             if not self.target is None and self.attack_cooldown <= 0:
                 atk = self.attack()
@@ -535,7 +539,7 @@ class Tower:
 
 
         if self.stun_timer <= 0:
-            if self.target is None or (vector.distance(self.target.position, self.position) > self.hit_range + self.target.collision_radius and (self.attack_cooldown <= self.hit_speed - self.load_time)):
+            if self.target is None or (vector.distance(self.target.position, self.position) > self.hit_range + self.collision_radius + self.target.collision_radius and (self.attack_cooldown <= self.hit_speed - self.load_time)):
                     self.attack_cooldown = self.hit_speed - self.load_time #if not currently attacking but cooldown is less than first hit delay
             else: #otherwise
                 self.attack_cooldown -= TICK_TIME
