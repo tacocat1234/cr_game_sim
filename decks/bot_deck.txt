@@ -1,10 +1,10 @@
-wizard 13
-minipekka 13
-electrowizard 13
-darkprince 13
+witch 13
+valkyrie 13
+prince 13
+archers 13
 elitebarbarians 13
-fireball 13
+poison 13
 arrows 13
-princess 13
+skeletonbarrel 13
 kingtower 13
 daggerduchess 13

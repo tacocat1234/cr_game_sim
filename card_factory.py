@@ -1,5 +1,6 @@
 import math
 import vector
+import towers
 import training_camp_cards
 import goblin_stadium_cards
 import bone_pit_cards
@@ -86,6 +87,28 @@ def card_factory(side, position, name, level):
         return "spell", spell_factory(side, position, name, level)
     elif name in buildings:
         return "building", building_factory(side, position, name, level)
+    
+def tower_factory(side, name, level):
+    if name == "princesstower":
+        return [
+            towers.PrincessTower(side, level, True),
+            towers.PrincessTower(side, level, False),
+            towers.KingTower(side, level)
+        ]
+    elif name == "cannoneer":
+        return [
+            towers.Cannoneer(side, level, True),
+            towers.Cannoneer(side, level, False),
+            towers.KingTower(side, level)
+        ]
+    elif name == "daggerduchess":
+        return [
+            towers.DaggerDuchess(side, level, True),
+            towers.DaggerDuchess(side, level, False),
+            towers.KingTower(side, level)
+        ]
+    else:
+        raise Exception("Invalid tower type.")
 
 def troop_factory(side, position, name, level):
     if name == "knight":

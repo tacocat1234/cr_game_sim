@@ -206,7 +206,7 @@ class WizardAttackEntity(AttackEntity):
             
             if vector.distance(self.position, self.target.position) < self.target.collision_radius:
                 self.display_size = WizardAttackEntity.DAMAGE_RADIUS
-                self.duration =  0.25
+                self.duration =  0.1
                 self.exploded = True
     
 class Wizard(Troop):

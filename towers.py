@@ -59,7 +59,7 @@ class PrincessTower(Tower):
             h_d=50 * pow(1.08, level - 1),
             h_r=7.5,
             h_s=0.8,
-            l_t=0.867, #.0166... extra so it stays below 0
+            l_t=0, #.0166... extra so it stays below 0
             h_p=1400 * pow(1.1, level - 1),
             c_r=1,
             p=vector.Vector(x, y)

@@ -85,7 +85,7 @@ class Furnace(Building):
                 self.attack_cooldown = self.hit_speed
 
 class ZappyAttackEntity(RangedAttackEntity):
-    def __init__(self, side, damage, velocity, position, target):
+    def __init__(self, side, damage, position, target):
         super().__init__(
             side=side, 
             damage=damage, 

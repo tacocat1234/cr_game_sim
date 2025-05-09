@@ -49,7 +49,7 @@ class Beserker(Troop):
         return BeserkerAttackEntity(self.side, self.hit_damage, self.position, self.target)
 
 class DartGoblinAttackEntity(RangedAttackEntity):
-    def __init__(self, side, damage, velocity, position, target):
+    def __init__(self, side, damage, position, target):
         super().__init__(
             side=side, 
             damage=damage, 
