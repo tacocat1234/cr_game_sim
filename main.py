@@ -419,7 +419,7 @@ while running:
     bot_card = bot.tick(bot_elixir)
     if not bot_card is None:
         print(bot_card.name)
-        bot_pos = Bot.random_pos(get_type(bot_card.name) == "spell", game_arena.troops + game_arena.buildings)
+        bot_pos = Bot.random_pos(bot_card.name, game_arena.troops + game_arena.buildings)
         if bot_pos:
             bot_elixir -= bot_card.elixir_cost
             bot_card_type, bot_summon = bot_card.summon(bot_pos)

@@ -2,6 +2,8 @@ import random
 import copy
 import vector
 from abstract_classes import TICK_TIME
+from card_factory import get_type
+from card_factory import get_elixir
 
 counters = {
     "minipekka" : ["skeletons", vector.Vector(0, 0)],
@@ -49,7 +51,8 @@ class Bot:
         else:
             self.internal_timer -= TICK_TIME
 
-    def random_pos(isSpell = False, things = None):
+    def random_pos(name, things = None):
+        isSpell = get_type(name) == "spell" or name == "barbarianbarrel" or name == "log"
         enemy = []
         friendly = []
         if not things is None:
@@ -62,6 +65,20 @@ class Bot:
             if len(enemy) > 0:
                 r = random.choice(enemy)
                 if r.cur_hp < 400: #cannot use rocket properly
+                    if name == "barbarianbarrel":
+                        pos = copy.deepcopy(r.position)
+                        if pos.y < -4.7:
+                            return False
+                        elif pos.y < 0:
+                            pos.y = 0
+                        return pos
+                    elif name == "log":
+                        pos = copy.deepcopy(r.position)
+                        if pos.y < -10.1:
+                            return False
+                        elif pos.y < 0:
+                            pos.y = 0
+                        return pos
                     return r.position.added(vector.Vector(0, 1.5))
             return False
         else:

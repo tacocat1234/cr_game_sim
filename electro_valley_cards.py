@@ -539,6 +539,7 @@ class Sparky(Troop):
         )
         self.can_kb = False
         self.level = level
+        self.attack_cooldown = self.hit_speed
 
     def slow(self, duration):
         if not self.invulnerable:
@@ -553,6 +554,12 @@ class Sparky(Troop):
             self.attack_cooldown = self.hit_speed
             self.stun_timer = 0.5
             self.target = None
+
+    def kb(self, vector):
+        if self.can_kb and not self.invulnerable:
+            self.position.add(vector)
+            self.attack_cooldown = self.hit_speed
+
 
     def attack(self):
         self.position.add(vector.Vector(math.cos(math.radians(self.facing_dir + 180)),

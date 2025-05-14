@@ -227,7 +227,7 @@ class Troop:
         pass
     
     def kb(self, vector):
-        if self.can_kb:
+        if self.can_kb and not self.invulnerable:
             self.position.add(vector)
 
     def die(self, arena):
