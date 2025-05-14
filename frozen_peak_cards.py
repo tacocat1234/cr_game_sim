@@ -202,13 +202,23 @@ class Lightning(Spell):
     
     def detect_hits(self, arena): #override
         max = None
-        for each in arena.troops + arena.buildings + arena.towers:
+        for each in arena.troops + arena.buildings:
             if not each in self.has_hit:
-                if (isinstance(each, Tower) or not each.invulnerable) and each.side != self.side and (vector.distance(each.position, self.position) <= self.radius + each.collision_radius):
+                if not each.invulnerable and each.side != self.side and (vector.distance(each.position, self.position) <= self.radius + each.collision_radius):
                     if max is None or each.cur_hp > max.cur_hp:
                         max = each
-        self.has_hit.append(max)
-        return [max]
+        if max is None:
+            for each in arena.towers:
+                if not each in self.has_hit:
+                    if not each.invulnerable and each.side != self.side and (vector.distance(each.position, self.position) <= self.radius + each.collision_radius):
+                        if max is None or each.cur_hp > max.cur_hp:
+                            max = each
+        
+        if max is not None:
+            self.has_hit.append(max)
+            return [max]
+        else:
+            return []
 
     def apply_effect(self, target):
         target.stun()

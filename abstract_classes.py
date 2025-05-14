@@ -572,7 +572,7 @@ class Spell:
         
         self.class_name = self.__class__.__name__.lower()
         self.sprite_path = f"sprites/{self.class_name}/{self.class_name}_travel.png"
-        self.pulse_timer = 0
+        self.pulse_timer = float('inf')
         self.pulse_time = float('inf')
 
     def detect_hits(self, arena): #override
@@ -595,7 +595,7 @@ class Spell:
             hits = self.detect_hits(arena)
             for each in hits:
                 if (isinstance(each, Tower)):
-                    each.cur_hp -= self.crown_tower_damage #crown tower damage
+                    each.damage(self.crown_tower_damage)
                 else:
                     each.damage(self.damage); #end damage, start kb
                 if (isinstance(each, Troop)):
