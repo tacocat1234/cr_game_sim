@@ -1,6 +1,7 @@
 import arena
 from card_factory import card_factory
 from card_factory import tower_factory
+from vector import Vector
 import uuid
 import random
 
@@ -60,7 +61,8 @@ def simulation_tick():
                 status[key] = "p1_win" if win else "p2_win"
 
 def spawn_card(name, pos, side, level, arena_id):
-    place_type, place_obj = card_factory(side, pos, name, level)
+    v_pos = Vector(pos["x"], pos["y"])
+    place_type, place_obj = card_factory(side, v_pos, name, level)
     if place_type == "troop":
         if isinstance(place_obj, list):
             arenas[arena_id].troops.extend(place_obj)
@@ -91,10 +93,13 @@ def get_information(side, arena_id):
         troop_sprite = [t.sprite_path for t in a.troops]
         troop_dir = [(t.facing_dir if side else -t.facing_dir) for t in a.troops]
         troop_side = [t.side for t in a.troops]
+        troop_radius=[t.collision_radius for t in a.troops]
+        troop_name=[t.__class__.__name__ for t in a.troops]
 
         spell_x = [s.position.x for s in a.spells]
         spell_y = [(s.position.y if side else -s.position.y) for s in a.spells]
         spell_sprite = [s.sprite_path for s in a.spells]
+        spell_dir = [(s.facing_dir if side else -s.facing_dir) for s in a.spells]
 
         building_x = [b.position.x for b in a.buildings]
         building_y = [(b.position.y if side else -b.position.y) for b in a.buildings]
@@ -103,6 +108,9 @@ def get_information(side, arena_id):
         building_sprite = [b.sprite_path_front for b in a.buildings]
         building_dir = [(b.facing_dir if side else - b.facing_dir) for b in a.buildings]
         building_side = [b.side for b in a.buildings]
+        building_radius=[b.collision_radius for b in a.buildings]
+        building_name=[b.__class__.__name__ for b in a.buildings]
+
 
         attack_x = [a.position.x for a in a.active_attacks]
         attack_y = [(a.position.y if side else -a.position.y) for a in a.active_attacks]
@@ -113,6 +121,8 @@ def get_information(side, arena_id):
         tower_l = [t.level for t in a.towers]
         tower_hp = [t.cur_hp / t.hit_points for t in a.towers]
         tower_sprite = [t.sprite_path for t in a.towers]
+        tower_radius=[t.collision_radius for t in a.towers]
+        tower_name=[t.__class__.__name__ for t in a.towers]
 
         response_data = {
                     "arena_state": status.get(arena_id, "unknown"),
@@ -123,8 +133,11 @@ def get_information(side, arena_id):
                     "troop_sprite": troop_sprite,
                     "troop_dir": troop_dir,
                     "troop_side": troop_side,
+                    "troop_radius": troop_radius, #temporary
+                    "troop_name": troop_name,
                     "spell_x": spell_x,
                     "spell_y": spell_y,
+                    "spell_dir": spell_dir,
                     "spell_sprite": spell_sprite,
                     "building_x": building_x,
                     "building_y": building_y,
@@ -133,6 +146,8 @@ def get_information(side, arena_id):
                     "building_sprite": building_sprite,
                     "building_dir" : building_dir,
                     "building_side" : building_side,
+                    "building_radius": building_radius, #temporary
+                    "building_name": building_name,
                     "attack_x": attack_x,
                     "attack_y": attack_y,
                     "attack_r" : attack_r,
@@ -141,6 +156,8 @@ def get_information(side, arena_id):
                     "tower_l": tower_l,
                     "tower_hp": tower_hp, # actually ratio of cur hp to max hp
                     "tower_sprite": tower_sprite,
+                    "tower_radius": tower_radius, #temporary
+                    "tower_name": tower_name,
                     "err": err
                 }
     return response_data

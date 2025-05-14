@@ -1,10 +1,10 @@
-balloon 11
-goblins 11
-dartgoblin 11
-hunter 11
-icespirit 11
+electrospirit 11
+skeletons 11
+mortar 11
+wizard 11
+cannon 11
 log 11
-arrows 11
+poison 11
 icegolem 11
 kingtower 11
-daggerduchess 11
+cannoneer 11
