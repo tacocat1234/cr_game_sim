@@ -1,10 +1,10 @@
-electrospirit 11
-skeletons 11
-mortar 11
-wizard 11
+icespirit 11
+hogrider 11
 cannon 11
+fireball 11
 log 11
-poison 11
+skeletons 11
+musketeer 11
 icegolem 11
 kingtower 11
-cannoneer 11
+princesstower 11

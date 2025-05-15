@@ -26,7 +26,7 @@ troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer",
           "icespirit", "icegolem", "battlehealer", "giantskeleton",
           "barbarianbarrel", "beserker", "goblingang", "dartgoblin", "skeletonbarrel", "goblingiant",
           "zappies", "hunter", "minionhorde", "elitebarbarians", "golem",
-          "log", "miner", "princess", "electrowizard", "sparky"]
+          "log", "miner", "princess", "electrowizard", "sparky", "megaknight"]
 
 spells = ["fireball", "arrows",
           "zap", "rocket",
@@ -60,7 +60,8 @@ effect_radius = {
     "poison" : 3.5,
     "tesla" : 5.5,
     "xbow" : 11.5,
-    "electrowizard" : 2.5
+    "electrowizard" : 2.5,
+    "megaknight" : 2.2
 }
 
 def get_radius(name):
@@ -312,6 +313,8 @@ def troop_factory(side, position, name, level):
         return electro_valley_cards.ElectroWizard(side, position, level)
     elif name == "sparky":
         return electro_valley_cards.Sparky(side, position, level)
+    elif name == "megaknight":
+        return electro_valley_cards.MegaKnight(side, position, level)
     else:
         raise Exception("Invalid troop name.")
 
@@ -439,5 +442,6 @@ elixir_map = {
     "miner" : 3,
     "princess" : 3,
     "electrowizard" : 4,
-    "sparky" : 6
+    "sparky" : 6,
+    "megaknight" : 7
 }

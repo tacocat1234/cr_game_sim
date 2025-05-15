@@ -565,3 +565,116 @@ class Sparky(Troop):
         self.position.add(vector.Vector(math.cos(math.radians(self.facing_dir + 180)),
                          math.sin(math.radians(self.facing_dir + 180))).scaled(0.75))
         return SparkyAttackEntity(self.side, self.hit_damage, self.position, self.target)
+    
+class MegaKnightJumpAttackEntity(AttackEntity):
+    SPLASH_RADIUS = 2.2
+    def __init__(self, side, damage, position):
+        super().__init__(
+            s=side,
+            d=damage,
+            v=0,
+            l=3/60 + 0.01,
+            i_p=copy.deepcopy(position)
+        )
+        self.display_size = self.SPLASH_RADIUS
+
+    def apply_effect(self, target):
+        if vector.distance(self.position, target.position) < 1:
+            vec = target.position.subtracted(self.position)
+            vec.normalize()
+            target.kb(vec)
+    
+    def detect_hits(self, arena):
+        hits = []
+        for each in arena.towers + arena.buildings + arena.troops:
+            if each.side != self.side and (isinstance(each, Tower) or each.ground): # if different side
+                if vector.distance(self.position, each.position) < self.SPLASH_RADIUS + each.collision_radius:
+                        hits.append(each)
+        return hits
+    
+class MegaKnightAttackEntity(MeleeAttackEntity):
+    SPLASH_RADIUS = 1.3
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            side=side,
+            damage=damage,
+            position=copy.deepcopy(target),
+            target=copy.deepcopy(target) #not used
+            )
+        self.display_size = self.SPLASH_RADIUS
+        
+    def detect_hits(self, arena):
+        hits = []
+        for each in arena.towers + arena.buildings + arena.troops:
+            if each.side != self.side and (isinstance(each, Tower) or (each.ground and not each.invulnerable)): # if different side
+                if vector.distance(each.position, self.position) <= each.collision_radius + self.SPLASH_RADIUS:
+                    hits.append(each)
+        return hits
+    
+class MegaKnight(Troop):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 3300 * pow(1.1, level - 9),         # Hit points (Example value)
+            h_d= 222 * pow(1.1, level - 9),          # Hit damage (Example value)
+            h_s=1.7,          # Hit speed (Seconds per hit)
+            l_t=1.2,            # First hit cooldown
+            h_r=0.7,            # Hit range
+            s_r=5.5,            # Sight Range
+            g=True,           # Ground troop
+            t_g_o=True,       # Targets ground-only
+            t_o=False,        # Not tower-only
+            m_s=60*TILES_PER_MIN,          # Movement speed 
+            d_t=1,            # Deploy time
+            m=18,            #mass
+            c_r=0.75,        #collision radius
+            p=position               # Position (vector.Vector object)
+        )
+        self.spawn_damage = 355 * pow(1.1, level - 9)
+        self.jump_cooldown = 0
+        self.jump_timer = 0
+
+        self.can_kb = False
+        self.level = level
+        self.ticks_per_frame = 6
+        self.walk_cycle_frames = 6
+        class_name = self.__class__.__name__.lower()
+        self.sprite_path = f"sprites/{class_name}/{class_name}_jump.png"
+
+    def tick_func(self, arena):
+        if self.jump_cooldown > 0:
+            self.jump_cooldown -= TICK_TIME
+        if self.jump_timer < 0:
+            self.jump_timer = 0
+            self.stun_timer = 0.3
+            self.jump_cooldown = 0.9
+            self.move_speed = 60*TILES_PER_MIN
+            self.collision_radius = 0.75
+            self.collideable = True
+            self.attack_cooldown = self.hit_speed
+            arena.active_attacks.append(MegaKnightJumpAttackEntity(self.side, self.hit_damage * 2, self.position))
+        if self.jump_timer >  0:
+            self.jump_timer -= TICK_TIME
+        if self.target is not None:
+            d = vector.distance(self.position, self.target.position)
+            if d > 3.5 and d < 5 and self.jump_timer == 0 and self.jump_cooldown <= 0:
+                self.collision_radius *= 1.5
+                self.collideable = False
+                self.move_speed = 250*TILES_PER_MIN
+                self.jump_timer = 0.8
+        else:
+            for tower in arena.towers:
+                if tower.side != self.side and vector.distance(tower.position, self.position) <= 3.33 + tower.collision_radius:
+                    self.target = tower
+                    self.collision_radius *= 1.5
+                    self.collideable = False
+                    self.move_speed = 250*TILES_PER_MIN
+                    self.jump_timer = 0.8
+    
+    def on_deploy(self, arena):
+        self.jump_cooldown = 0.9
+        arena.active_attacks.append(MegaKnightJumpAttackEntity(self.side, self.spawn_damage, self.position))
+    
+    def attack(self):
+        if self.jump_timer == 0: #if not jumpings
+            return MegaKnightAttackEntity(self.side, self.hit_damage, self.position, self.target.position)

@@ -425,7 +425,7 @@ class GiantSkeletonDeathBombAttackEntity(AttackEntity):
                     each.damage(self.damage)
                     vec = each.position.subtracted(self.position)
                     vec.normalize()
-                    vec.scale
+                    vec.scale(1.8)
                     each.kb(vec)
                 self.has_hit.append(each)
 

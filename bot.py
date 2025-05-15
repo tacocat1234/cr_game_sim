@@ -64,7 +64,7 @@ class Bot:
         if (isSpell):
             if len(enemy) > 0:
                 r = random.choice(enemy)
-                if r.cur_hp < 400: #cannot use rocket properly
+                if r.cur_hp < 900: #cannot use rocket properly
                     if name == "barbarianbarrel":
                         pos = copy.deepcopy(r.position)
                         if pos.y < -4.7:
