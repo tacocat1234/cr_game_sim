@@ -633,6 +633,7 @@ class MegaKnight(Troop):
         self.spawn_damage = 355 * pow(1.1, level - 9)
         self.jump_cooldown = 0
         self.jump_timer = 0
+        self.should_jump = False
 
         self.can_kb = False
         self.level = level
@@ -642,9 +643,34 @@ class MegaKnight(Troop):
         self.sprite_path = f"sprites/{class_name}/{class_name}_jump.png"
 
     def tick_func(self, arena):
-        if self.jump_cooldown > 0:
-            self.jump_cooldown -= TICK_TIME
-        if self.jump_timer < 0:
+        if self.stun_timer <= 0:
+            if self.deploy_time <= 0:
+                if self.jump_cooldown > 0:
+                    self.jump_cooldown -= TICK_TIME
+                
+                if self.jump_timer == 0 and self.jump_cooldown <= 0:
+                    
+                    if self.should_jump:
+                        if self.target is None: #if target toewr
+                            self.update_target(arena) #give chance to target other troop instead
+                        self.should_jump = False
+                        self.collideable = False
+                        self.move_speed = 250*TILES_PER_MIN
+                        self.jump_timer = 0.8
+                    elif self.target is not None:
+                        d = vector.distance(self.position, self.target.position)
+                        if d > 3.5 + self.target.collision_radius and d < 5 + self.target.collision_radius and self.jump_timer == 0 and self.jump_cooldown <= 0:
+                            self.stun_timer = 0.3
+                            self.should_jump = True
+                    else:
+                        for tower in arena.towers:
+                            dist = vector.distance(tower.position, self.position)
+                            if tower.side != self.side and dist > 3.5 + tower.collision_radius and dist < 5 + tower.collision_radius:
+                                self.stun_timer = 0.3
+                                self.should_jump = True
+                                break 
+        
+        if self.jump_timer < 0: #done jumping
             self.jump_timer = 0
             self.stun_timer = 0.3
             self.jump_cooldown = 0.9
@@ -655,21 +681,9 @@ class MegaKnight(Troop):
             arena.active_attacks.append(MegaKnightJumpAttackEntity(self.side, self.hit_damage * 2, self.position))
         if self.jump_timer >  0:
             self.jump_timer -= TICK_TIME
-        if self.target is not None:
-            d = vector.distance(self.position, self.target.position)
-            if d > 3.5 and d < 5 and self.jump_timer == 0 and self.jump_cooldown <= 0:
-                self.collision_radius *= 1.5
-                self.collideable = False
-                self.move_speed = 250*TILES_PER_MIN
-                self.jump_timer = 0.8
-        else:
-            for tower in arena.towers:
-                if tower.side != self.side and vector.distance(tower.position, self.position) <= 3.33 + tower.collision_radius:
-                    self.target = tower
-                    self.collision_radius *= 1.5
-                    self.collideable = False
-                    self.move_speed = 250*TILES_PER_MIN
-                    self.jump_timer = 0.8
+            x = 5/4*self.jump_timer*self.jump_timer
+            self.collision_radius = -1.8*x*(x-0.8) + 0.75
+        
     
     def on_deploy(self, arena):
         self.jump_cooldown = 0.9

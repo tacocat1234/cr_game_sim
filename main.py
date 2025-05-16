@@ -224,8 +224,14 @@ def draw():
             rect_x = troop_x - width / 2
             rect_y = troop_y - height / 2
             pygame.draw.rect(screen, troop_color, pygame.Rect(rect_x, rect_y, width, height))
+            display_y = rect_y
         else:
             pygame.draw.circle(screen, troop_color, (troop_x, troop_y), troop.collision_radius * SCALE)
+            display_y = troop_y - troop.collision_radius * SCALE  # Use circle's top for text position
+        class_name = troop.__class__.__name__
+        text_surface = font.render(class_name, True, (255, 255, 255))  # White color text
+        text_rect = text_surface.get_rect(center=(troop_x, display_y + 10))  # 10 pixels above the troop
+        screen.blit(text_surface, text_rect)
 
         # Health bar
         hp_bar_x = troop_x - 10
