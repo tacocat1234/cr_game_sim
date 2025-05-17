@@ -374,6 +374,8 @@ class InfernoTower(Building):
         return InfernoTowerAttackEntity(self.side, self.damage_stages[self.stage - 1], self.position, self.target)
     
     def tick(self, arena):
+        if self.preplace:
+            return
         #print(self.target) #temp
         if self.target is None or self.target.cur_hp <= 0:
             self.update_target(arena)

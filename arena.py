@@ -1,3 +1,5 @@
+from abstract_classes import TICK_TIME
+import card_factory
 import vector
 import itertools
 
@@ -8,8 +10,75 @@ class Arena:
         self.spells = []
         self.buildings = []
         self.towers = []
+        self.p1_elixir = 7
+        self.p2_elixir = 7
+        self.preplace = None
+        self.preplace_side = None
+
+    def add(self, side, position, name, level):
+        e = card_factory.get_elixir(name)
+        if (side and e <= self.p1_elixir + 1) or (not side and e <= self.p2_elixir + 1):
+            did_preplace = False if (side and e <= self.p1_elixir) or (not side and e <= self.p2_elixir) else False
+            card_type, card = card_factory.card_factory(side, position, name, level)
+            
+            if did_preplace:
+                self.preplace = card
+                if isinstance(card, list):
+                    self.preplace_side = card[0].side
+                else:
+                    self.preplace_side = card.side
+
+            if card_type == "troop":
+                if isinstance(card, list):
+                    self.troops.extend(card)
+                else:
+                    self.troops.append(card)
+            elif card_type == "spell":
+                if isinstance(card, list):
+                    self.spells.extend(card)
+                else:
+                    self.spells.append(card)
+            elif card_type == "building":
+                if isinstance(card, list):
+                    self.buildings.extend(card)
+                else:
+                    self.buildings.append(card)
+
+            if did_preplace:
+                if isinstance(card, list):
+                    for each in card:
+                        each.preplace = True
+                        each.invulnerable = True
+                        each.collideable = False
+                        each.targetable = False
+                else:
+                    card.preplace = True
+                    card.invulnerable = True
+                    card.collideable = False
+                    card.targetable = False
+            
+            return True
+        return False
     
     def tick(self):
+        self.p1_elixir = min(10, self.p1_elixir + 1/2.8 * TICK_TIME)
+        self.p2_elixir = min(10, self.p2_elixir + 1/2.8 * TICK_TIME)
+
+        if self.preplace is not None and ((self.preplace_side and self.p1_elixir >= 0) or (not self.preplace_side and self.p2_elixir >= 0)):
+            if isinstance(self.preplace, list):
+                for each in self.preplace:
+                    each.preplace = False
+                    each.invulnerable = False
+                    each.collideable = True
+                    each.targetable = True
+            else:
+                self.preplace.preplace = False
+                self.preplace.invulnerable = False
+                self.preplace.collideable = True
+                self.preplace.targetable = True
+            self.preplace = None
+            self.preplace_side = None
+
         for spell in self.spells:
             spell.tick(self)
         for troop in self.troops:

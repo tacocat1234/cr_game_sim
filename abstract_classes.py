@@ -189,6 +189,7 @@ class Troop:
         self.can_kb = True
         self.collideable = True
 
+        self.preplace = False
         self.placed = True
 
     def slow(self, duration):
@@ -381,6 +382,8 @@ class Troop:
             
         
     def tick(self, arena):
+        if self.preplace:
+            return
         #update arena before
         self.tick_func(arena)
         if self.stun_timer <= 0:
@@ -399,6 +402,9 @@ class Troop:
             
     
     def cleanup(self, arena): # each troop runs this after ALL ticks are finished
+        if self.preplace:
+            return
+
         self.cleanup_func(arena)
 
         if self.placed:
@@ -574,6 +580,7 @@ class Spell:
         self.sprite_path = f"sprites/{self.class_name}/{self.class_name}_travel.png"
         self.pulse_timer = float('inf')
         self.pulse_time = float('inf')
+        self.preplace = False
 
     def detect_hits(self, arena): #override
         out = []
@@ -586,6 +593,8 @@ class Spell:
         pass
         
     def tick(self, arena):
+        if self.preplace:
+            return
         if self.spawn_timer > 0:
             tower_to_target  = self.target_pos.subtracted(self.king_pos)
             self.position.add(tower_to_target.scaled(self.velocity / tower_to_target.magnitude()))
@@ -623,6 +632,9 @@ class Spell:
         pass
             
     def cleanup(self, arena):
+        if self.preplace:
+            return
+        
         if self.should_delete:
             arena.spells.remove(self) #delete
         self.display_duration -= TICK_TIME
@@ -665,6 +677,7 @@ class Building:
         self.is_spawner = False
         self.targetable = True
         self.invulnerable = False
+        self.preplace = False
 
     def slow(self, duration):
         self.slow_timer = duration
@@ -709,6 +722,8 @@ class Building:
                 self.facing_dir = angle
     
     def tick(self, arena):
+        if self.preplace:
+            return
         self.tick_func(arena)
         if self.target is None or self.target.cur_hp <= 0:
             self.update_target(arena)
@@ -721,6 +736,9 @@ class Building:
             self.attack_cooldown = self.hit_speed
     
     def cleanup(self, arena):
+        if self.preplace:
+            return
+        
         self.cleanup_func(arena)
 
         self.cur_hp -= self.hit_points * TICK_TIME / self.lifespan

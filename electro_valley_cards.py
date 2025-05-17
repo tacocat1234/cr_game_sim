@@ -579,7 +579,7 @@ class MegaKnightJumpAttackEntity(AttackEntity):
         self.display_size = self.SPLASH_RADIUS
 
     def apply_effect(self, target):
-        if vector.distance(self.position, target.position) < 1:
+        if not isinstance(target, Tower) and vector.distance(self.position, target.position) < 1:
             vec = target.position.subtracted(self.position)
             vec.normalize()
             target.kb(vec)
@@ -681,7 +681,7 @@ class MegaKnight(Troop):
             arena.active_attacks.append(MegaKnightJumpAttackEntity(self.side, self.hit_damage * 2, self.position))
         if self.jump_timer >  0:
             self.jump_timer -= TICK_TIME
-            x = 5/4*self.jump_timer*self.jump_timer
+            x = self.jump_timer
             self.collision_radius = -1.8*x*(x-0.8) + 0.75
         
     

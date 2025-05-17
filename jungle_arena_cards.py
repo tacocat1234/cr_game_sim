@@ -223,6 +223,8 @@ class BarbarianHut(Building):
                 self.next_spawn -= TICK_TIME
         
     def tick(self, arena):
+        if self.preplace:
+            return
         if self.stun_timer <= 0:
             if self.attack_cooldown <= 0: #attack code
                 front = vector.Vector(0, 1.5) if self.side else vector.Vector(0, -1.5)
@@ -430,6 +432,8 @@ class BarbarianBarrel(Troop):
         self.position.y += self.move_speed if self.side else -self.move_speed
     
     def tick(self, arena):
+        if self.preplace:
+            return
         self.timer -= TICK_TIME
         self.move(arena)
         if self.first:

@@ -7,4 +7,4 @@ megaknight 11
 archers 11
 arrows 11
 kingtower 11
-princesstower 11
+cannoneer 11

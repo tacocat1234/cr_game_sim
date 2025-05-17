@@ -13,7 +13,7 @@ let tips = ["This game's logic was coded in Python!",
     "HTML is really annoying to work with.",
     "Hello, World.", "APCSA is a really boring class.",
     "OOP is better.", "Sometimes the cards cheat, and I don't know why or how.",
-    "Apparently, making sprites for things is hard.", "Counter anything with 'heal spirit, good placement.'"]
+    "Apparently, making sprites for things is hard."]
 let t_i = 0;
 for (let i = tips.length - 1; i > 0; i--) { //shuffle
     const j = Math.floor(Math.random() * (i + 1));
@@ -32,6 +32,7 @@ deck = [["battleram", 11],
         ["icegolem", 11],
         ["kingtower", 11],
         ["daggerduchess", 11]];
+
 let hand = [0, 1, 2, 3];
 let cycler = [4, 5, 6, 7];
 let promise_index = null;

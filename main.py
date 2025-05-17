@@ -215,7 +215,7 @@ def draw():
     # Draw Troops
     for troop in game_arena.troops:
         troop_x, troop_y = convert_to_pygame(troop.position)
-        troop_color = BLUE if troop.side else RED
+        troop_color = GRAY if troop.preplace else (BLUE if troop.side else RED)
 
         # Draw troop circle
         if isinstance(troop, Log) or isinstance(troop, BarbarianBarrel):
