@@ -181,6 +181,8 @@ class Troop:
         self.stun_timer = 0
         self.slow_timer = 0
 
+        self.slow_sources = []
+
         self.targetable = True
         self.invulnerable = False
         self.cross_river = False
@@ -192,21 +194,28 @@ class Troop:
         self.preplace = False
         self.placed = True
 
-    def slow(self, duration):
+    def slow(self, duration, source):
         if not self.invulnerable:
-            self.slow_timer = duration
+            if self.slow_timer < duration:
+                self.slow_timer = duration
             self.hit_speed = 1.35 * self.normal_hit_speed
             self.load_time = 1.35 * self.normal_load_time
-            self.move_speed = 0.65 * self.normal_move_speed
+            if source not in self.slow_sources:
+                self.move_speed = 0.65 * self.move_speed
+                self.slow_sources.append(source)
 
-    def move_slow(self, percent, duration):
-        self.slow_timer = duration
-        self.move_speed = (1 - percent) * self.normal_move_speed
+    def move_slow(self, percent, duration, source):
+        if self.slow_timer < duration:
+            self.slow_timer = duration
+        if source not in self.slow_sources:
+            self.move_speed = (1 - percent) * self.move_speed
+            self.slow_sources.append(source)
 
     def unslow(self):
         self.hit_speed = self.normal_hit_speed
         self.load_time = self.normal_load_time
         self.move_speed = self.normal_move_speed
+        self.slow_sources = []
 
     def stun(self):
         if not self.invulnerable:
@@ -478,7 +487,8 @@ class Tower:
         self.cur_hp -= amount
     
     def slow(self, duration):
-        self.slow_timer = duration
+        if self.slow_timer < duration:
+            self.slow_timer = duration
         self.load_time = 1.35 * self.normal_load_time
         self.hit_speed = 1.35 * self.normal_hit_speed
 
@@ -680,6 +690,8 @@ class Building:
         self.preplace = False
 
     def slow(self, duration):
+        if self.slow_timer < duration:
+            self.slow_timer = duration
         self.slow_timer = duration
         self.hit_speed = 1.35 * self.normal_hit_speed
         self.load_time = 1.35 * self.normal_load_time

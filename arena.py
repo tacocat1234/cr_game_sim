@@ -45,7 +45,6 @@ class Arena:
                     self.buildings.append(card)
 
             if did_preplace:
-                print("preplace")
                 if isinstance(card, list):
                     for each in card:
                         each.preplace = True

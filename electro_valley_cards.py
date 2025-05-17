@@ -149,7 +149,7 @@ class ElectroWizard(Troop):
             p=position               # Position (vector.Vector object)
         ) 
         self.level = level
-        self.secondary_target = FileNotFoundError
+        self.secondary_target = None
 
         self.spawn_damage = 159 * pow(1.1, level - 9)
 
@@ -692,3 +692,212 @@ class MegaKnight(Troop):
     def attack(self):
         if self.jump_timer == 0: #if not jumpings
             return MegaKnightAttackEntity(self.side, self.hit_damage, self.position, self.target.position)
+
+class InfernoDragonAttackEntity(RangedAttackEntity):
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            side=side,
+            damage=damage,
+            velocity=2000*TILES_PER_MIN,
+            position=position,
+            target=target,
+        )
+
+class InfernoDragon(Troop):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 1070 * pow(1.1, level - 9),         # Hit points (Example value)
+            h_d= 30 * pow(1.1, level - 9),          # Hit damage (Example value)
+            h_s=0.4,          # Hit speed (Seconds per hit)
+            l_t=1.2,            # First hit cooldown
+            h_r=3.5,            # Hit range
+            s_r=5.5,            # Sight Range
+            g=False,           # Ground troop
+            t_g_o=False,       # Targets ground-only
+            t_o=False,        # Not tower-only
+            m_s=60*TILES_PER_MIN,          # Movement speed 
+            d_t=1,            # Deploy time
+            m=5,            #mass
+            c_r=0.5,        #collision radius
+            p=position               # Position (vector.Vector object)
+        ) 
+        self.level = level
+        self.stage = 1
+        self.stage_duration = 2
+        self.damage_stages = [30 * pow(1.1, level - 9), 100 * pow(1.1, level - 9), 350 * pow(1.1, level - 9)]
+    
+    def tick_func(self, arena):
+        if self.target is None or self.target.cur_hp <= 0:
+            self.update_target(arena)
+            self.stage = 1
+            self.attack_cooldown = self.load_time - self.hit_speed
+
+    def cleanup_func(self, arena):
+        if self.stun_timer <= 0:
+            if self.stage_duration <= 0:
+                self.stage = self.stage + 1 if self.stage < 3 else self.stage
+                self.stage_duration = 2
+            else:
+                self.stage_duration -= TICK_TIME
+
+    def attack(self):
+        return InfernoDragonAttackEntity(self.side, self.damage_stages[self.stage - 1], self.position, self.target)
+    
+    
+class RamRiderAttackEntity(MeleeAttackEntity):
+    HIT_RANGE = 0.8
+    COLLISION_RADIUS = 0.6
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            side=side,
+            damage=damage,
+            position=position,
+            target=target
+            )
+    
+class RamRider(Troop):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 1461 * pow(1.1, level - 9),         # Hit points
+            h_d= 220 * pow(1.1, level - 9),          # Hit damage (charge is 2x)
+            h_s=1.8,          # Hit speed (Seconds per hit)
+            l_t=1.2,            # First hit cooldown
+            h_r=0.8,            # Hit range
+            s_r=7.5,            # Sight Range
+            g=True,           # Ground troop
+            t_g_o=True,       # Targets ground-only
+            t_o=True,        # Not tower-only
+            m_s=60*TILES_PER_MIN,          # Movement speed 
+            d_t=1,            # Deploy time
+            m=4,            #mass
+            c_r=0.6,        #collision radius
+            p=position               # Position (vector.Vector object)
+        ) 
+        self.level = level
+        self.charge_speed = 120 * TILES_PER_MIN
+        self.charge_damage = self.hit_damage * 2
+        self.charge_charge_distance = 0
+        self.charging = False
+        self.cross_river = True
+        self.jump_speed = 160 * TILES_PER_MIN
+
+        class_name = self.__class__.__name__.lower()
+        self.sprite_path = f"sprites/{class_name}/{class_name}_0.png"
+
+        self.rider = RamRiderRider(self.side, self.position, self.level)
+
+    def kb(self, vec):
+        if vec.magnitude() > 0:
+            self.charging = False
+            self.charge_charge_distance = 0
+            self.move_speed = 60 * TILES_PER_MIN
+            self.position.add(vector)
+    
+    def freeze(self, duration):
+        self.stun_timer = duration
+        self.charging = False
+        self.charge_charge_distance = 0
+        self.move_speed = 60 * TILES_PER_MIN
+        self.attack_cooldown = self.hit_speed
+    
+    def stun(self):
+        self.charging = False
+        self.charge_charge_distance = 0
+        self.stun_timer = 0.5
+        self.move_speed = 60 * TILES_PER_MIN
+        self.target = None
+
+    def tick_func(self, arena):
+        if self.stun_timer <= 0:
+            self.rider.tick(arena)
+        if self.stun_timer <= 0 and not self.charging and self.charge_charge_distance >= 3:
+            self.charging = True
+            self.move_speed = self.charge_speed
+            self.charge_charge_distance = 0
+        if self.stun_timer <= 0 and self.deploy_time <= 0 and not self.charging and not self.move_vector.magnitude() == 0: #if not in range
+            self.charge_charge_distance += self.move_speed
+
+    def cleanup_func(self, arena):
+        if self.stun_timer <= 0:
+            self.rider.cleanup(arena)
+
+    def attack(self):
+        if self.charging:
+            self.charging = False 
+            self.charge_charge_distance = 0
+            self.move_speed = 60 * TILES_PER_MIN
+            return RamRiderAttackEntity(self.side, self.charge_damage, self.position, self.target) 
+        else:
+            return RamRiderAttackEntity(self.side, self.hit_damage, self.position, self.target)
+
+class RamRiderRiderAttackEntity(RangedAttackEntity):
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            side=side,
+            damage=damage,
+            velocity=600*TILES_PER_MIN,
+            position=position,
+            target=target,
+        )
+
+    def apply_effect(self, target):
+        target.move_slow(0.7, 2, "ramriderrider")
+
+class RamRiderRider(Troop):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 1,         # Hit points (Example value)
+            h_d= 86 * pow(1.1, level - 9),          # Hit damage (Example value)
+            h_s=1.1,          # Hit speed (Seconds per hit)
+            l_t=0.7,            # First hit cooldown
+            h_r=5.5,            # Hit range
+            s_r=5.5,            # Sight Range
+            g=True,           # Ground troop
+            t_g_o=False,       # Targets ground-only
+            t_o=False,        # Not tower-only
+            m_s=0,          # Movement speed 
+            d_t=0,            # Deploy time
+            m=0,            #mass
+            c_r=0,        #collision radius
+            p=position               # Position (vector.Vector object)
+        ) 
+        self.level = level
+        self.snared = []
+        self.snared_snare_time = []
+
+    def update_target(self, arena):
+        self.target = None 
+
+        abs_closest = None
+        
+        min_dist = float('inf')
+        for each in arena.troops: #for each troop
+            if each.targetable and not each.invulnerable and each.side != self.side: #targets air or is ground only and each is ground troup
+                dist = vector.distance(each.position, self.position)
+                if dist < min_dist and dist < self.sight_range + self.collision_radius + each.collision_radius:
+                    if each in self.snared:
+                        abs_closest = each
+                    else:
+                        self.target = each
+                    min_dist = vector.distance(each.position, self.position)
+        
+        if self.target is None:
+            self.target = abs_closest
+    
+    def cleanup_func(self, arena):
+        self.update_target(arena)
+        for i in range(len(self.snared) - 1, -1, -1):
+            if self.snared_snare_time[i] <= 0:
+                del self.snared[i]
+                del self.snared_snare_time[i]
+            else:
+                self.snared_snare_time[i] -= TICK_TIME
+
+    def attack(self):
+        if isinstance(self.target, Troop):
+            self.snared.append(self.target)
+            self.snared_snare_time.append(2.1)
+            return RamRiderRiderAttackEntity(self.side, self.hit_damage, self.position, self.target)

@@ -20,7 +20,7 @@ darkprince, royalhogs, balloon, prince, royalgiant, royalrecruits, threemusketee
 icespirit, icegolem, battlehealer, giantskeleton, 
 beserker, goblingang, dartgoblin, skeletonbarrel, goblingiant, 
 zappies, hunter, minionhorde, elitebarbarians, golem, 
-miner, princess, electrowizard, sparky
+miner, princess, electrowizard, infernodragon, sparky, megaknight
 ## Spells
 Implemented spells include:
 

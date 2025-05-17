@@ -25,7 +25,7 @@ class GiantSnowball(Spell):
         )
 
     def apply_effect(self, target):
-        target.slow(2.5)
+        target.slow(2.5, "giantsnowball")
 
 class IceSpiritAttackEntity(AttackEntity):
     DAMAGE_RADIUS = 1.5
@@ -125,7 +125,7 @@ class IceGolemDeathAttackEntity(AttackEntity):
         self.display_size = self.SPLASH_RADIUS
 
     def apply_effect(self, target):
-        target.slow(2.5)
+        target.slow(2.5, "icegolemdeathattackentity")
     
     def detect_hits(self, arena):
         hits = []

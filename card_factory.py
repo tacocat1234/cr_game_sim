@@ -26,7 +26,7 @@ troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer",
           "icespirit", "icegolem", "battlehealer", "giantskeleton",
           "barbarianbarrel", "beserker", "goblingang", "dartgoblin", "skeletonbarrel", "goblingiant",
           "zappies", "hunter", "minionhorde", "elitebarbarians", "golem",
-          "log", "miner", "princess", "electrowizard", "sparky", "megaknight"]
+          "log", "miner", "princess", "electrowizard", "infernodragon", "ramrider", "sparky", "megaknight"]
 
 spells = ["fireball", "arrows",
           "zap", "rocket",
@@ -311,6 +311,10 @@ def troop_factory(side, position, name, level):
         return electro_valley_cards.Princess(side, position, level)
     elif name == "electrowizard":
         return electro_valley_cards.ElectroWizard(side, position, level)
+    elif name == "infernodragon":
+        return electro_valley_cards.InfernoDragon(side, position, level)
+    elif name == "ramrider":
+        return electro_valley_cards.RamRider(side, position, level)
     elif name == "sparky":
         return electro_valley_cards.Sparky(side, position, level)
     elif name == "megaknight":
@@ -442,6 +446,8 @@ elixir_map = {
     "miner" : 3,
     "princess" : 3,
     "electrowizard" : 4,
+    "infernodragon" : 4,
+    "ramrider" : 5,
     "sparky" : 6,
     "megaknight" : 7
 }
