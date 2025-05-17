@@ -10,6 +10,7 @@ from card_factory import can_anywhere
 import arena
 import towers
 import vector
+import math
 
 from electro_valley_cards import Log
 from jungle_arena_cards import BarbarianBarrel
@@ -112,6 +113,7 @@ BLACK = (0, 0, 0)
 GRAY = (200, 200, 200)
 YELLOW = (255, 255, 0)
 PURPLE = (255, 0, 255)
+GRAY_PURPLE = (255, 150, 255)
 
 BG_TEMP = (150, 150, 150)
 RIVER_TEMP = (79, 66, 181)
@@ -140,6 +142,7 @@ font = pygame.font.Font(None, 12)
 background_img = pygame.image.load("sprites/background.png").convert_alpha()
 select_img = pygame.image.load("sprites/tileselect.png").convert_alpha()
 dd_symbol_img = pygame.image.load("sprites/daggerduchess/duchess_symbol.png").convert_alpha()
+elixir_int_img = pygame.image.load("sprites/elixir_bar.png").convert_alpha()
 
 #temp
 #game_arena.troops.append(training_camp_cards.Giant(True, vector.Vector(-2, -3), 1))
@@ -286,7 +289,9 @@ def draw():
         building_x, building_y = convert_to_pygame(building.position)
         building_color = BLUE if building.side else RED
 
-        if not building.targetable:
+        if building.preplace:
+            building_color = GRAY
+        elif not building.targetable:
             building_color = (255, 127, 127)
 
         # Draw building square
@@ -321,7 +326,7 @@ def draw():
             attack_size = attack.display_size * SCALE
             attack_surface = pygame.Surface((attack_size * 2, attack_size * 2), pygame.SRCALPHA)
             
-            # Draw a semi-transparent yellow circle
+            # Draw a semi-trfansparent yellow circle
             pygame.draw.circle(attack_surface, (255, 255, 0, 128), (attack_size, attack_size), attack_size)
             
             # Blit the surface onto the screen
@@ -330,20 +335,30 @@ def draw():
             # Regular solid yellow circle for small attacks
             pygame.draw.circle(screen, YELLOW, (attack_x, attack_y), attack.display_size * SCALE)
     for spell in game_arena.spells:
-        spell_x, spell_y = convert_to_pygame(spell.position)
-        size = spell.radius * SCALE if spell.spawn_timer <= 0 else 1 * SCALE
-        if spell.spawn_timer <= 0:
-            # Partially transparent when the spell has spawned
-            # Create a surface to represent the spell
+        if spell.preplace:
+            spell_x, spell_y = convert_to_pygame(spell.target_pos)
+            size = spell.radius * SCALE
             spell_surface = pygame.Surface((size * 2, size * 2), pygame.SRCALPHA)  # Creating transparent surface
             
             # Fill the surface with the purple color and set transparency (alpha channel)
-            pygame.draw.circle(spell_surface, (128, 0, 128, 128), (size, size), size)
+            pygame.draw.circle(spell_surface, (128, 128, 128, 128), (size, size), size)
             # Draw the surface onto the screen at the correct position
             screen.blit(spell_surface, (spell_x - size, spell_y - size))  # Centering the spell's circle
         else:
-            # Non-transparent when the spell is in its "flying" phase (spawn_timer > 0)
-            pygame.draw.circle(screen, PURPLE, (spell_x, spell_y), size)
+            spell_x, spell_y = convert_to_pygame(spell.position)
+            size = spell.radius * SCALE if spell.spawn_timer <= 0 else 1 * SCALE
+            if spell.spawn_timer <= 0:
+                # Partially transparent when the spell has spawned
+                # Create a surface to represent the spell
+                spell_surface = pygame.Surface((size * 2, size * 2), pygame.SRCALPHA)  # Creating transparent surface
+                
+                # Fill the surface with the purple color and set transparency (alpha channel)
+                pygame.draw.circle(spell_surface, (128, 0, 128, 128), (size, size), size)
+                # Draw the surface onto the screen at the correct position
+                screen.blit(spell_surface, (spell_x - size, spell_y - size))  # Centering the spell's circle
+            else:
+                # Non-transparent when the spell is in its "flying" phase (spawn_timer > 0)
+                pygame.draw.circle(screen, PURPLE, (spell_x, spell_y), size)
     
     card_name_font = pygame.font.Font(None, 24)  # Use a larger font for card names
 
@@ -369,18 +384,30 @@ def draw():
 
     #draw elixir bar
     elixir_bar_height = 15  
-    elixir_bar_width = int((elixir / 10) * WIDTH)  
-    pygame.draw.rect(screen, PURPLE, (0, HEIGHT - elixir_bar_height - 10, elixir_bar_width, elixir_bar_height))  
-    pygame.draw.rect(screen, WHITE, (0, HEIGHT - elixir_bar_height - 10, WIDTH, elixir_bar_height), 2)  
+    elixir_bar_width = int((game_arena.p1_elixir / 10) * WIDTH)  
+    elixir_bar_int_width = max((math.floor(game_arena.p1_elixir) / 10) * WIDTH, 0)
 
-    elixir_circle_x = elixir_bar_width  # Position at the end of the elixir bar
+    pygame.draw.rect(screen, PURPLE, (0, HEIGHT - elixir_bar_height - 10, elixir_bar_int_width, elixir_bar_height))
+
+    # Draw the GRAY_PURPLE portion (fractional elixir)
+    if elixir_bar_width > elixir_bar_int_width:
+        pygame.draw.rect(screen, GRAY_PURPLE, (elixir_bar_int_width, HEIGHT - elixir_bar_height - 10,
+                                            elixir_bar_width - elixir_bar_int_width, elixir_bar_height))
+        
+    e_rect = elixir_int_img.get_rect(midtop=(WIDTH // 2, HEIGHT - elixir_bar_height - 11))
+    screen.blit(elixir_int_img, e_rect)
+
+    pygame.draw.rect(screen, (189, 240, 255), (0, HEIGHT - elixir_bar_height - 10, WIDTH, elixir_bar_height), 2)  
+    
+
+    elixir_circle_x = elixir_bar_int_width   # Position at the end of the elixir bar
     elixir_circle_y = HEIGHT - elixir_bar_height // 2 - 10  # Align with the bar
     elixir_circle_radius = 12  # Size of the circle
 
     pygame.draw.circle(screen, PURPLE, (elixir_circle_x, elixir_circle_y), elixir_circle_radius)  # Draw elixir circle
 
     # Render the elixir amount text
-    elixir_text = card_name_font.render(str(elixir), True, WHITE)
+    elixir_text = card_name_font.render(str(max(math.floor(game_arena.p1_elixir), 0)), True, WHITE)
     text_rect = elixir_text.get_rect(center=(elixir_circle_x, elixir_circle_y))
     screen.blit(elixir_text, text_rect)  # Display elixir text
 
@@ -480,27 +507,13 @@ while running:
                 drag_end_pos = (mouse_x, mouse_y)
                 cur_card = deck[hand[click_quarter - 1]]
                 if mouse_x > 64 and mouse_x < WIDTH - 64 and mouse_y < HEIGHT - 128 and (get_type(cur_card.name) == "spell" or cur_card.name == "miner" or mouse_y > 340) or (not enemy_right and in_pocket(mouse_x, mouse_y, True)) or (not enemy_left and in_pocket(mouse_x, mouse_y, False)):
-                    if (cur_card.elixir_cost <= elixir):
-                        card_type, card = deck[hand[click_quarter - 1]].summon(convert_from_pygame(mouse_x, mouse_y))
-
-                        if card_type == "troop":
-                            if isinstance(card, list):
-                                game_arena.troops.extend(card)
-                            else:
-                                game_arena.troops.append(card)
-                        elif card_type == "spell":
-                            if isinstance(card, list):
-                                game_arena.spells.extend(card)
-                            else:
-                                game_arena.spells.append(card)
-                        elif card_type == "building":
-                            if isinstance(card, list):
-                                game_arena.buildings.extend(card)
-                            else:
-                                game_arena.buildings.append(card)
-
+                    pos = convert_from_pygame(mouse_x, mouse_y)
+                    name = cur_card.name
+                    level = cur_card.level
+                    
+                    succesful = game_arena.add(True, pos, name, level)
+                    if succesful:
                         cycle(hand, click_quarter - 1, cycler)
-                        elixir -= cur_card.elixir_cost
 
                 # Reset drag start position after the release
                 drag_start_pos = None

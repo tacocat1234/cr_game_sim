@@ -17,8 +17,8 @@ class Arena:
 
     def add(self, side, position, name, level):
         e = card_factory.get_elixir(name)
-        if (side and e <= self.p1_elixir + 1) or (not side and e <= self.p2_elixir + 1):
-            did_preplace = False if (side and e <= self.p1_elixir) or (not side and e <= self.p2_elixir) else False
+        if (side and e <= self.p1_elixir + 0.5) or (not side and e <= self.p2_elixir + 0.5): #if enough elixir
+            did_preplace = False if (side and e <= self.p1_elixir) or (not side and e <= self.p2_elixir) else True
             card_type, card = card_factory.card_factory(side, position, name, level)
             
             if did_preplace:
@@ -45,6 +45,7 @@ class Arena:
                     self.buildings.append(card)
 
             if did_preplace:
+                print("preplace")
                 if isinstance(card, list):
                     for each in card:
                         each.preplace = True
@@ -57,6 +58,11 @@ class Arena:
                     card.collideable = False
                     card.targetable = False
             
+            if side:
+                self.p1_elixir -= e
+            else:
+                self.p2_elixir -= e
+
             return True
         return False
     
