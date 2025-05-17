@@ -1,10 +1,1 @@
-prince 13
-icespirit 13
-knight 13
-furnace 13
-log 13
-fireball 13
-musketeer 13
-skeletons 13
-kingtower 13
-daggerduchess 13
+random 13

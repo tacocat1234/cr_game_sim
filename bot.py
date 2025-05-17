@@ -52,7 +52,7 @@ class Bot:
             self.internal_timer -= TICK_TIME
 
     def random_pos(name, things = None):
-        isSpell = get_type(name) == "spell" or name == "barbarianbarrel" or name == "log"
+        isSpell = get_type(name) == "spell" or name == "barbarianbarrel" or name == "log" or name == "miner"
         enemy = []
         friendly = []
         if not things is None:
@@ -64,6 +64,8 @@ class Bot:
         if (isSpell):
             if len(enemy) > 0:
                 r = random.choice(enemy)
+                if name == "miner":
+                    return copy.deepcopy(r.position)
                 if r.cur_hp < 900: #cannot use rocket properly
                     if name == "barbarianbarrel":
                         pos = copy.deepcopy(r.position)

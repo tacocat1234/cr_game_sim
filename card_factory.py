@@ -451,3 +451,52 @@ elixir_map = {
     "sparky" : 6,
     "megaknight" : 7
 }
+
+def filter_cards(card_list, min_elixir, max_elixir, used_cards):
+    return [card for card in card_list
+            if min_elixir <= elixir_map.get(card, 0) <= max_elixir and card not in used_cards]
+
+def generate_random_deck():
+    deck = []
+    used = set()
+
+    # 1st: troop with elixir 1–2
+    options = filter_cards(troops, 1, 2, used)
+    choice = random.choice(options)
+    deck.append(choice)
+    used.add(choice)
+
+    # 2nd: troop with elixir 2–3
+    options = filter_cards(troops, 2, 3, used)
+    choice = random.choice(options)
+    deck.append(choice)
+    used.add(choice)
+
+    # 3rd–5th: troops with elixir 3–5
+    options = filter_cards(troops, 3, 5, used)
+    choices = random.sample(options, 3)
+    deck.extend(choices)
+    used.update(choices)
+
+    # 6th: troop with elixir 5–9
+    options = filter_cards(troops, 5, 9, used)
+    choice = random.choice(options)
+    deck.append(choice)
+    used.add(choice)
+
+    # 7th: spell with elixir 1–3
+    options = filter_cards(spells, 1, 3, used)
+    choice = random.choice(options)
+    deck.append(choice)
+    used.add(choice)
+
+    # 8th: spell with elixir = 4
+    options = filter_cards(spells, 4, 4, used)
+    choice = random.choice(options)
+    deck.append(choice)
+    used.add(choice)
+
+    if random.randint(1, 4) == 1:
+        deck[2] = random.choice(["goblinhut", "barbarianhut", "furnace", "xbow", "mortar", "goblincage", "tombstone"])
+
+    return deck

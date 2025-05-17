@@ -7,6 +7,7 @@ from bot import place
 from card_factory import get_type
 from card_factory import get_radius
 from card_factory import can_anywhere
+from card_factory import generate_random_deck
 import arena
 import towers
 import vector
@@ -40,23 +41,36 @@ with open("decks/deck.txt", "r") as file:
         PRINCESS_LEVEL = int(PRINCESS_LEVEL)
 
 bot_deck = []
-
+random_deck = False
 with open("decks/bot_deck.txt", "r") as file:
     for _ in range(8):
         line = file.readline().strip()
         if line:  # Ensure line is not empty
             card, level = line.rsplit(" ", 1)  # Split at the last space
-            bot_deck.append(Card(False, card, int(level)))
             
-    line = file.readline().strip()
-    if line:
-        _, BOT_K_L = line.rsplit(" ", 1)
-        BOT_K_L = int(BOT_K_L)
+            if card == "random":
+                random_deck = True
+                BOT_K_L = BOT_P_L = int(level)
+                BOT_TOWER_TYPE = random.choice(["princesstower", "cannoneer", "daggerduchess"])
+                break
 
-    line = file.readline().strip()
-    if line:
-        BOT_TOWER_TYPE, BOT_P_L = line.rsplit(" ", 1)
-        BOT_P_L = int(BOT_P_L)
+            bot_deck.append(Card(False, card, int(level)))
+    
+    if not random_deck:
+        line = file.readline().strip()
+        if line:
+            _, BOT_K_L = line.rsplit(" ", 1)
+            BOT_K_L = int(BOT_K_L)
+
+        line = file.readline().strip()
+        if line:
+            BOT_TOWER_TYPE, BOT_P_L = line.rsplit(" ", 1)
+            BOT_P_L = int(BOT_P_L)
+
+if random_deck:
+    l = generate_random_deck()
+    for each in l:
+        bot_deck.append(Card(False, each, BOT_K_L))
 
 if TOWER_TYPE.lower() == "princesstower":
     player_tower_a = towers.PrincessTower(True, PRINCESS_LEVEL, True)
@@ -534,6 +548,14 @@ while running:
         break
     draw()  # Redraw screen
 
+print("bot deck is:")
+
+for i in range(len(bot_deck)):
+    if i == 7:
+        print(bot_deck[i].name)
+    else:
+        print(bot_deck[i].name, end=", ")
+
 winfont = pygame.font.Font(None, 100)  # Adjust font size as needed
 text = None
 if win is None:
@@ -542,7 +564,8 @@ elif win:
     text = winfont.render("YOU WIN", True, WHITE)
 else:
     text = winfont.render("YOU LOSE", True, WHITE)
-    
+
+
 
 # Get text rectangle and center it
 text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
