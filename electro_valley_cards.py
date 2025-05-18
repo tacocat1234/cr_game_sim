@@ -244,7 +244,7 @@ class Miner(Troop):
             self.move_speed = 90 * TILES_PER_MIN
             self.invulnerable = False
             self.targetable = True
-            self.collidable = True
+            self.collideable = True
             self.target = None
 
     def move(self, arena):
@@ -541,14 +541,15 @@ class Sparky(Troop):
         self.level = level
         self.attack_cooldown = self.hit_speed
 
-    def slow(self, duration):
+    def slow(self, duration, source):
         if not self.invulnerable:
             self.attack_cooldown = self.hit_speed
+            if self.slow_timer < duration:
+                self.slow_timer = duration
             self.slow_timer = duration
             self.hit_speed = 1.35 * self.normal_hit_speed
             self.load_time = 1.35 * self.normal_load_time
-            self.move_speed = 0.65 * self.normal_move_speed
-
+    
     def stun(self):
         if not self.invulnerable:
             self.attack_cooldown = self.hit_speed

@@ -20,43 +20,51 @@ game_arena = arena.Arena()
 
 
 deck = []
+bot_deck = []
+
 KING_LEVEL = PRINCESS_LEVEL = BOT_K_L = BOT_P_L = 0
 TOWER_TYPE = BOT_TOWER_TYPE = ""
+player_random_deck = False
+bot_random_deck = False
 
+# Load Player Deck
 with open("decks/deck.txt", "r") as file:
     for _ in range(8):
         line = file.readline().strip()
-        if line:  # Ensure line is not empty
-            card, level = line.rsplit(" ", 1)  # Split at the last space
+        if line:
+            card, level = line.rsplit(" ", 1)
+            if card == "random":
+                player_random_deck = True
+                KING_LEVEL = PRINCESS_LEVEL = int(level)
+                TOWER_TYPE = random.choice(["princesstower", "cannoneer", "daggerduchess"])
+                break
             deck.append(Card(True, card, int(level)))
-            
-    line = file.readline().strip()
-    if line:
-        _, KING_LEVEL = line.rsplit(" ", 1)
-        KING_LEVEL = int(KING_LEVEL)
 
-    line = file.readline().strip()
-    if line:
-        TOWER_TYPE, PRINCESS_LEVEL = line.rsplit(" ", 1)
-        PRINCESS_LEVEL = int(PRINCESS_LEVEL)
+    if not player_random_deck:
+        line = file.readline().strip()
+        if line:
+            _, KING_LEVEL = line.rsplit(" ", 1)
+            KING_LEVEL = int(KING_LEVEL)
 
-bot_deck = []
-random_deck = False
+        line = file.readline().strip()
+        if line:
+            TOWER_TYPE, PRINCESS_LEVEL = line.rsplit(" ", 1)
+            PRINCESS_LEVEL = int(PRINCESS_LEVEL)
+
+# Load Bot Deck
 with open("decks/bot_deck.txt", "r") as file:
     for _ in range(8):
         line = file.readline().strip()
-        if line:  # Ensure line is not empty
-            card, level = line.rsplit(" ", 1)  # Split at the last space
-            
+        if line:
+            card, level = line.rsplit(" ", 1)
             if card == "random":
-                random_deck = True
+                bot_random_deck = True
                 BOT_K_L = BOT_P_L = int(level)
                 BOT_TOWER_TYPE = random.choice(["princesstower", "cannoneer", "daggerduchess"])
                 break
-
             bot_deck.append(Card(False, card, int(level)))
-    
-    if not random_deck:
+
+    if not bot_random_deck:
         line = file.readline().strip()
         if line:
             _, BOT_K_L = line.rsplit(" ", 1)
@@ -67,22 +75,33 @@ with open("decks/bot_deck.txt", "r") as file:
             BOT_TOWER_TYPE, BOT_P_L = line.rsplit(" ", 1)
             BOT_P_L = int(BOT_P_L)
 
-if random_deck:
-    l = generate_random_deck()
-    for each in l:
-        bot_deck.append(Card(False, each, BOT_K_L))
+# Generate Random Player Deck
+if player_random_deck:
+    deck = [Card(True, card, KING_LEVEL) for card in generate_random_deck()]
+    print("your deck is:")
 
+    for i in range(len(deck)):
+        if i == 7:
+            print(deck[i].name)
+        else:
+            print(deck[i].name, end=", ")
+
+# Generate Random Bot Deck
+if bot_random_deck:
+    bot_deck = [Card(False, card, BOT_K_L) for card in generate_random_deck()]
+
+# Initialize Player Towers
 if TOWER_TYPE.lower() == "princesstower":
     player_tower_a = towers.PrincessTower(True, PRINCESS_LEVEL, True)
     player_tower_b = towers.PrincessTower(True, PRINCESS_LEVEL, False)
 elif TOWER_TYPE.lower() == "cannoneer":
-    # Replace with whatever alternative tower type is appropriate
     player_tower_a = towers.Cannoneer(True, PRINCESS_LEVEL, True)
     player_tower_b = towers.Cannoneer(True, PRINCESS_LEVEL, False)
 elif TOWER_TYPE.lower() == "daggerduchess":
     player_tower_a = towers.DaggerDuchess(True, PRINCESS_LEVEL, True)
     player_tower_b = towers.DaggerDuchess(True, PRINCESS_LEVEL, False)
 
+# Initialize Bot Towers
 if BOT_TOWER_TYPE.lower() == "princesstower":
     bot_tower_a = towers.PrincessTower(False, BOT_P_L, True)
     bot_tower_b = towers.PrincessTower(False, BOT_P_L, False)
@@ -90,8 +109,8 @@ elif BOT_TOWER_TYPE.lower() == "cannoneer":
     bot_tower_a = towers.Cannoneer(False, BOT_P_L, True)
     bot_tower_b = towers.Cannoneer(False, BOT_P_L, False)
 elif BOT_TOWER_TYPE.lower() == "daggerduchess":
-    bot_tower_a = towers.DaggerDuchess(False, PRINCESS_LEVEL, True)
-    bot_tower_b = towers.DaggerDuchess(False, PRINCESS_LEVEL, False)
+    bot_tower_a = towers.DaggerDuchess(False, BOT_P_L, True)
+    bot_tower_b = towers.DaggerDuchess(False, BOT_P_L, False)
 
 game_arena.towers = [towers.KingTower(True, PRINCESS_LEVEL), 
                         player_tower_a,  # a
@@ -465,7 +484,6 @@ while running:
 
     bot_card = bot.tick(bot_elixir)
     if not bot_card is None:
-        print(bot_card.name)
         bot_pos = Bot.random_pos(bot_card.name, game_arena.troops + game_arena.buildings)
         if bot_pos:
             bot_elixir -= bot_card.elixir_cost

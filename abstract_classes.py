@@ -486,7 +486,7 @@ class Tower:
     def damage(self, amount):
         self.cur_hp -= amount
     
-    def slow(self, duration):
+    def slow(self, duration, source):
         if self.slow_timer < duration:
             self.slow_timer = duration
         self.load_time = 1.35 * self.normal_load_time
@@ -688,8 +688,9 @@ class Building:
         self.targetable = True
         self.invulnerable = False
         self.preplace = False
+        self.collideable = True
 
-    def slow(self, duration):
+    def slow(self, duration, source):
         if self.slow_timer < duration:
             self.slow_timer = duration
         self.slow_timer = duration

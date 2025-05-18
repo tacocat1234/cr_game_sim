@@ -47,6 +47,7 @@ const ctx = gameDisplay.getContext('2d');
 //const debug = document.getElementById("debug");
 
 const bg = new Image(); bg.src = "../sprites/background.png";
+const elxiir_bar = new Image(); elxiir_bar.src = "../sprites/elixir_bar.png"
 const select = new Image(); select.src = "../sprites/tileselect.png";
 
 let resizeTimeout;
@@ -203,8 +204,10 @@ function joinSpecificLobby(){
 }
 
 function draw(){
-    if (state == "game"){
+    if (state == "game")
+    {
         ctx.drawImage(bg, 64 * scale, 0, 360 * scale, 640 * scale);
+        ctx.drawImage(elxiir_bar, 0, (751)*scale, 488 * scale, 17 * scale);
     }
     requestAnimationFrame(draw);
 }

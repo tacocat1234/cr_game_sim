@@ -126,6 +126,8 @@ def get_information(side, arena_id):
 
         response_data = {
                     "arena_state": status.get(arena_id, "unknown"),
+                    "p1_elixir": arenas.get(arena_id).p1_elixir,
+                    "p2_elixir": arenas.get(arena_id).p2_elixir,
                     "troop_x": troop_x,
                     "troop_y": troop_y,
                     "troop_l": troop_l,

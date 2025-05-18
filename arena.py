@@ -150,7 +150,7 @@ class Arena:
         for troop in self.troops:
             for building in self.buildings + self.towers:
                 dist = vector.distance(troop.position, building.position)
-                if troop.collideable and dist < (building.collision_radius + troop.collision_radius):
+                if troop.collideable and building.collideable and dist < (building.collision_radius + troop.collision_radius):
                     vec = troop.position.subtracted(building.position)  # building to troop vector
                     if vec.magnitude() > 0:
                         vec.scale(((building.collision_radius + troop.collision_radius) / vec.magnitude()) - 1)
