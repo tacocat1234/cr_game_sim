@@ -427,6 +427,11 @@ class BarbarianBarrel(Troop):
         self.collideable = False
 
         self.first = True
+    
+    def on_deploy(self, arena):
+        self.targetable = False
+        self.invulnerable = True
+        self.collideable = False
 
     def move(self, arena):
         self.position.y += self.move_speed if self.side else -self.move_speed

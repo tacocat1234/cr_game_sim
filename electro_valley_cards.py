@@ -68,12 +68,18 @@ class Log(Troop):
         self.level = level
         self.targetable = False
         self.invulnerable = True
+        self.collideable = False
         self.timer = 3.03
-        self.crown_tower_damage = h_d= 48 * pow(1.1, level - 9)
+        self.crown_tower_damage = 48 * pow(1.1, level - 9)
 
         self.collideable = False
 
         self.first = True
+
+    def on_deploy(self, arena):
+        self.targetable = False
+        self.invulnerable = True
+        self.collideable = False
 
     def move(self, arena):
         self.position.y += self.move_speed if self.side else -self.move_speed
@@ -238,6 +244,8 @@ class Miner(Troop):
         self.invulnerable = True
         self.targetable = False
         self.collideable = False
+        self.preplace = False
+        self.normal_move_speed = 90*TILES_PER_MIN
 
     def tick_func(self, arena):
         if self.invulnerable and vector.distance(self.position, self.target) < 0.25:
@@ -246,6 +254,11 @@ class Miner(Troop):
             self.targetable = True
             self.collideable = True
             self.target = None
+    
+    def on_deploy(self, arena):
+        self.invulnerable = True
+        self.targetable = False
+        self.collideable = False
 
     def move(self, arena):
         tar_pos = None if self.target is None else (self.target if isinstance(self.target, vector.Vector) else self.target.position)
@@ -348,6 +361,8 @@ class Miner(Troop):
         return False
 
     def tick(self, arena):
+        if self.preplace:
+            return
         #update arena before
         tar_pos = None if self.target is None else (self.target if isinstance(self.target, vector.Vector) else self.target.position)
 
@@ -369,7 +384,8 @@ class Miner(Troop):
 
 
     def cleanup(self, arena): # each troop runs this after ALL ticks are finished
-        
+        if self.preplace:
+            return
         self.cleanup_func(arena)
 
         if self.cur_hp <= 0 or self.should_delete:
@@ -794,7 +810,7 @@ class RamRider(Troop):
             self.charging = False
             self.charge_charge_distance = 0
             self.move_speed = 60 * TILES_PER_MIN
-            self.position.add(vector)
+            self.position.add(vec)
     
     def freeze(self, duration):
         self.stun_timer = duration

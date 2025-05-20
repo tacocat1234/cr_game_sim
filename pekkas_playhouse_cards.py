@@ -13,8 +13,8 @@ import copy
 import math
 
 class PekkaAttackEntity(MeleeAttackEntity):
-    HIT_RANGE = 0.8
-    COLLISION_RADIUS = 0.6
+    HIT_RANGE = 1.2
+    COLLISION_RADIUS = 0.75
     def __init__(self, side, damage, position, target):
         super().__init__(
             side=side,
@@ -36,7 +36,7 @@ class Pekka(Troop):
             g=True,           # Ground troop
             t_g_o=True,       # Targets ground-only
             t_o=False,        # Not tower-only
-            m_s=90*TILES_PER_MIN,          # Movement speed 
+            m_s=45*TILES_PER_MIN,          # Movement speed 
             d_t=1,            # Deploy time
             m=18,            #mass
             c_r=0.75,        #collision radius

@@ -482,6 +482,7 @@ class Tower:
         self.invulnerable = False
         self.ground = True
         self.type = None
+        self.collideable = True
 
     def damage(self, amount):
         self.cur_hp -= amount
