@@ -25,6 +25,8 @@ class Zap(Spell):
         )
     
     def tick(self, arena):
+        if self.preplace:
+            return
         if self.waves > 0:
             hits = self.detect_hits(arena)
             for each in hits:

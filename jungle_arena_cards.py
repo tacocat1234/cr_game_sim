@@ -260,7 +260,7 @@ class Poison(Spell):
 
     def passive_effect(self, each):
         if isinstance(each, Troop):
-            each.move_slow(0.15, 0.25, "poison")
+            each.move_slow(0.15, 1, "poison")
 
 class GoblinGiantAttackEntity(MeleeAttackEntity):
     HIT_RANGE = 1.2

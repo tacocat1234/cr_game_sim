@@ -146,8 +146,8 @@ class ElectroWizard(Troop):
             h_r=5,            # Hit range
             s_r=5.5,            # Sight Range
             g=True,           # Ground troop
-            t_g_o=True,       # Targets ground-only
-            t_o=True,        # Not tower-only
+            t_g_o=False,       # Targets ground-only
+            t_o=False,        # Not tower-only
             m_s=90*TILES_PER_MIN,          # Movement speed 
             d_t=1,            # Deploy time
             m=5,            #mass

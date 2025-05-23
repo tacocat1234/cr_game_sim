@@ -13,6 +13,7 @@ import frozen_peak_cards
 import jungle_arena_cards
 import hog_mountain_cards
 import electro_valley_cards
+import spooky_town_cards
 import random
 
 troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer", 
@@ -26,13 +27,15 @@ troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer",
           "icespirit", "icegolem", "battlehealer", "giantskeleton",
           "barbarianbarrel", "beserker", "goblingang", "dartgoblin", "skeletonbarrel", "goblingiant",
           "zappies", "hunter", "minionhorde", "elitebarbarians", "golem",
-          "log", "miner", "princess", "electrowizard", "infernodragon", "ramrider", "sparky", "megaknight"]
+          "log", "miner", "princess", "electrowizard", "infernodragon", "ramrider", "sparky", "megaknight",
+          "wallbreakers", "icewizard", "firecracker"]
 
 spells = ["fireball", "arrows",
           "zap", "rocket",
           "goblinbarrel",
           "giantsnowball", "freeze", "lightning",
-          "poison"]
+          "poison",
+          "earthquake", "graveyard"]
 
 buildings = ["goblinhut", "goblincage", 
              "tombstone",
@@ -55,13 +58,16 @@ effect_radius = {
     "rocket" : 2,
     "goblinbarrel" : 1.5,
     "giantsnowball" : 2.5,
-    "freeze" : 4,
+    "freeze" : 3,
     "lightning" : 3.5,
     "poison" : 3.5,
     "tesla" : 5.5,
     "xbow" : 11.5,
     "electrowizard" : 2.5,
-    "megaknight" : 2.2
+    "megaknight" : 2.2,
+    "icewizard" : 3,
+    "earthquake" : 3.5,
+    "graveyard" : 4
 }
 
 def get_radius(name):
@@ -319,6 +325,15 @@ def troop_factory(side, position, name, level):
         return electro_valley_cards.Sparky(side, position, level)
     elif name == "megaknight":
         return electro_valley_cards.MegaKnight(side, position, level)
+    elif name == "wallbreakers":
+        pos1 = vector.Vector(0.75, 0)
+        pos2 = vector.Vector(-0.75, 0)
+        return [spooky_town_cards.WallBreaker(side, position.added(pos1), level),
+                spooky_town_cards.WallBreaker(side, position.added(pos2), level)]
+    elif name == "icewizard":
+        return spooky_town_cards.IceWizard(side, position, level)
+    elif name == "firecracker":
+        return spooky_town_cards.Firecracker(side, position, level)
     else:
         raise Exception("Invalid troop name.")
 
@@ -341,6 +356,10 @@ def spell_factory(side, position, name, level):
         return frozen_peak_cards.Lightning(side, position, level)
     elif name == "poison":
         return jungle_arena_cards.Poison(side, position, level)
+    elif name == "earthquake":
+        return spooky_town_cards.Earthquake(side, position, level)
+    elif name == "graveyard":
+        return spooky_town_cards.Graveyard(side, position, level)
     else:
         raise Exception("Invalid spell name.")
 
@@ -449,7 +468,12 @@ elixir_map = {
     "infernodragon" : 4,
     "ramrider" : 5,
     "sparky" : 6,
-    "megaknight" : 7
+    "megaknight" : 7,
+    "wallbreakers" : 2,
+    "firecracker" : 3,
+    "icewizard" : 3,
+    "earthquake" : 3,
+    "graveyard" : 5
 }
 
 def filter_cards(card_list, min_elixir, max_elixir, used_cards):

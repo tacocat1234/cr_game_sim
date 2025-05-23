@@ -380,6 +380,8 @@ def draw():
         else:
             spell_x, spell_y = convert_to_pygame(spell.position)
             size = spell.radius * SCALE if spell.spawn_timer <= 0 else 1 * SCALE
+
+
             if spell.spawn_timer <= 0:
                 # Partially transparent when the spell has spawned
                 # Create a surface to represent the spell
@@ -392,6 +394,10 @@ def draw():
             else:
                 # Non-transparent when the spell is in its "flying" phase (spawn_timer > 0)
                 pygame.draw.circle(screen, PURPLE, (spell_x, spell_y), size)
+            class_name = spell.__class__.__name__
+            text_surface = font.render(class_name, True, (255, 255, 255))  # White color text
+            text_rect = text_surface.get_rect(center=(spell_x, spell_y))  # 10 pixels above the troop
+            screen.blit(text_surface, text_rect)
     
     card_name_font = pygame.font.Font(None, 24)  # Use a larger font for card names
 

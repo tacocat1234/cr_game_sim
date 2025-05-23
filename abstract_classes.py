@@ -29,10 +29,14 @@ class AttackEntity:
     def apply_effect(self, target):
         pass
 
+    def tick_func(self, arena):
+        pass
+
     def cleanup_func(self, arena):
         pass
 
     def tick(self, arena):
+        self.tick_func(arena)
         if self.velocity != 0:
             self.position.add(self.velocity)
         hits = self.detect_hits(arena)
@@ -68,20 +72,23 @@ class RangedAttackEntity(AttackEntity):
         self.homing = True
         self.target = target
         self.should_delete = False
+        self.piercing = False
 
     def detect_hits(self, arena):
         if (vector.distance(self.target.position, self.position) < self.target.collision_radius):
             return [self.target] # has hit
         else:
-            return [] #hasnt hit yet
-            
+            return [] #hasnt hit 
+
     def tick(self, arena):
+        self.tick_func(arena)
         hits = self.detect_hits(arena)
         if len(hits) > 0:
             for each in hits:
                 each.damage(self.damage)
                 self.apply_effect(each)
-            self.should_delete = True
+            if not self.piercing:
+                self.should_delete = True
         else:
             direction = None
             if self.homing:
@@ -100,6 +107,7 @@ class RangedAttackEntity(AttackEntity):
             self.position.add(movement)
 
     def cleanup(self, arena):
+        self.cleanup_func(arena)
         self.duration -= TICK_TIME
         if self.duration <= 0:
             arena.active_attacks.remove(self)
