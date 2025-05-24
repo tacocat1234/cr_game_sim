@@ -21,6 +21,7 @@ icespirit, icegolem, battlehealer, giantskeleton,
 beserker, goblingang, dartgoblin, skeletonbarrel, goblingiant, 
 zappies, hunter, minionhorde, elitebarbarians, golem, 
 miner, princess, electrowizard, infernodragon, sparky, megaknight
+wallbreakers, royalghost, icewizard, firecracker, phoenix, electrodragon
 ## Spells
 Implemented spells include:
 
@@ -29,7 +30,8 @@ zap, rocket,
 goblinbarrel, 
 giantsnowball, freeze, lightning, 
 poison, barbarianbarrel,
-log
+log,
+earthquake, graveyard
 ## Buildings
 Implemented buildings include:
 
