@@ -28,7 +28,7 @@ troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer",
           "barbarianbarrel", "beserker", "goblingang", "dartgoblin", "skeletonbarrel", "goblingiant",
           "zappies", "hunter", "minionhorde", "elitebarbarians", "golem",
           "log", "miner", "princess", "electrowizard", "infernodragon", "ramrider", "sparky", "megaknight",
-          "wallbreakers", "icewizard", "firecracker"]
+          "wallbreakers", "icewizard", "royalghost", "firecracker", "phoenix", "electrodragon"]
 
 spells = ["fireball", "arrows",
           "zap", "rocket",
@@ -332,8 +332,14 @@ def troop_factory(side, position, name, level):
                 spooky_town_cards.WallBreaker(side, position.added(pos2), level)]
     elif name == "icewizard":
         return spooky_town_cards.IceWizard(side, position, level)
+    elif name == "royalghost":
+        return spooky_town_cards.RoyalGhost(side, position, level)
     elif name == "firecracker":
         return spooky_town_cards.Firecracker(side, position, level)
+    elif name == "phoenix":
+        return spooky_town_cards.Phoenix(side, position, level)
+    elif name == "electrodragon":
+        return spooky_town_cards.ElectroDragon(side, position, level)
     else:
         raise Exception("Invalid troop name.")
 
@@ -471,8 +477,11 @@ elixir_map = {
     "megaknight" : 7,
     "wallbreakers" : 2,
     "firecracker" : 3,
+    "royalghost" : 3,
     "icewizard" : 3,
     "earthquake" : 3,
+    "phoenix" : 4,
+    "electrodragon" : 5,
     "graveyard" : 5
 }
 

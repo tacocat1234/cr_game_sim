@@ -353,3 +353,279 @@ class IceWizard(Troop):
 
     def attack(self):
         return IceWizardAttackEntity(self.side, self.spawn_damage, self.position, self.target)
+
+class RoyalGhostAttackEntity(MeleeAttackEntity):
+    HIT_RANGE = 1.2
+    COLLISION_RADIUS = 0.6
+    SPLASH_RADIUS = 1
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            side=side,
+            damage=damage,
+            position=target.position,
+            target=target
+            )
+    
+    def detect_hits(self, arena):
+        hits = []
+        for each in arena.towers + arena.buildings + arena.troops:
+            if each.side != self.side and (isinstance(each, Tower) or (each.ground and not each.invulnerable)): # if different side
+                if vector.distance(each.position, self.position) <= each.collision_radius + self.SPLASH_RADIUS:
+                    hits.append(each)
+        return hits
+    
+class RoyalGhost(Troop):
+    INVISIBLE_COOLDOWN = 1.8
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 1000 * pow(1.1, level - 9),         # Hit points (Example value)
+            h_d= 216 * pow(1.1, level - 9),          # Hit damage (Example value)
+            h_s=1.8,          # Hit speed (Seconds per hit)
+            l_t=1.2,            # First hit cooldown
+            h_r=1.2,            # Hit range
+            s_r=5.5,            # Sight Range
+            g=True,           # Ground troop
+            t_g_o=True,       # Targets ground-only
+            t_o=False,        # Not tower-only
+            m_s=90*TILES_PER_MIN,          # Movement speed 
+            d_t=1,            # Deploy time
+            m=3,            #mass
+            c_r=0.6,        #collision radius
+            p=position               # Position (vector.Vector object)
+        ) 
+        self.cross_river = True
+        self.jump_speed = 90 * TILES_PER_MIN
+        self.invisbility_timer = 0
+
+        self.level = level
+
+    def on_deploy(self, arena):
+        self.targetable = False
+    
+    def cleanup_func(self, arena):
+        if self.invisbility_timer > 0 :
+            self.invisbility_timer -= TICK_TIME
+        else:
+            self.targetable = False
+
+    def attack(self):
+        self.targetable = True
+        self.invisbility_timer = RoyalGhost.INVISIBLE_COOLDOWN
+        return RoyalGhostAttackEntity(self.side, self.hit_damage, self.position, self.target)
+    
+class ElectroDragonAttackEntity(AttackEntity):
+    CHAIN_RADIUS = 4
+    MAX_CHAIN_HITS = 3
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            s=side,
+            d=damage,
+            v=2000*TILES_PER_MIN,
+            l=float('inf'),
+            i_p=copy.deepcopy(position)
+        )
+        self.target = target
+        self.chain_count = 0
+        self.chain_center = target.position
+        self.has_hit = [target]
+        self.should_delete = False
+
+    def detect_hits(self, arena):
+        if vector.distance(self.position, self.target.position) < self.target.collision_radius:
+            self.chain_count += 1
+            return [self.target]
+        return []
+            
+    def tick(self, arena):
+        hits = self.detect_hits(arena)
+        if len(hits) > 0:
+                hits[0].stun()
+                hits[0].damage(self.damage)
+                self.should_delete = True
+                self.chain_center = self.target.position
+                if self.chain_count < ElectroDragonAttackEntity.MAX_CHAIN_HITS: #if can still chain
+                    min_dist = float("inf")
+                    min = None
+                    for each in arena.towers + arena.buildings + arena.troops: #find new hits
+                        if (isinstance(each, Tower) or not each.invulnerable) and each.side != self.side and vector.distance(each.position, self.chain_center) < 4: # if different side
+                            new = not any(each is h for h in self.has_hit)
+                            if vector.distance(each.position, self.chain_center) < min_dist and new:
+                                min = each
+                                min_dist = vector.distance(each.position, self.chain_center)
+                                
+                    if not min is None:
+                        self.target = min
+                        self.has_hit.append(min)
+                        self.should_delete = False
+        else:
+            direction = self.target.position.subtracted(self.position)
+            direction.normalize()
+
+            movement = direction.scaled(self.velocity)
+            self.position.add(movement)
+
+    def cleanup(self, arena): #also delete self if single target here in derived classes
+        if self.should_delete:
+            arena.active_attacks.remove(self)
+
+class ElectroDragon(Troop):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 569 * pow(1.1, level - 9),         # Hit points (Example value)
+            h_d= 75 * pow(1.1, level - 9),          # Hit damage (Example value)
+            h_s=2.1,          # Hit speed (Seconds per hit)
+            l_t=1.4,            # First hit cooldown
+            h_r=3.5,            # Hit range
+            s_r=5.5,            # Sight Range
+            g=False,           # Ground troop
+            t_g_o=False,       # Targets ground-only
+            t_o=False,        # Not tower-only
+            m_s=60*TILES_PER_MIN,          # Movement speed 
+            d_t=1,            # Deploy time
+            m=7,            #mass
+            c_r=0.6,        #collision radius
+            p=position               # Position (vector.Vector object)
+        ) 
+        self.level = level
+    
+    def attack(self):
+        return ElectroDragonAttackEntity(self.side, self.hit_damage, self.position, self.target)
+
+class PhoenixAttackEntity(MeleeAttackEntity):
+    HIT_RANGE = 1.6
+    COLLISION_RADIUS = 0.5
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            side=side,
+            damage=damage,
+            position=position,
+            target=target
+            )
+        
+class PhoenixDeathAttackEntity(AttackEntity):
+    SPLASH_RADIUS = 2.5
+    def __init__(self, side, damage, ctd, position, target_pos):
+        super().__init__(
+            s=side,
+            d=damage,
+            v=0,
+            l=1/60 + 0.01,
+            i_p=copy.deepcopy(position)
+        )
+        self.display_size = self.SPLASH_RADIUS
+        self.ctd = ctd
+
+    def apply_effect(self, target):
+        if isinstance(target, Troop):
+            vec = target.position.subtracted(self.position)
+            vec.normalize()
+            vec.scale(2)
+            target.kb(vec)
+    
+    def detect_hits(self, arena):
+        hits = []
+        for each in arena.towers + arena.buildings + arena.troops:
+            if each.side != self.side: # if different side
+                if vector.distance(self.position, each.position) < self.SPLASH_RADIUS + each.collision_radius:
+                        hits.append(each)
+
+        return hits
+    
+    def tick(self, arena):
+        hits = self.detect_hits(arena)
+        for each in hits:
+            new = not each in self.has_hit
+            if (new):
+                if (isinstance(each, Tower)):
+                    each.damage(self.ctd)
+                else:
+                    each.damage(self.damage)
+                self.apply_effect(each)
+                self.has_hit.append(each)
+        
+class Phoenix(Troop):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 870 * pow(1.1, level - 9),         # Hit points (Example value)
+            h_d= 180 * pow(1.1, level - 9),          # Hit damage (Example value)
+            h_s=1,          # Hit speed (Seconds per hit)
+            l_t=0.5,            # First hit cooldown
+            h_r=1.6,            # Hit range
+            s_r=5.5,            # Sight Range
+            g=False,           # Ground troop
+            t_g_o=False,       # Targets ground-only
+            t_o=False,        # Not tower-only
+            m_s=60*TILES_PER_MIN,          # Movement speed 
+            d_t=1,            # Deploy time
+            m=2,            #mass
+            c_r=0.6,        #collision radius
+            p=position               # Position (vector.Vector object)
+        ) 
+        self.level = level
+        self.death_damage = 135 * pow(1.1, level - 9)
+        self.crown_tower_death_damage = 41 * pow(1.1, level - 9)
+    
+    def attack(self):
+        return PhoenixAttackEntity(self.side, self.hit_damage, self.target.position, self.target)
+    
+    def die(self, arena):
+        arena.active_attacks.append(PhoenixDeathAttackEntity(self.side, self.death_damage, self.crown_tower_death_damage, self.position, self.target))
+        arena.troops.append(PhoenixEgg(self.side, self.position, self.level))
+        self.cur_hp = -1
+        arena.troops.remove(self)
+    
+class PhoenixEgg(Troop):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 144 * pow(1.1, level - 9),         # Hit points (Example value)
+            h_d= 0,          # Hit damage (Example value)
+            h_s=3.3,          # Hit speed (Seconds per hit)
+            l_t=0,            # First hit cooldown
+            h_r=0,            # Hit range
+            s_r=0,            # Sight Range
+            g=True,           # Ground troop
+            t_g_o=False,       # Targets ground-only
+            t_o=False,        # Not tower-only
+            m_s=0,          # Movement speed 
+            d_t=1,            # Deploy time
+            m=99999,            #mass
+            c_r=0.6,        #collision radius
+            p=position               # Position (vector.Vector object)
+        ) 
+        self.level = level
+        self.can_kb = False
+    
+    def tick(self, arena):
+        if self.attack_cooldown > 0:
+            self.attack_cooldown -= TICK_TIME
+        else:
+            self.should_delete = True
+            arena.troops.append(RebornPhoenix(self.side, self.position, self.level))
+
+class RebornPhoenix(Troop):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 696 * pow(1.1, level - 9),         # Hit points (Example value)
+            h_d= 144 * pow(1.1, level - 9),          # Hit damage (Example value)
+            h_s=1,          # Hit speed (Seconds per hit)
+            l_t=0.5,            # First hit cooldown
+            h_r=1.6,            # Hit range
+            s_r=5.5,            # Sight Range
+            g=False,           # Ground troop
+            t_g_o=False,       # Targets ground-only
+            t_o=False,        # Not tower-only
+            m_s=60*TILES_PER_MIN,          # Movement speed 
+            d_t=0.733,            # Deploy time
+            m=2,            #mass
+            c_r=0.6,        #collision radius
+            p=position               # Position (vector.Vector object)
+        ) 
+        self.level = level
+    
+    def attack(self):
+        return PhoenixAttackEntity(self.side, self.hit_damage, self.target.position, self.target)

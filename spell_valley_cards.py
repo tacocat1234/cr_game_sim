@@ -111,6 +111,7 @@ class ElectroSpiritAttackEntity(AttackEntity):
                 hits[0].stun()
                 hits[0].damage(self.damage)
                 self.should_delete = True
+                self.chain_center = self.target.position
                 if self.chain_count < ElectroSpiritAttackEntity.MAX_CHAIN_HITS: #if can still chain
                     min_dist = float("inf")
                     min = None
