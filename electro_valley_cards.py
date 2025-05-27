@@ -85,6 +85,8 @@ class Log(Troop):
         self.position.y += self.move_speed if self.side else -self.move_speed
     
     def tick(self, arena):
+        if self.preplace:
+            return
         self.timer -= TICK_TIME
         self.move(arena)
         if self.first:

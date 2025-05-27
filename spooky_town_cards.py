@@ -28,6 +28,13 @@ class Earthquake(Spell):
         self.pulse_time = 0.1
         self.building_damage = 136 * pow(1.1, level - 3)
 
+    def detect_hits(self, arena):
+        out = []
+        for each in arena.troops + arena.buildings + arena.towers:
+            if each.side != self.side and each.ground and (isinstance(each, Tower) or not each.invulnerable) and (vector.distance(each.position, self.position) <= self.radius + each.collision_radius):
+                out.append(each)
+        return out
+
     def tick(self, arena):
         if self.preplace:
             return

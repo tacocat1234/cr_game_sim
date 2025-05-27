@@ -7,7 +7,6 @@ from abstract_classes import TILES_PER_MIN
 from abstract_classes import TICK_TIME
 import vector
 import copy
-import math
 
 class RoyalRecruitAttackEntity(MeleeAttackEntity):
     HIT_RANGE = 1.6

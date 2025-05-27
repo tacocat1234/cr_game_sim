@@ -14,6 +14,8 @@ class Arena:
         self.p2_elixir = 7
         self.preplace = None
         self.preplace_side = None
+        self.timer = 0
+        self.state = ""
 
     def add(self, side, position, name, level):
         e = card_factory.get_elixir(name)
@@ -66,8 +68,26 @@ class Arena:
         return False
     
     def tick(self):
-        self.p1_elixir = min(10, self.p1_elixir + 1/2.8 * TICK_TIME)
-        self.p2_elixir = min(10, self.p2_elixir + 1/2.8 * TICK_TIME)
+        if self.timer >= 300:
+            for tower in self.towers:
+                tower.damage(10)
+            self.active_attacks = []
+            self.troops = []
+            self.buildings = []
+            self.p1_elixir = 0
+            self.p2_elixir = 0
+            return
+
+
+        e_rate = 1/2.8
+        if self.timer >= 240:
+            self.state = "Overtime: 3x Elixir"
+            e_rate = 3/2.8
+        elif self.timer >= 120:
+            self.state = "2x Elixir"
+            e_rate = 2/2.8
+        self.p1_elixir = min(10, self.p1_elixir + e_rate * TICK_TIME)
+        self.p2_elixir = min(10, self.p2_elixir + e_rate * TICK_TIME)
 
         if self.preplace is not None and ((self.preplace_side and self.p1_elixir >= 0) or (not self.preplace_side and self.p2_elixir >= 0)):
             if isinstance(self.preplace, list):
@@ -98,6 +118,7 @@ class Arena:
         
     
     def cleanup(self):
+        self.timer += TICK_TIME
         for troop in self.troops:
             troop.cleanup(self)
         for attack in self.active_attacks:
@@ -110,6 +131,17 @@ class Arena:
             winSide = tower.cleanup(self)
             if not winSide is None:
                 return winSide
+            
+        p1_side = 0
+        if self.timer >= 180: #overtime
+            for tower in self.towers:
+                p1_side += (1 if tower.side else -1)
+            if p1_side > 0:
+                return True
+            elif p1_side < 0:
+                return False
+            if self.timer < 240:
+                self.state = "Overtime: 2x Elixir"
 
         #do collision checks
         applyVelocity = {}

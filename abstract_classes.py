@@ -236,7 +236,8 @@ class Troop:
             self.attack_cooldown = self.hit_speed
 
     def damage(self, amount):
-        self.cur_hp -= amount
+        if not self.invulnerable:
+            self.cur_hp -= amount
 
     def heal(self, amount):
         self.cur_hp = min(self.cur_hp + amount, self.hit_points)
@@ -493,7 +494,8 @@ class Tower:
         self.collideable = True
 
     def damage(self, amount):
-        self.cur_hp -= amount
+        if not self.invulnerable:
+            self.cur_hp -= amount
     
     def slow(self, duration, source):
         if self.slow_timer < duration:
@@ -744,7 +746,7 @@ class Building:
                 self.facing_dir = angle
     
     def tick(self, arena):
-        if self.preplace:
+        if self.preplace or self.deploy_time > 0:
             return
         self.tick_func(arena)
         if self.target is None or self.target.cur_hp <= 0:
@@ -759,6 +761,10 @@ class Building:
     
     def cleanup(self, arena):
         if self.preplace:
+            return
+        
+        if self.deploy_time > 0:
+            self.deploy_time -= TICK_TIME
             return
         
         self.cleanup_func(arena)

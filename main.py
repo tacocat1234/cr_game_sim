@@ -121,14 +121,7 @@ game_arena.towers = [towers.KingTower(True, PRINCESS_LEVEL),
                        ]
 
 #player deck 
-'''
-deck = [Card(True, "balloon", 1), Card(True, "firespirit", 1), Card(True, "arrows", 1), Card(True, "zap", 1), 
-        Card(True, "mortar", 1), Card(True, "archers", 1), Card(True, "bats", 1), Card(True, "giant", 1)]
 
-#bot deck (duh)
-bot_deck = [Card(False, "fireball", 2), Card(False, "witch", 4), Card(False, "wizard", 3), Card(False, "royalgiant", 3), 
-        Card(False, "speargoblins", 3), Card(False, "skeletondragons", 3), Card(False, "prince", 3), Card(False, "arrows", 4)]
-'''
 bot = Bot(bot_deck)
 #height comp screen ~ 800
 #20x20 per tile
@@ -151,6 +144,16 @@ GRAY_PURPLE = (255, 150, 255)
 BG_TEMP = (150, 150, 150)
 RIVER_TEMP = (79, 66, 181)
 BRIDGE_TEMP = (193, 154, 107)
+
+def format_time(seconds):
+    if seconds >= 180:
+        sec = 300 - seconds
+    else:
+        sec = 180 - seconds
+    m = str(int((sec // 60)))
+    s = round(sec % 60)
+    s = str(s) if s >= 10 else "0" + str(s)
+    return m + ":" + s
 
 def convert_to_pygame(coordinate):
     pygame_x = int(WIDTH / 2 + coordinate.x * SCALE)
@@ -202,6 +205,12 @@ def draw():
     pygame.draw.rect(screen, BRIDGE_TEMP, (64 + 2.5 * SCALE, HEIGHT/2 - 64 - 1.5 * SCALE, SCALE * 2, SCALE * 3)) 
     pygame.draw.rect(screen, BRIDGE_TEMP, (WIDTH - (64 + 4.5 * SCALE), HEIGHT/2 - 64 - 1.5 *SCALE, SCALE * 2, SCALE * 3)) 
 
+    #Time Left:
+    #format_time(game_arena.timer)
+    #game_arena.state
+
+    
+
     #draw hovered
 
     if not hovered is None:
@@ -225,6 +234,36 @@ def draw():
             if enemy_left:
                 pygame.draw.rect(place_surface, (238, 75, 43, 128), pygame.Rect(64, 220, 180, 120))
             screen.blit(place_surface, (0,0))
+
+    #draw time
+    nfont = pygame.font.Font(None, 24)
+
+    time_text = f"Time Left: {format_time(game_arena.timer)}"
+
+    time_surface = nfont.render(time_text, True, (255, 255, 255))  # White text
+    state_surface = nfont.render(game_arena.state, True, (255, 255, 255))
+
+    # Position: top right with some padding
+    padding = 10
+    time_rect = time_surface.get_rect(topright=(WIDTH - padding, padding))
+    state_rect = state_surface.get_rect(topright=(WIDTH - padding, padding + time_rect.height + 5))
+
+    screen.blit(time_surface, time_rect)
+    screen.blit(state_surface, state_rect)
+
+    cfont = pygame.font.Font(None, 64)
+    center_text = ""
+    if game_arena.timer < 180 and game_arena.timer >= 170:
+        center_text = str(round(180 - game_arena.timer))
+    elif game_arena.timer < 300 and game_arena.timer >= 290:
+        center_text = str(round(300 - game_arena.timer))
+    elif game_arena.timer >= 300:
+        center_text = "Tiebreaker"
+    
+    center_surface = cfont.render(center_text, True, (255, 255, 255))
+    center_rect = center_surface.get_rect(center=(WIDTH/2, HEIGHT/2 - 64))
+
+    screen.blit(center_surface, center_rect)
 
     # Draw Towers
     for tower in game_arena.towers:
@@ -330,6 +369,11 @@ def draw():
         # Draw building square
         building_size = building.collision_radius * 2 * SCALE
         pygame.draw.rect(screen, building_color, (building_x - building_size / 2, building_y - building_size / 2, building_size, building_size))
+
+        class_name = building.__class__.__name__
+        text_surface = font.render(class_name, True, (255, 255, 255))  # White color text
+        text_rect = text_surface.get_rect(center=(building_x, building_y))  # 10 pixels above the troop
+        screen.blit(text_surface, text_rect)
 
         # Health bar
         hp_bar_x = building_x - 10
@@ -456,8 +500,6 @@ random.shuffle(deck)
 
 hand = [0, 1, 2, 3]
 cycler = [4, 5, 6, 7]
-elixir = 7
-bot_elixir = 9 #for bot
 
 # Main Loop
 running = True
@@ -467,32 +509,23 @@ clock = pygame.time.Clock()
 click_quarter = None  # Will store which quarter of the screen the player clicked in
 drag_start_pos = None  # Starting position of the drag
 drag_end_pos = None  # Ending position of the drag
-
-elixir_recharge = 2.8
-elixir_timer = elixir_recharge
-
 hovered = None
 select_radius = None
 win = None
-#bot_elixir = -999 #disable bot for testing
 enemy_left = True
 enemy_right = True
+
+game_arena.p2_elixir = 9
+#game_arena.p2_elixir = -999 #disable bot for testing
 
 while running:
     clock.tick(60)  # 60 FPS
 
-    if (elixir_timer < 0):
-        elixir = min(elixir + 1, 10)
-        bot_elixir = min(bot_elixir + 1, 10)
-        elixir_timer = elixir_recharge
-    else:
-        elixir_timer -= TICK_TIME
-
-    bot_card = bot.tick(bot_elixir)
+    bot_card = bot.tick(game_arena.p2_elixir)
     if not bot_card is None:
         bot_pos = Bot.random_pos(bot_card.name, game_arena.troops + game_arena.buildings)
         if bot_pos:
-            bot_elixir -= bot_card.elixir_cost
+            game_arena.p2_elixir -= bot_card.elixir_cost
             bot_card_type, bot_summon = bot_card.summon(bot_pos)
             place(bot_card_type, bot_summon, game_arena)
 

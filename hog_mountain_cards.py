@@ -289,7 +289,7 @@ class Tesla(Building):
 
 class GolemAttackEntity(MeleeAttackEntity):
     HIT_RANGE = 0.75
-    COLLISION_RADIUS = 0.7
+    COLLISION_RADIUS = 0.75
     def __init__(self, side, damage, position, target):
         super().__init__(
             side=side,
