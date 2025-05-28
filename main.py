@@ -288,7 +288,80 @@ def draw():
             screen.blit(dd_symbol_img, (tower_x - 3, tower_y))
 
     # Draw Troops
+    flying = []
     for troop in game_arena.troops:
+        if troop.ground:
+            troop_x, troop_y = convert_to_pygame(troop.position)
+            troop_color = GRAY if troop.preplace else (BLUE if troop.side else RED)
+
+            # Draw troop circle
+            if isinstance(troop, Log) or isinstance(troop, BarbarianBarrel):
+                width = troop.collision_radius * SCALE
+                height = 1.2 * SCALE
+                rect_x = troop_x - width / 2
+                rect_y = troop_y - height / 2
+                pygame.draw.rect(screen, troop_color, pygame.Rect(rect_x, rect_y, width, height))
+                display_y = rect_y
+            else:
+                pygame.draw.circle(screen, troop_color, (troop_x, troop_y), troop.collision_radius * SCALE)
+                display_y = troop_y - troop.collision_radius * SCALE  # Use circle's top for text position
+            class_name = troop.__class__.__name__
+            text_surface = font.render(class_name, True, (255, 255, 255))  # White color text
+            text_rect = text_surface.get_rect(center=(troop_x, display_y + 10))  # 10 pixels above the troop
+            screen.blit(text_surface, text_rect)
+
+            # Health bar
+            hp_bar_x = troop_x - 10
+            hp_bar_y = troop_y - 12
+            hp_bar_width = 20
+            hp_bar_height = 3
+
+            if not troop.invulnerable:
+                pygame.draw.rect(screen, BLACK, (hp_bar_x, hp_bar_y, hp_bar_width, hp_bar_height))
+                if troop.has_shield and troop.shield_hp > 0:
+                    pygame.draw.rect(screen, (250, 250, 250), (hp_bar_x, hp_bar_y, int(hp_bar_width * (troop.shield_hp / troop.shield_max_hp)), hp_bar_height))
+                else:
+                    pygame.draw.rect(screen, GREEN, (hp_bar_x, hp_bar_y, int(hp_bar_width * (troop.cur_hp / troop.hit_points)), hp_bar_height))
+                
+                
+
+            # Draw Level Indicator
+            level_box_size = 10  # Square size for level indicator
+            level_box_x = hp_bar_x - level_box_size - 2  # Slight padding to the left
+            level_box_y = hp_bar_y - 2  # Align with HP bar
+
+            if troop.has_shield and troop.shield_hp > 0:
+                # Draw an upside-down triangle
+                top_left = (level_box_x - 0.5, level_box_y - 0.5)
+                top_right = (level_box_x + level_box_size + 0.5, level_box_y - 0.5)
+                bottom_right = (level_box_x + level_box_size + 0.5, level_box_y + level_box_size + 0.5)
+                bottom_left = (level_box_x - 0.5, level_box_y + level_box_size + 0.5)
+
+                # Define the bottom triangle point
+                triangle_tip = (level_box_x + level_box_size / 2, level_box_y + level_box_size + level_box_size / 2)
+
+                # Draw pentagon (square + downward triangle)
+                pygame.draw.polygon(screen, troop_color, [
+                    top_left,          # Top-left corner
+                    top_right,         # Top-right corner
+                    bottom_right,      # Bottom-right corner
+                    triangle_tip,      # Bottom center triangle tip
+                    bottom_left        # Bottom-left corner
+                ])
+            else:
+                # Draw square
+                pygame.draw.rect(screen, troop_color, (level_box_x, level_box_y, level_box_size, level_box_size))
+
+
+            # Render level number text 
+            level_text = font.render(str(troop.level), True, WHITE)  # White text
+            text_rect = level_text.get_rect(center=(level_box_x + level_box_size / 2, level_box_y + level_box_size / 2))
+            screen.blit(level_text, text_rect)
+        else:
+            flying.append(troop)
+    # Draw Attack Entities (Projectiles)
+
+    for troop in flying:
         troop_x, troop_y = convert_to_pygame(troop.position)
         troop_color = GRAY if troop.preplace else (BLUE if troop.side else RED)
 
@@ -351,11 +424,10 @@ def draw():
             pygame.draw.rect(screen, troop_color, (level_box_x, level_box_y, level_box_size, level_box_size))
 
 
-        # Render level number text
+        # Render level number text 
         level_text = font.render(str(troop.level), True, WHITE)  # White text
         text_rect = level_text.get_rect(center=(level_box_x + level_box_size / 2, level_box_y + level_box_size / 2))
         screen.blit(level_text, text_rect)
-    # Draw Attack Entities (Projectiles)
 
     for building in game_arena.buildings:
         building_x, building_y = convert_to_pygame(building.position)

@@ -308,7 +308,7 @@ class BowlerAttackEntity(RangedAttackEntity):
         hits = []
         for each in arena.towers + arena.buildings + arena.troops:
             if each.side != self.side and (isinstance(each, Tower) or (each.ground and not each.invulnerable)) and each not in self.has_hit: # if different side
-                if vector.distance(each.position, self.position) <= each.collision_radius + self.SPLASH_RADIUS:
+                if vector.distance(each.position, self.position) <= each.collision_radius + (-0.26 if self.duration > 2.45 else self.SPLASH_RADIUS):
                     hits.append(each)
                     self.has_hit.append(each)
         return hits

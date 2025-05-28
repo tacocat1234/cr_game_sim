@@ -369,6 +369,13 @@ class Miner(Troop):
         tar_pos = None if self.target is None else (self.target if isinstance(self.target, vector.Vector) else self.target.position)
 
         self.tick_func(arena)
+
+        if self.kb_timer > 0:
+            self.kb_timer -= TICK_TIME #akward but better to keep it contained
+            self.kb_tick()
+        else:
+            self.kb_vector = None
+
         if self.stun_timer <= 0:
             if self.deploy_time <= 0:
                 if self.move_speed != 650 * TILES_PER_MIN:

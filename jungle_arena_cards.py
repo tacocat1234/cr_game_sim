@@ -172,6 +172,12 @@ class SkeletonBarrelDeathBarrel(Troop):
         self.target=None
         self.collidable = False
 
+    def on_deploy(self, arena):
+        self.invulnerable=True
+        self.targetable=False
+        self.target=None
+        self.collidable = False
+
     def die(self, arena):
         flip = 1 if self.side else -1
         radius = 1.48

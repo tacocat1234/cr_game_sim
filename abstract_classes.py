@@ -303,13 +303,6 @@ class Troop:
                     min_dist = vector.distance(tower.position, self.position)
     
     def move(self, arena):
-        #handle kb
-        if self.kb_timer > 0:
-            self.kb_timer -= TICK_TIME #akward but better to keep it contained
-            self.kb_tick()
-        else:
-            self.kb_vector = None
-
         direction_x = 0
         direction_y = 0
         m_s = self.move_speed
@@ -424,6 +417,14 @@ class Troop:
             return
         #update arena before
         self.tick_func(arena)
+
+        #handle kb
+        if self.kb_timer > 0:
+            self.kb_timer -= TICK_TIME #akward but better to keep it contained
+            self.kb_tick()
+        else:
+            self.kb_vector = None
+
         if self.stun_timer <= 0:
             if self.deploy_time <= 0:
                 if self.target is None or self.target.cur_hp <= 0 or not self.target.targetable:

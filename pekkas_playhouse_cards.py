@@ -43,6 +43,7 @@ class Pekka(Troop):
             p=position               # Position (vector.Vector object)
         ) 
         self.level = level
+        self.can_kb = False
     def attack(self):
         return PekkaAttackEntity(self.side, self.hit_damage, self.position, self.target)
 
