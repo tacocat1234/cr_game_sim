@@ -239,6 +239,7 @@ class DaggerDuchess(Tower):
         self.type = "dd" #for animation purposes
 
     def attack(self):
+        #return #disable
         if self.ammo > 0:
             self.ammo -= 1
             return DaggerDuchessAttackEntity(self.side, self.hit_damage, self.position, self.target)

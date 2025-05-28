@@ -4,6 +4,7 @@ import vector
 import copy
 
 TICK_TIME = 1/60 #tps
+KB_TIME = 0.16
 TILES_PER_MIN = 1/3600
 
 def same_sign(x, y):
@@ -74,6 +75,15 @@ class RangedAttackEntity(AttackEntity):
         self.should_delete = False
         self.piercing = False
 
+    def set_move_vec(self):
+        if not self.homing:
+            self.move_vec = vector.Vector(
+                    self.target.x - self.position.x, 
+                    self.target.y - self.position.y
+                )
+            self.move_vec.normalize()
+            self.move_vec.scale(self.velocity)
+
     def detect_hits(self, arena):
         if (vector.distance(self.target.position, self.position) < self.target.collision_radius):
             return [self.target] # has hit
@@ -96,16 +106,13 @@ class RangedAttackEntity(AttackEntity):
                     self.target.position.x - self.position.x, 
                     self.target.position.y - self.position.y
                 )
+                direction.normalize()
+                direction.scale(self.velocity)
+                self.position.add(direction)
+
             else:
-                direction = vector.Vector(
-                    self.target.x - self.position.x, 
-                    self.target.y - self.position.y
-                )
-            direction.normalize()
-
-            movement = direction.scaled(self.velocity)
-            self.position.add(movement)
-
+                self.position.add(self.move_vec)
+            
     def cleanup(self, arena):
         self.cleanup_func(arena)
         self.duration -= TICK_TIME
@@ -188,7 +195,9 @@ class Troop:
 
         self.stun_timer = 0
         self.slow_timer = 0
+        self.kb_timer = 0
 
+        self.kb_vector = None
         self.slow_sources = []
 
         self.targetable = True
@@ -247,7 +256,11 @@ class Troop:
     
     def kb(self, vector):
         if self.can_kb and not self.invulnerable:
-            self.position.add(vector)
+            self.kb_timer = KB_TIME
+            self.kb_vector = vector
+
+    def kb_tick(self):
+        self.position.add(self.kb_vector.scaled(TICK_TIME/KB_TIME))
 
     def die(self, arena):
         self.cur_hp = -1
@@ -290,6 +303,13 @@ class Troop:
                     min_dist = vector.distance(tower.position, self.position)
     
     def move(self, arena):
+        #handle kb
+        if self.kb_timer > 0:
+            self.kb_timer -= TICK_TIME #akward but better to keep it contained
+            self.kb_tick()
+        else:
+            self.kb_vector = None
+
         direction_x = 0
         direction_y = 0
         m_s = self.move_speed
@@ -746,7 +766,7 @@ class Building:
                 self.facing_dir = angle
     
     def tick(self, arena):
-        if self.preplace or self.deploy_time > 0:
+        if self.preplace or self.deploy_time > 0 or self.stun_timer > 0:
             return
         self.tick_func(arena)
         if self.target is None or self.target.cur_hp <= 0:
@@ -763,6 +783,9 @@ class Building:
         if self.preplace:
             return
         
+        if self.stun_timer > 0:
+            self.stun_timer -= TICK_TIME
+
         if self.deploy_time > 0:
             self.deploy_time -= TICK_TIME
             return

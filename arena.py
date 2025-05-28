@@ -106,14 +106,14 @@ class Arena:
 
         for spell in self.spells:
             spell.tick(self)
-        for troop in self.troops:
-            troop.tick(self)
         for building in self.buildings:
             building.tick(self)
         for tower in self.towers:
             tower.tick(self)
         for attack in self.active_attacks:
             attack.tick(self)
+        for troop in self.troops:
+            troop.tick(self)
         
         
     

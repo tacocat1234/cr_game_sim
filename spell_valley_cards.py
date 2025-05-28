@@ -375,7 +375,7 @@ class InfernoTower(Building):
         return InfernoTowerAttackEntity(self.side, self.damage_stages[self.stage - 1], self.position, self.target)
     
     def tick(self, arena):
-        if self.preplace:
+        if self.preplace or self.stun_timer > 0:
             return
         #print(self.target) #temp
         if self.target is None or self.target.cur_hp <= 0:
@@ -397,6 +397,8 @@ class InfernoTower(Building):
                 self.stage_duration = 2
             else:
                 self.stage_duration -= TICK_TIME
+        else:
+            self.stun_timer -= TICK_TIME
 
 class BombTowerAttackEntity(AttackEntity):
     DAMAGE_RADIUS = 1.5

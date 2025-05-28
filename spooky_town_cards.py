@@ -130,6 +130,8 @@ class FirecrackerExplosionAttackEntity(RangedAttackEntity):
         self.duration = 0.545
         self.homing = False
         self.piercing = True
+
+        self.set_move_vec()
     
     def detect_hits(self, arena):
         out = []
@@ -156,6 +158,8 @@ class FirecrackerAttackEntity(RangedAttackEntity):
         to_tar = self.target.subtracted(self.position)
 
         self.facing_dir = math.atan2(to_tar.y, to_tar.x)
+
+        self.set_move_vec()
 
     def detect_hits(self, arena):
         out = []
@@ -214,7 +218,7 @@ class Firecracker(Troop):
         self.level = level
     
     def attack(self):
-        self.position.add(vector.Vector(math.cos(math.radians(self.facing_dir + 180)),
+        self.kb(vector.Vector(math.cos(math.radians(self.facing_dir + 180)),
                          math.sin(math.radians(self.facing_dir + 180))).scaled(1.5))
         return FirecrackerAttackEntity(self.side, self.hit_damage, self.position, copy.deepcopy(self.target.position))
 

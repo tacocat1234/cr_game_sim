@@ -576,8 +576,9 @@ class Sparky(Troop):
 
     def kb(self, vector):
         if self.can_kb and not self.invulnerable:
-            self.position.add(vector)
             self.attack_cooldown = self.hit_speed
+            super().kb(vector)
+
 
 
     def attack(self):

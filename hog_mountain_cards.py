@@ -169,6 +169,7 @@ class HunterAttackEntity(RangedAttackEntity):
         )
         self.random_delay = random.uniform(0, 0.2)
         self.homing = False
+        self.set_move_vec()
         self.duration = 0.709 + self.random_delay
 
 
@@ -176,6 +177,7 @@ class HunterAttackEntity(RangedAttackEntity):
         self.random_delay -= TICK_TIME
         if self.velocity == 0 and self.random_delay <= 0:
             self.velocity = 550*TILES_PER_MIN
+            self.set_move_vec()
         self.duration -= TICK_TIME
         if self.duration <= 0 or self.should_delete:
             arena.active_attacks.remove(self)

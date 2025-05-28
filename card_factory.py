@@ -30,7 +30,7 @@ troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer",
           "zappies", "hunter", "minionhorde", "elitebarbarians", "golem",
           "log", "miner", "princess", "electrowizard", "infernodragon", "ramrider", "sparky", "megaknight",
           "wallbreakers", "icewizard", "royalghost", "firecracker", "phoenix", "electrodragon",
-          "bandit", "rascals"]
+          "bandit", "magicarcher", "rascals", "bowler", "electrogiant"]
 
 spells = ["fireball", "arrows",
           "zap", "rocket",
@@ -342,6 +342,10 @@ def troop_factory(side, position, name, level):
         return spooky_town_cards.Phoenix(side, position, level)
     elif name == "electrodragon":
         return spooky_town_cards.ElectroDragon(side, position, level)
+    elif name == "bandit":
+        return rascals_hideout_cards.Bandit(side, position, level)
+    elif name == "magicarcher":
+        return rascals_hideout_cards.MagicArcher(side, position, level)
     elif name == "rascals":
         flip = 1 if side else -1
         pos1 = vector.Vector(0, 3/2 * flip)
@@ -350,8 +354,10 @@ def troop_factory(side, position, name, level):
         return [rascals_hideout_cards.RascalBoy(side, position.added(pos1), level), 
                 rascals_hideout_cards.RascalGirl(side, position.added(pos2), level),
                 rascals_hideout_cards.RascalGirl(side, position.added(pos3), level)]
-    elif name == "bandit":
-        return rascals_hideout_cards.Bandit(side, position, level)
+    elif name == "bowler":
+        return rascals_hideout_cards.Bowler(side, position, level)
+    elif name == "electrogiant":
+        return rascals_hideout_cards.ElectroGiant(side, position, level)
     else:
         raise Exception("Invalid troop name.")
 
@@ -496,7 +502,10 @@ elixir_map = {
     "electrodragon" : 5,
     "graveyard" : 5,
     "bandit" : 3,
-    "rascals" : 5
+    "magicarcher" : 4,
+    "rascals" : 5,
+    "bowler" : 5,
+    "electrogiant" : 7
 }
 
 def filter_cards(card_list, min_elixir, max_elixir, used_cards):
