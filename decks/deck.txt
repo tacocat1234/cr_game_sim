@@ -1,7 +1,7 @@
 valkyrie 11
 skeletons 11
 firecracker 11
-healspirit 11
+icespirit 11
 suspiciousbush 11
 random.building.3-7 11
 random.troop.3-9 11

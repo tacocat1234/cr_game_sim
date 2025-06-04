@@ -3,6 +3,16 @@ modify deck.txt to set deck. type in lowercase.
 modify bot_deck.txt to set bot_deck
 format is 
 {cardname} {level}
+random format is
+random {level} for a entirely random deck with level = level
+random.{type}.{min elixir}-{max elixir} {level}
+type = spell, troop, building
+
+examples:
+"firecracker 11" is a level 11 firecracker
+"random.building.3-7 11" is a random building from 3-7 elixir, at level 11
+"random.spell.4-4 200" is a random spell with 4 elxir, at level 200
+"random 13" randomizes the entire deck according to an algorithim, where every card is level 13
 
 recommended bot_deck.txt levels is 13 comapred to your 11, becuase bot is stupid.
 
@@ -22,6 +32,7 @@ beserker, goblingang, dartgoblin, skeletonbarrel, goblingiant,
 zappies, hunter, minionhorde, elitebarbarians, golem, 
 miner, princess, electrowizard, infernodragon, sparky, megaknight
 wallbreakers, royalghost, icewizard, firecracker, phoenix, electrodragon
+healspirit, suspiciousbush, bandit, magicarcher, bowler, rascals, electrogiant, lavahound
 ## Spells
 Implemented spells include:
 
