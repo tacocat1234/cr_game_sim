@@ -8,6 +8,7 @@ from card_factory import get_type
 from card_factory import get_radius
 from card_factory import can_anywhere
 from card_factory import generate_random_deck
+from card_factory import parse_input
 import arena
 import towers
 import vector
@@ -27,18 +28,21 @@ TOWER_TYPE = BOT_TOWER_TYPE = ""
 player_random_deck = False
 bot_random_deck = False
 
+used = []
 # Load Player Deck
 with open("decks/deck.txt", "r") as file:
     for _ in range(8):
         line = file.readline().strip()
         if line:
             card, level = line.rsplit(" ", 1)
-            if card == "random":
+            if card == "allrandom":
                 player_random_deck = True
                 KING_LEVEL = PRINCESS_LEVEL = int(level)
                 TOWER_TYPE = random.choice(["princesstower", "cannoneer", "daggerduchess"])
                 break
-            deck.append(Card(True, card, int(level)))
+            actual = parse_input(card, used)
+            used.append(actual)
+            deck.append(Card(True, actual, int(level)))
 
     if not player_random_deck:
         line = file.readline().strip()
@@ -51,18 +55,22 @@ with open("decks/deck.txt", "r") as file:
             TOWER_TYPE, PRINCESS_LEVEL = line.rsplit(" ", 1)
             PRINCESS_LEVEL = int(PRINCESS_LEVEL)
 
+used = []
+
 # Load Bot Deck
 with open("decks/bot_deck.txt", "r") as file:
     for _ in range(8):
         line = file.readline().strip()
         if line:
             card, level = line.rsplit(" ", 1)
-            if card == "random":
+            if card == "allrandom":
                 bot_random_deck = True
                 BOT_K_L = BOT_P_L = int(level)
                 BOT_TOWER_TYPE = random.choice(["princesstower", "cannoneer", "daggerduchess"])
                 break
-            bot_deck.append(Card(False, card, int(level)))
+            actual = parse_input(card, used)
+            used.append(actual)
+            bot_deck.append(Card(True, actual, int(level)))
 
     if not bot_random_deck:
         line = file.readline().strip()

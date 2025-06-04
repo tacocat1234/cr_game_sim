@@ -1,1 +1,10 @@
-random 11
+valkyrie 11
+skeletons 11
+firecracker 11
+healspirit 11
+suspiciousbush 11
+random.building.3-7 11
+random.troop.3-9 11
+random.spell.4-7 11
+kingtower 11
+princesstower 11

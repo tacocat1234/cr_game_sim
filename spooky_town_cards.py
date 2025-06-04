@@ -411,7 +411,7 @@ class RoyalGhost(Troop):
 
         self.level = level
 
-    def on_deploy(self, arena):
+    def on_preplace(self):
         self.targetable = False
     
     def cleanup_func(self, arena):

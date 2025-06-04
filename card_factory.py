@@ -30,7 +30,7 @@ troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer",
           "zappies", "hunter", "minionhorde", "elitebarbarians", "golem",
           "log", "miner", "princess", "electrowizard", "infernodragon", "ramrider", "sparky", "megaknight",
           "wallbreakers", "icewizard", "royalghost", "firecracker", "phoenix", "electrodragon",
-          "bandit", "magicarcher", "rascals", "bowler", "electrogiant"]
+          "healspirit", "suspiciousbush", "bandit", "magicarcher", "rascals", "bowler", "electrogiant", "lavahound"]
 
 spells = ["fireball", "arrows",
           "zap", "rocket",
@@ -342,6 +342,10 @@ def troop_factory(side, position, name, level):
         return spooky_town_cards.Phoenix(side, position, level)
     elif name == "electrodragon":
         return spooky_town_cards.ElectroDragon(side, position, level)
+    elif name == "healspirit":
+        return rascals_hideout_cards.HealSpirit(side, position, level)
+    elif name == "suspiciousbush":
+        return rascals_hideout_cards.SuspiciousBush(side, position, level)
     elif name == "bandit":
         return rascals_hideout_cards.Bandit(side, position, level)
     elif name == "magicarcher":
@@ -358,6 +362,8 @@ def troop_factory(side, position, name, level):
         return rascals_hideout_cards.Bowler(side, position, level)
     elif name == "electrogiant":
         return rascals_hideout_cards.ElectroGiant(side, position, level)
+    elif name == "lavahound":
+        return rascals_hideout_cards.LavaHound(side, position, level)
     else:
         raise Exception("Invalid troop name.")
 
@@ -501,11 +507,14 @@ elixir_map = {
     "phoenix" : 4,
     "electrodragon" : 5,
     "graveyard" : 5,
+    "healspirit" : 1,
+    "suspiciousbush" : 2,
     "bandit" : 3,
     "magicarcher" : 4,
     "rascals" : 5,
     "bowler" : 5,
-    "electrogiant" : 7
+    "electrogiant" : 7,
+    "lavahound" : 7
 }
 
 def filter_cards(card_list, min_elixir, max_elixir, used_cards):
@@ -556,3 +565,20 @@ def generate_random_deck():
         deck[2] = random.choice(["goblinhut", "barbarianhut", "furnace", "xbow", "mortar", "goblincage", "tombstone"])
 
     return deck
+
+def parse_input(string, current_used):
+    components = string.split(".")
+    if components[0] != "random":
+        return components[0]
+    else:
+        lower, upper = components[2].split("-")
+        return random_with_param(components[1], int(lower), int(upper), current_used)
+
+def random_with_param(t, lower, upper, used):
+    if t == "troop":
+        options = filter_cards(troops, lower, upper, used)
+    if t == "spell":
+        options = filter_cards(spells, lower, upper, used)
+    if t == "building":
+        options = filter_cards(buildings, lower, upper, used)
+    return random.choice(options)

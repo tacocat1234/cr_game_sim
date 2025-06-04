@@ -96,11 +96,13 @@ class Arena:
                     each.invulnerable = False
                     each.collideable = True
                     each.targetable = True
+                    each.on_preplace()
             else:
                 self.preplace.preplace = False
                 self.preplace.invulnerable = False
                 self.preplace.collideable = True
                 self.preplace.targetable = True
+                self.preplace.on_preplace()
             self.preplace = None
             self.preplace_side = None
 

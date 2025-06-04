@@ -178,6 +178,14 @@ class Witch(Troop):
         self.spawn_timer = 1
     
     def tick(self, arena):
+        if self.preplace:
+            return
+
+        if self.kb_timer > 0:
+            self.kb_timer -= TICK_TIME #akward but better to keep it contained
+            self.kb_tick()
+        else:
+            self.kb_vector = None
         
         self.spawn_timer -= TICK_TIME
 

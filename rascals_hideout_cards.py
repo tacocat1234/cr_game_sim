@@ -7,6 +7,7 @@ from abstract_classes import TILES_PER_MIN
 from abstract_classes import TICK_TIME
 import vector
 import copy
+import math
 
 class RascalBoyAttackEntity(MeleeAttackEntity):
     HIT_RANGE = 0.8
@@ -140,6 +141,7 @@ class Bandit(Troop):
                                 m = tower
                         self.target = m
                     self.ground = False #allow cross river
+                    self.collideable = False
                     self.should_dash = False
                     self.invulnerable = True
                     self.move_speed = 500*TILES_PER_MIN
@@ -159,6 +161,7 @@ class Bandit(Troop):
         if self.dash_timer < 0: #done dashing
             self.dash_timer = 0
             self.ground = True
+            self.collideable = True
             self.move_speed = 60*TILES_PER_MIN
             self.invulnerable = False
             self.attack_cooldown = self.hit_speed
@@ -262,6 +265,7 @@ class ElectroGiant(Troop):
         self.level = level
         self.reflected_damage = 120 * pow(1.1, level - 6)
         self.reflected_ctd = 80 * pow(1.1, level - 6)
+        self.can_kb = False
 
         self.reflect_entity = ElectroGiantReflectAttackEntity(self.side, self.reflected_damage, self.reflected_ctd, self.position, self)
         self.reflect_display = ElectroGiantReflectDisplay(self.position)
@@ -395,3 +399,279 @@ class MagicArcher(Troop):
 
     def attack(self):
         return MagicArcherAttackEntity(self.side, self.hit_damage, self.position, self.target.position)
+    
+class BushGoblinAttackEntity(MeleeAttackEntity):
+    HIT_RANGE = 0.8
+    COLLISION_RADIUS = 0.5
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            side=side,
+            damage=damage,
+            position=position,
+            target=target
+            )
+        
+class BushGoblin(Troop):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 143 * pow(1.1, level - 3),         # Hit points (Example value)
+            h_d= 107 * pow(1.1, level - 3),          # Hit damage (Example value)
+            h_s=1.4,          # Hit speed (Seconds per hit)
+            l_t=1.0,            # First hit cooldown
+            h_r=0.8,            # Hit range
+            s_r=5.5,            # Sight Range
+            g=True,           # Ground troop
+            t_g_o=True,       # Targets ground-only
+            t_o=False,        # not tower-only
+            m_s=60*TILES_PER_MIN,          # Movement speed 
+            d_t=1,            # Deploy time
+            m=10,            #mass
+            c_r=0.5,        #collision radius
+            p=position               # Position (vector.Vector object)
+        ) 
+        self.level = level
+    
+    def attack(self):
+        return BushGoblinAttackEntity(self.side, self.hit_damage, self.position, self.target)
+    
+    
+class SuspiciousBush(Troop):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 38 * pow(1.1, level - 3),         # Hit points
+            h_d= 0,          # Hit damage (charge is 2x)
+            h_s=0.4,          # Hit speed (Seconds per hit)
+            l_t=0.05,            # First hit cooldown
+            h_r=0.5,            # Hit range
+            s_r=5.5,            # Sight Range
+            g=True,           # Ground troop
+            t_g_o=True,       # Targets ground-only
+            t_o=True,        # Not tower-only
+            m_s=60*TILES_PER_MIN,          # Movement speed 
+            d_t=1,            # Deploy time
+            m=3,            #mass
+            c_r=0.6,        #collision radius
+            p=position               # Position (vector.Vector object)
+        ) 
+        self.level = level
+        self.should_delete = False
+        self.targetable = False
+
+        self.sprite_path = "sprites/suspiciousbush/suspiciousbush.png"
+
+    def on_preplace(self):
+        self.targetable = False
+    
+    def die(self, arena):
+        arena.troops.append(BushGoblin(self.side, self.position.added(vector.Vector(0.3, 0)), self.level))
+        arena.troops.append(BushGoblin(self.side, self.position.added(vector.Vector(-0.3, 0)), self.level))
+        arena.troops.remove(self)
+        self.cur_hp = -1
+
+    def attack(self):
+        self.should_delete = True
+
+class LavaPupAttackEntity(RangedAttackEntity):
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            side=side, 
+            damage=damage, 
+            velocity=500*TILES_PER_MIN, 
+            position=position, 
+            target=target
+        )
+
+class LavaPup(Troop):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 179 * pow(1.1, level - 9),         # Hit points (Example value)
+            h_d= 75 * pow(1.1, level - 9),          # Hit damage (Example value)
+            h_s=1.7,          # Hit speed (Seconds per hit)
+            l_t=0.7,            # First hit cooldown
+            h_r=1.6,            # Hit range
+            s_r=5.5,            # Sight Range
+            g=False,           # Ground troop
+            t_g_o=False,       # Targets ground-only
+            t_o=False,        # not tower-only
+            m_s=60*TILES_PER_MIN,          # Movement speed 
+            d_t=1,            # Deploy time
+            m=5,            #mass
+            c_r=0.45,        #collision radius
+            p=position               # Position (vector.Vector object)
+        ) 
+        self.level = level
+    
+    def attack(self):
+        return LavaPupAttackEntity(self.side, self.hit_damage, self.position, self.target)
+
+class LavaHoundAttackEntity(RangedAttackEntity):
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            side=side, 
+            damage=damage, 
+            velocity=400*TILES_PER_MIN, 
+            position=position, 
+            target=target
+        )
+
+class LavaHoundDeathAttackEntity(AttackEntity):
+    SPLASH_RADIUS = 2.5
+    def __init__(self, side, position):
+        super().__init__(
+            s=side,
+            d=0,
+            v=0,
+            l=1/60 + 0.01,
+            i_p=copy.deepcopy(position)
+        )
+        self.display_size = self.SPLASH_RADIUS
+    
+    def apply_effect(self, target):
+        if isinstance(target, Troop):
+            vec = target.position.subtracted(self.position)
+            vec.normalize()
+            target.kb(vec)
+    
+    def detect_hits(self, arena):
+        hits = []
+        for each in arena.towers + arena.buildings + arena.troops:
+            if each.side != self.side: # if different side
+                if vector.distance(self.position, each.position) < self.SPLASH_RADIUS + each.collision_radius:
+                        hits.append(each)
+
+        return hits
+
+class LavaHound(Troop):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 3150 * pow(1.1, level - 9),         # Hit points (Example value)
+            h_d= 45 * pow(1.1, level - 9),          # Hit damage (Example value)
+            h_s=1.3,          # Hit speed (Seconds per hit)
+            l_t=0.3,            # First hit cooldown
+            h_r=3.5,            # Hit range
+            s_r=5.5,            # Sight Range
+            g=False,           # Ground troop
+            t_g_o=False,       # Targets ground-only
+            t_o=True,        # not tower-only
+            m_s=45*TILES_PER_MIN,          # Movement speed 
+            d_t=1,            # Deploy time
+            m=5,            #mass
+            c_r=0.75,        #collision radius
+            p=position               # Position (vector.Vector object)
+        ) 
+        self.level = level
+        self.can_kb = False
+
+    def die(self, arena):
+        flip = 1 if self.side else -1
+        radius = 2.5
+        angles = [(2 * math.pi * k / 6) + (math.pi / 2) for k in range(6)]
+        positions = [vector.Vector(radius * math.cos(a), radius * math.sin(a) * flip) for a in angles]
+        out = []
+        for each in positions:
+            out.append(LavaPup(self.side, self.position.added(each), self.level))
+        arena.troops.extend(out)
+        arena.active_attacks.append(LavaHoundDeathAttackEntity(self.side, self.position))
+        arena.troops.remove(self)
+        self.cur_hp = -1
+    
+    def attack(self):
+        return LavaHoundAttackEntity(self.side, self.hit_damage, self.position, self.target)
+    
+class HealSpiritAttackEntity(AttackEntity):
+    DAMAGE_RADIUS = 1.5
+    HEALING_RADIUS = 2.5
+    def __init__(self, side, damage, healing, position, target):
+        super().__init__(
+            s=side,
+            d=damage,
+            v=400*TILES_PER_MIN,
+            l=float('inf'),
+            i_p=copy.deepcopy(position)
+        )
+        self.healing = healing
+        self.target = target
+        self.exploded = False
+        self.has_hit = []
+        self.heal_reset = 0.25
+        self.has_healed = []
+
+    def detect_hits(self, arena):
+        hits = []
+        if self.exploded:
+            for each in arena.towers + arena.buildings + arena.troops:
+                if self.duration > 1.75 and each.side != self.side and (isinstance(each, Tower) or not each.invulnerable): # if different side
+                    if vector.distance(self.position, each.position) < HealSpiritAttackEntity.DAMAGE_RADIUS + each.collision_radius:
+                        hits.append(each)
+                if each.side == self.side and isinstance(each, Troop) and vector.distance(self.position, each.position) < HealSpiritAttackEntity.HEALING_RADIUS + each.collision_radius:
+                    hits.append(each)
+        return hits
+            
+    def tick(self, arena):
+        if self.heal_reset <= 0:
+            self.has_healed = []
+            self.heal_reset = 0.25
+    
+        if self.exploded:
+            hits = self.detect_hits(arena)
+            for each in hits:
+                if each.side != self.side:
+                    new = not any(each is h for h in self.has_hit)
+                    if (new):
+                            each.damage(self.damage)
+                            self.has_hit.append(each)
+                else:
+                    new_heal = not any(each is h for h in self.has_healed)
+                    if (new_heal):
+                        each.heal(self.healing)
+                        self.has_healed.append(each)
+                    
+        else:
+            direction = self.target.position.subtracted(self.position)
+            direction.normalize()
+
+            movement = direction.scaled(self.velocity)
+            self.position.add(movement)
+            
+            if vector.distance(self.position, self.target.position) < self.target.collision_radius:
+                self.display_size = HealSpiritAttackEntity.HEALING_RADIUS
+                self.duration =  2
+                self.exploded = True
+
+    def cleanup_func(self, arena):
+        self.heal_reset -= TICK_TIME
+    
+class HealSpirit(Troop):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 109 * pow(1.1, level - 3),         # Hit points (Example value)
+            h_d= 52 * pow(1.1, level - 3),          # Hit damage (Example value)
+            h_s=0.3,          # Hit speed (Seconds per hit)
+            l_t=0.1,            # First hit cooldown
+            h_r=2.5,            # Hit range
+            s_r=5.5,            # Sight Range
+            g=True,           # Ground troop
+            t_g_o=False,       # Targets ground-only
+            t_o=False,        # Not tower-only
+            m_s=120*TILES_PER_MIN,          # Movement speed 
+            d_t=1,            # Deploy time
+            m=1,            #mass
+            c_r=0.4,        #collision radius
+            p=position               # Position (vector.Vector object)
+        ) 
+        self.level = level
+        self.should_delete = False
+        self.walk_cycle_frames = 4
+        class_name = self.__class__.__name__.lower()
+        self.sprite_path = f"sprites/{class_name}/{class_name}_0.png"
+
+        self.healing = (189 * pow(1.1, level - 3))/4
+    
+    def attack(self):
+        self.should_delete = True
+        return HealSpiritAttackEntity(self.side, self.hit_damage, self.healing, self.position, self.target)

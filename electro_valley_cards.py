@@ -76,7 +76,7 @@ class Log(Troop):
 
         self.first = True
 
-    def on_deploy(self, arena):
+    def on_preplace(self):
         self.targetable = False
         self.invulnerable = True
         self.collideable = False
@@ -256,8 +256,12 @@ class Miner(Troop):
             self.targetable = True
             self.collideable = True
             self.target = None
+        elif self.invulnerable and vector.distance(self.position, self.target) < 1:
+            self.move_speed = 300 * TILES_PER_MIN #halve the speed
+        elif self.invulnerable and vector.distance(self.position, self.target) < 0.5:
+            self.move_speed = 150 * TILES_PER_MIN #halve the speed
     
-    def on_deploy(self, arena):
+    def on_preplace(self):
         self.invulnerable = True
         self.targetable = False
         self.collideable = False
@@ -305,7 +309,7 @@ class Miner(Troop):
             
             if tower_target is None:
                 return #exit
-            elif self.move_speed != 650 * TILES_PER_MIN and min_dist < self.hit_range + self.collision_radius + tower_target.collision_radius: #within hit range, locks on
+            elif self.move_speed < 150 * TILES_PER_MIN and min_dist < self.hit_range + self.collision_radius + tower_target.collision_radius: #within hit range, locks on
                 self.target = tower_target
                 self.move_vector = vector.Vector(0, 0)
                 direction_x = tower_target.position.x - self.position.x #set to directly move to tower
@@ -344,7 +348,7 @@ class Miner(Troop):
             direction_y = tar_pos.y - self.position.y
             distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
         
-        if self.move_speed != 650 * TILES_PER_MIN and vector.distance(tar_pos, self.position) < self.hit_range + self.collision_radius + self.target.collision_radius: #within hit range, then dont move just attack
+        if self.move_speed < 150 * TILES_PER_MIN and vector.distance(tar_pos, self.position) < self.hit_range + self.collision_radius + self.target.collision_radius: #within hit range, then dont move just attack
             self.move_vector = vector.Vector(0, 0)
             direction_x = tar_pos.x - self.position.x #set to directly move to tower
             direction_y = tar_pos.y - self.position.y
@@ -378,12 +382,12 @@ class Miner(Troop):
 
         if self.stun_timer <= 0:
             if self.deploy_time <= 0:
-                if self.move_speed != 650 * TILES_PER_MIN:
+                if self.move_speed < 150 * TILES_PER_MIN:
                     if self.target is None or self.target.cur_hp <= 0 or not self.target.targetable:
                         self.update_target(arena)
                     elif vector.distance(self.position, tar_pos) > self.sight_range + self.collision_radius + self.target.collision_radius: #add 0.2 so there is tiny buffer for ranged troops
                         self.update_target(arena)
-                if self.move(arena) and self.move_speed != 650 * TILES_PER_MIN and self.attack_cooldown <= 0: #move, then if within range, attack
+                if self.move(arena) and self.move_speed < 150 * TILES_PER_MIN and self.attack_cooldown <= 0: #move, then if within range, attack
                     atk = self.attack()
                     if isinstance(atk, list) and len(atk) > 0:
                         arena.active_attacks.extend(atk)
@@ -411,7 +415,7 @@ class Miner(Troop):
             if self.deploy_time <= 0:
                 self.on_deploy(arena)
         elif self.stun_timer <= 0:
-            if self.move_speed != 650 * TILES_PER_MIN:
+            if self.move_speed < 150 * TILES_PER_MIN:
                 if not self.target is None and not vector.distance(self.target.position, self.position) < self.hit_range + self.target.collision_radius + self.collision_radius and (self.attack_cooldown <= self.hit_speed - self.load_time):
                     self.attack_cooldown = self.hit_speed - self.load_time #if not currently attacking but cooldown is less than first hit delay
                 else: #otherwise
@@ -580,12 +584,6 @@ class Sparky(Troop):
             self.attack_cooldown = self.hit_speed
             self.stun_timer = 0.5
             self.target = None
-
-    def kb(self, vector):
-        if self.can_kb and not self.invulnerable:
-            self.attack_cooldown = self.hit_speed
-            super().kb(vector)
-
 
 
     def attack(self):

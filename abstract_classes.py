@@ -253,6 +253,9 @@ class Troop:
 
     def on_deploy(self, arena):
         pass
+
+    def on_preplace(self):
+        pass
     
     def kb(self, vector):
         if self.can_kb and not self.invulnerable:
@@ -633,6 +636,9 @@ class Spell:
     
     def apply_effect(self, target):
         pass
+
+    def on_preplace(self):
+        pass
         
     def tick(self, arena):
         if self.preplace:
@@ -753,6 +759,9 @@ class Building:
 
     def attack(self):
         return None
+    
+    def on_preplace(self):
+        pass
 
     def update_target(self, arena):
         self.target = None
