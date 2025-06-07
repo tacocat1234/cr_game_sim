@@ -161,7 +161,7 @@ class MeleeAttackEntity(AttackEntity):
 
 
 class Troop:
-    def __init__(self, s, h_p, h_d, h_s, l_t, h_r, s_r, g, t_g_o, t_o, m_s, d_t, m, c_r, p):
+    def __init__(self, s, h_p, h_d, h_s, l_t, h_r, s_r, g, t_g_o, t_o, m_s, d_t, m, c_r, p, cloned=False):
         self.side = s
         self.hit_points = h_p
         self.hit_damage = h_d
@@ -220,6 +220,14 @@ class Troop:
         self.goblin_cursed_level = None
         self.damage_amplification = 1
         self.hog_cursed_level = None
+
+        if cloned:
+            self.cur_hp = 1
+            self.hit_points = 1
+            if self.has_shield:
+                self.shield_hp = 1
+                self.shield_max_hp = 1
+        self.cloned = cloned
 
     def rage(self):
         self.rage_timer = 2
@@ -300,7 +308,10 @@ class Troop:
     def die(self, arena):
         if not self.should_delete and self.goblin_cursed_level is not None:
             from goblin_stadium_cards import Goblin
-            arena.troops.append(Goblin(not self.side, self.position, self.goblin_cursed_level))
+            arena.troops.append(Goblin(not self.side, copy.deepcopy(self.position), self.goblin_cursed_level))
+        if not self.should_delete and self.hog_cursed_level is not None:
+            from miners_mine_cards import CursedHog
+            arena.troops.append(CursedHog(not self.side, copy.deepcopy(self.position), self.hog_cursed_level))
         self.cur_hp = -1
         arena.troops.remove(self)
 

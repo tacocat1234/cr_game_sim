@@ -22,7 +22,7 @@ class SkeletonAttackEntity(MeleeAttackEntity):
         
             
 class Skeleton(Troop):
-    def __init__(self, side, position, level):
+    def __init__(self, side, position, level, cloned=False):
         super().__init__(
             s=side,              # Side (True for one player, False for the other)
             h_p= 32 * pow(1.1, level - 1),         # Hit points (Example value)
@@ -38,7 +38,8 @@ class Skeleton(Troop):
             d_t=1,            # Deploy time
             m=1,            #mass
             c_r=0.5,        #collision radius
-            p=position               # Position (vector.Vector object)
+            p=position,               # Position (vector.Vector object)
+            cloned=cloned
         )
         self.level = level
 

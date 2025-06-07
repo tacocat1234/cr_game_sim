@@ -181,11 +181,11 @@ class NightWitch(Troop):
                     self.spawn_timer = self.spawn_time
 
     def spawn(self, arena):
-        arena.troops.append(Bat(self.side, self.position.added(vector.Vector(1.5, 0)), self.level))
-        arena.troops.append(Bat(self.side, self.position.added(vector.Vector(-1.5, 0)), self.level))
+        arena.troops.append(Bat(self.side, self.position.added(vector.Vector(1.5, 0)), self.level, self.cloned))
+        arena.troops.append(Bat(self.side, self.position.added(vector.Vector(-1.5, 0)), self.level, self.cloned))
 
     def die(self, arena):
-        arena.troops.append(Bat(self.side, self.position, self.level))
+        arena.troops.append(Bat(self.side, self.position, self.level, self.cloned))
         super().die(arena)
 
     def attack(self):
@@ -233,8 +233,8 @@ class ElixirGolem(Troop):
             arena.p2_elixir += 1
         else:
             arena.p1_elixir += 1
-        arena.troops.append(ElixirGolemite(self.side, self.position.added(vector.Vector(0.75, 0)), self.level))
-        arena.troops.append(ElixirGolemite(self.side, self.position.added(vector.Vector(-0.75, 0)), self.level))
+        arena.troops.append(ElixirGolemite(self.side, self.position.added(vector.Vector(0.75, 0)), self.level, self.cloned))
+        arena.troops.append(ElixirGolemite(self.side, self.position.added(vector.Vector(-0.75, 0)), self.level, self.cloned))
         super().die(arena)
 
 class ElixirGolemiteAttackEntity(MeleeAttackEntity):
@@ -249,7 +249,7 @@ class ElixirGolemiteAttackEntity(MeleeAttackEntity):
             )
 
 class ElixirGolemite(Troop):
-    def __init__(self, side, position, level):
+    def __init__(self, side, position, level, cloned):
         super().__init__(
             s=side,              # Side (True for one player, False for the other)
             h_p= 360 * pow(1.1, level - 3),         # Hit points (Example value)
@@ -265,7 +265,8 @@ class ElixirGolemite(Troop):
             d_t=1,            # Deploy time
             m=10,            #mass
             c_r=0.5,        #collision radius
-            p=position               # Position (vector.Vector object)
+            p=position,               # Position (vector.Vector object)
+            cloned=cloned
         )
         self.level = level
 
@@ -278,8 +279,8 @@ class ElixirGolemite(Troop):
             arena.p2_elixir += 0.5
         else:
             arena.p1_elixir += 0.5
-        arena.troops.append(ElixirBlob(self.side, self.position.added(vector.Vector(0.75, 0)), self.level))
-        arena.troops.append(ElixirBlob(self.side, self.position.added(vector.Vector(-0.75, 0)), self.level))
+        arena.troops.append(ElixirBlob(self.side, self.position.added(vector.Vector(0.75, 0)), self.level, self.cloned))
+        arena.troops.append(ElixirBlob(self.side, self.position.added(vector.Vector(-0.75, 0)), self.level, self.cloned))
         super().die(arena)
 
 class ElixirBlobAttackEntity(MeleeAttackEntity):
@@ -294,7 +295,7 @@ class ElixirBlobAttackEntity(MeleeAttackEntity):
             )
 
 class ElixirBlob(Troop):
-    def __init__(self, side, position, level):
+    def __init__(self, side, position, level, cloned=False):
         super().__init__(
             s=side,              # Side (True for one player, False for the other)
             h_p= 170 * pow(1.1, level - 3),         # Hit points (Example value)
@@ -310,7 +311,8 @@ class ElixirBlob(Troop):
             d_t=1,            # Deploy time
             m=5,            #mass
             c_r=0.4,        #collision radius
-            p=position               # Position (vector.Vector object)
+            p=position,               # Position (vector.Vector object)
+            cloned=cloned
         )
         self.level = level
 
@@ -409,4 +411,5 @@ class GoblinCurse(Spell):
     def passive_effect(self, each):
         each.damage_amplificatgion = 1.2
         each.goblin_cursed_level = self.level
-        each.cursed_timer = 0.1
+        if each.cursed_timer <= 0.1:
+            each.cursed_timer = 0.1

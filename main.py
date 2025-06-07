@@ -322,6 +322,8 @@ def draw():
 
             if troop.rage_timer > 0:
                 troop_color = raged_color(troop_color)
+            if troop.cloned:
+                troop_color = (troop_color[0], min(troop_color[1] + 160, 255), min(troop_color[2] + 160, 255))
 
             # Draw troop circle
             if isinstance(troop, Log) or isinstance(troop, BarbarianBarrel):
@@ -394,7 +396,9 @@ def draw():
         troop_x, troop_y = convert_to_pygame(troop.position)
         troop_color = GRAY if troop.preplace else (BLUE if troop.side else RED)
         if troop.rage_timer > 0:
-                troop_color = raged_color(troop_color)
+            troop_color = raged_color(troop_color)
+        if troop.cloned:
+            troop_color = (troop_color[0], min(troop_color[1] + 160, 255), min(troop_color[2] + 160, 255))
 
         # Draw troop circle
         if isinstance(troop, Log) or isinstance(troop, BarbarianBarrel):

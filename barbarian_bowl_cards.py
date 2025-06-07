@@ -20,7 +20,7 @@ class BarbarianAttackEntity(MeleeAttackEntity):
         
             
 class Barbarian(Troop):
-    def __init__(self, side, position, level):
+    def __init__(self, side, position, level, cloned=False):
         super().__init__(
             s=side,              # Side (True for one player, False for the other)
             h_p= 262 * pow(1.1, level - 1),         # Hit points (Example value)
@@ -36,7 +36,8 @@ class Barbarian(Troop):
             d_t=1,            # Deploy time
             m=4,            #mass
             c_r=0.5,        #collision radius
-            p=position               # Position (vector.Vector object)
+            p=position,               # Position (vector.Vector object)
+            cloned=cloned
         )
         self.level = level
         self.ticks_per_frame = 6
@@ -182,8 +183,8 @@ class BattleRam(Troop):
         self.attack_cooldown = self.hit_speed
     
     def die(self, arena):
-        arena.troops.append(Barbarian(self.side, self.position.added(vector.Vector(0, 0.3)), self.level))
-        arena.troops.append(Barbarian(self.side, self.position.added(vector.Vector(0, -0.3)), self.level))
+        arena.troops.append(Barbarian(self.side, self.position.added(vector.Vector(0, 0.3)), self.level, self.cloned))
+        arena.troops.append(Barbarian(self.side, self.position.added(vector.Vector(0, -0.3)), self.level, self.cloned))
         arena.troops.remove(self)
         self.cur_hp = -1
 

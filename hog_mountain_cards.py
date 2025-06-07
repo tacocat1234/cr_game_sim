@@ -360,8 +360,8 @@ class Golem(Troop):
         return GolemAttackEntity(self.side, self.hit_damage, self.position, self.target)
     def die(self, arena):
         arena.active_attacks.append(GolemDeathAttackEntity(self.side, self.death_damage, self.position, self.target))
-        arena.troops.append(Golemite(self.side, self.position.added(vector.Vector(1.5, 0)), self.level))
-        arena.troops.append(Golemite(self.side, self.position.added(vector.Vector(-1.5, 0)), self.level))
+        arena.troops.append(Golemite(self.side, self.position.added(vector.Vector(1.5, 0)), self.level, self.cloned))
+        arena.troops.append(Golemite(self.side, self.position.added(vector.Vector(-1.5, 0)), self.level, self.cloned))
         super().die(arena)
 
 class GolemiteAttackEntity(MeleeAttackEntity):
@@ -404,7 +404,7 @@ class GolemiteDeathAttackEntity(AttackEntity):
         return hits
 
 class Golemite(Troop):
-    def __init__(self, side, position, level):
+    def __init__(self, side, position, level, cloned=False):
         super().__init__(
             s=side,              # Side (True for one player, False for the other)
             h_p= 650 * pow(1.1, level - 6),         # Hit points (Example value)
@@ -420,7 +420,8 @@ class Golemite(Troop):
             d_t=1,            # Deploy time
             m=6,            #mass
             c_r=0.5,        #collision radius
-            p=position               # Position (vector.Vector object)
+            p=position,               # Position (vector.Vector object)
+            cloned=cloned
         )
         self.level = level
         self.can_kb = False

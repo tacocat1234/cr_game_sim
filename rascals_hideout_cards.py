@@ -411,7 +411,7 @@ class BushGoblinAttackEntity(MeleeAttackEntity):
             )
         
 class BushGoblin(Troop):
-    def __init__(self, side, position, level):
+    def __init__(self, side, position, level, cloned=False):
         super().__init__(
             s=side,              # Side (True for one player, False for the other)
             h_p= 143 * pow(1.1, level - 3),         # Hit points (Example value)
@@ -427,7 +427,8 @@ class BushGoblin(Troop):
             d_t=1,            # Deploy time
             m=10,            #mass
             c_r=0.5,        #collision radius
-            p=position               # Position (vector.Vector object)
+            p=position,               # Position (vector.Vector object)
+            cloned=cloned
         ) 
         self.level = level
     
@@ -464,8 +465,8 @@ class SuspiciousBush(Troop):
         self.targetable = False
     
     def die(self, arena):
-        arena.troops.append(BushGoblin(self.side, self.position.added(vector.Vector(0.3, 0)), self.level))
-        arena.troops.append(BushGoblin(self.side, self.position.added(vector.Vector(-0.3, 0)), self.level))
+        arena.troops.append(BushGoblin(self.side, self.position.added(vector.Vector(0.3, 0)), self.level, self.cloned))
+        arena.troops.append(BushGoblin(self.side, self.position.added(vector.Vector(-0.3, 0)), self.level, self.cloned))
         arena.troops.remove(self)
         self.cur_hp = -1
 
@@ -483,7 +484,7 @@ class LavaPupAttackEntity(RangedAttackEntity):
         )
 
 class LavaPup(Troop):
-    def __init__(self, side, position, level):
+    def __init__(self, side, position, level, cloned=False):
         super().__init__(
             s=side,              # Side (True for one player, False for the other)
             h_p= 179 * pow(1.1, level - 9),         # Hit points (Example value)
@@ -499,7 +500,8 @@ class LavaPup(Troop):
             d_t=1,            # Deploy time
             m=5,            #mass
             c_r=0.45,        #collision radius
-            p=position               # Position (vector.Vector object)
+            p=position,               # Position (vector.Vector object)
+            cloned=cloned
         ) 
         self.level = level
     
@@ -572,7 +574,7 @@ class LavaHound(Troop):
         positions = [vector.Vector(radius * math.cos(a), radius * math.sin(a) * flip) for a in angles]
         out = []
         for each in positions:
-            out.append(LavaPup(self.side, self.position.added(each), self.level))
+            out.append(LavaPup(self.side, self.position.added(each), self.level, self.cloned))
         arena.troops.extend(out)
         arena.active_attacks.append(LavaHoundDeathAttackEntity(self.side, self.position))
         super().die(arena)

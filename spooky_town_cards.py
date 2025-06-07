@@ -585,11 +585,11 @@ class Phoenix(Troop):
     
     def die(self, arena):
         arena.active_attacks.append(PhoenixDeathAttackEntity(self.side, self.death_damage, self.crown_tower_death_damage, self.position, self.target))
-        arena.troops.append(PhoenixEgg(self.side, self.position, self.level))
+        arena.troops.append(PhoenixEgg(self.side, self.position, self.level, self.cloned))
         super().die(arena)
     
 class PhoenixEgg(Troop):
-    def __init__(self, side, position, level):
+    def __init__(self, side, position, level, cloned):
         super().__init__(
             s=side,              # Side (True for one player, False for the other)
             h_p= 199 * pow(1.1, level - 9),         # Hit points (Example value)
@@ -605,7 +605,8 @@ class PhoenixEgg(Troop):
             d_t=1,            # Deploy time
             m=99999,            #mass
             c_r=0.6,        #collision radius
-            p=position               # Position (vector.Vector object)
+            p=position,               # Position (vector.Vector object)
+            cloned=cloned
         ) 
         self.level = level
         self.can_kb = False
@@ -615,10 +616,10 @@ class PhoenixEgg(Troop):
             self.attack_cooldown -= TICK_TIME
         else:
             self.should_delete = True
-            arena.troops.append(RebornPhoenix(self.side, self.position, self.level))
+            arena.troops.append(RebornPhoenix(self.side, self.position, self.level, self.cloned))
 
 class RebornPhoenix(Troop):
-    def __init__(self, side, position, level):
+    def __init__(self, side, position, level, cloned=False):
         super().__init__(
             s=side,              # Side (True for one player, False for the other)
             h_p= 696 * pow(1.1, level - 9),         # Hit points (Example value)
@@ -634,7 +635,8 @@ class RebornPhoenix(Troop):
             d_t=0.733,            # Deploy time
             m=2,            #mass
             c_r=0.6,        #collision radius
-            p=position               # Position (vector.Vector object)
+            p=position,               # Position (vector.Vector object)
+            cloned=cloned
         ) 
         self.level = level
     

@@ -108,7 +108,7 @@ class SkeletonBarrel(Troop):
         self.should_delete = True
     
     def die(self, arena):
-        arena.troops.append(SkeletonBarrelDeathBarrel(self.side, self.position, self.level))
+        arena.troops.append(SkeletonBarrelDeathBarrel(self.side, self.position, self.level, self.cloned))
         arena.troops.remove(self)
         self.cur_hp = -1
 
@@ -148,7 +148,7 @@ class SkeletonBarrelDeathBarrelAttackEntity(AttackEntity):
                 self.has_hit.append(each)
 
 class SkeletonBarrelDeathBarrel(Troop):
-    def __init__(self, side, position, level):
+    def __init__(self, side, position, level, cloned=False):
         super().__init__(
             s=side,              # Side (True for one player, False for the other)
             h_p=  float('inf'),         # Hit points (Example value)
@@ -164,7 +164,8 @@ class SkeletonBarrelDeathBarrel(Troop):
             d_t=1.1,            # Deploy time
             m=float('inf'),            #mass
             c_r=0.5,        #collision radius
-            p=position               # Position (vector.Vector object)
+            p=position,               # Position (vector.Vector object)
+            cloned=cloned
         ) 
         self.level = level
         self.invulnerable=True
@@ -184,7 +185,7 @@ class SkeletonBarrelDeathBarrel(Troop):
         angles = [(2 * math.pi * k / 7) + (math.pi / 2) for k in range(7)]
         positions = [vector.Vector(radius * math.cos(a), radius * math.sin(a) * flip) for a in angles]
         for each in positions:
-            arena.troops.append(Skeleton(self.side, self.position.added(each), self.level))
+            arena.troops.append(Skeleton(self.side, self.position.added(each), self.level, self.cloned))
 
         self.cur_hp = -1
         arena.troops.remove(self)
@@ -335,8 +336,8 @@ class GoblinGiant(Troop):
         v1 = vector.Vector(-0.2, 0.45).rotated(self.facing_dir)
         v2 = vector.Vector(-0.2, -0.45).rotated(self.facing_dir)
         self.cur_hp = -1
-        arena.troops.append(SpearGoblin(self.side, self.position.added(v1), self.level))
-        arena.troops.append(SpearGoblin(self.side, self.position.added(v2), self.level))
+        arena.troops.append(SpearGoblin(self.side, self.position.added(v1), self.level, self.cloned))
+        arena.troops.append(SpearGoblin(self.side, self.position.added(v2), self.level, self.cloned))
         arena.troops.remove(self)
 
     def attack(self):

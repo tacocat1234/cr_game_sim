@@ -16,6 +16,7 @@ import electro_valley_cards
 import spooky_town_cards
 import rascals_hideout_cards
 import serenity_peak_cards
+import miners_mine_cards
 import random
 
 troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer", 
@@ -32,7 +33,8 @@ troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer",
           "log", "miner", "princess", "electrowizard", "infernodragon", "ramrider", "sparky", "megaknight",
           "wallbreakers", "icewizard", "royalghost", "firecracker", "phoenix", "electrodragon",
           "healspirit", "suspiciousbush", "bandit", "magicarcher", "rascals", "bowler", "electrogiant", "lavahound",
-          "elixirgolem", "lumberjack", "nightwitch", "executioner"]
+          "elixirgolem", "lumberjack", "nightwitch", "executioner",
+          "motherwitch"]
 
 spells = ["fireball", "arrows",
           "zap", "rocket",
@@ -40,7 +42,8 @@ spells = ["fireball", "arrows",
           "giantsnowball", "freeze", "lightning",
           "poison",
           "earthquake", "graveyard",
-          "rage", "goblincurse", "royaldelivery"]
+          "rage", "goblincurse", "royaldelivery",
+          "clone"]
 
 buildings = ["goblinhut", "goblincage", 
              "tombstone",
@@ -48,7 +51,8 @@ buildings = ["goblinhut", "goblincage",
              "bombtower", "infernotower",
              "mortar",
              "barbarianhut",
-             "furnace", "tesla", "xbow"]
+             "furnace", "tesla", "xbow",
+             "elixircollector"]
 #total 127
 #print(len(troops) + len(spells) + len(buildings))
 
@@ -75,7 +79,8 @@ effect_radius = {
     "graveyard" : 4,
     "rage" : 3,
     "goblincurse" : 3,
-    "royaldelivery" : 3
+    "royaldelivery" : 3,
+    "clone" : 3
 }
 
 def get_radius(name):
@@ -86,7 +91,7 @@ def get_radius(name):
     
 def can_defend(name):
     return not name in ["suspiciousbush", "wallbreakers", "icegolem",
-                        "elixirgolem",
+                        "elixirgolem", "goblinbarrel",
                         "hogrider", "battleram", 
                         "ramrider", "giant", "balloon", 
                         "royalgiant", "goblingiant", 
@@ -387,6 +392,8 @@ def troop_factory(side, position, name, level):
         return serenity_peak_cards.NightWitch(side, position, level)
     elif name == "executioner":
         return serenity_peak_cards.Executioner(side, position, level)
+    elif name == "motherwitch":
+        return miners_mine_cards.MotherWitch(side, position, level)
     else:
         raise Exception("Invalid troop name.")
 
@@ -419,6 +426,8 @@ def spell_factory(side, position, name, level):
         return serenity_peak_cards.GoblinCurse(side, position, level)
     elif name == "royaldelivery":
         return serenity_peak_cards.RoyalDelivery(side, position, level)
+    elif name == "clone":
+        return miners_mine_cards.Clone(side, position, level)
     else:
         raise Exception("Invalid spell name.")
 
@@ -445,6 +454,8 @@ def building_factory(side, position, name, level):
         return hog_mountain_cards.Tesla(side, position, level)
     elif name == "xbow":
         return hog_mountain_cards.XBow(side, position, level)
+    elif name == "elixircollector":
+        return miners_mine_cards.ElixirCollector(side, position, level)
     else:
         raise Exception("Invalid building name")
 
@@ -550,7 +561,10 @@ elixir_map = {
     "elixirgolem" : 3,
     "lumberjack" : 4,
     "nightwitch" : 4,
-    "executioner" : 5
+    "executioner" : 5,
+    "clone" : 3,
+    "motherwitch" : 4,
+    "elixircollector" : 6
 }
 
 def filter_cards(card_list, min_elixir, max_elixir, used_cards):
