@@ -359,11 +359,10 @@ class Golem(Troop):
     def attack(self):
         return GolemAttackEntity(self.side, self.hit_damage, self.position, self.target)
     def die(self, arena):
-        self.cur_hp = -1
         arena.active_attacks.append(GolemDeathAttackEntity(self.side, self.death_damage, self.position, self.target))
         arena.troops.append(Golemite(self.side, self.position.added(vector.Vector(1.5, 0)), self.level))
         arena.troops.append(Golemite(self.side, self.position.added(vector.Vector(-1.5, 0)), self.level))
-        arena.troops.remove(self)
+        super().die(arena)
 
 class GolemiteAttackEntity(MeleeAttackEntity):
     HIT_RANGE = 0.75
@@ -433,6 +432,5 @@ class Golemite(Troop):
     def attack(self):
         return GolemAttackEntity(self.side, self.hit_damage, self.position, self.target)
     def die(self, arena):
-        self.cur_hp = -1
         arena.active_attacks.append(GolemiteDeathAttackEntity(self.side, self.death_damage, self.position, self.target))
-        arena.troops.remove(self)
+        super().die(arena)

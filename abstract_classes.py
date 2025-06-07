@@ -74,15 +74,19 @@ class RangedAttackEntity(AttackEntity):
         self.target = target
         self.should_delete = False
         self.piercing = False
+        self.initial_vec = None
+
+    def set_initial_vec(self):
+        self.initial_vec = vector.Vector(
+            self.target.x - self.position.x, 
+            self.target.y - self.position.y
+        )
 
     def set_move_vec(self):
+        if self.initial_vec is None:
+            self.set_initial_vec()
         if not self.homing:
-            self.move_vec = vector.Vector(
-                    self.target.x - self.position.x, 
-                    self.target.y - self.position.y
-                )
-            self.move_vec.normalize()
-            self.move_vec.scale(self.velocity)
+            self.move_vec = self.initial_vec.normalized().scaled(self.velocity)
 
     def detect_hits(self, arena):
         if (vector.distance(self.target.position, self.position) < self.target.collision_radius):
@@ -195,6 +199,7 @@ class Troop:
 
         self.stun_timer = 0
         self.slow_timer = 0
+        self.rage_timer = 0
         self.kb_timer = 0
 
         self.kb_vector = None
@@ -211,12 +216,24 @@ class Troop:
         self.preplace = False
         self.placed = True
 
+        self.cursed_timer = 0
+        self.goblin_cursed_level = None
+        self.damage_amplification = 1
+        self.hog_cursed_level = None
+
+    def rage(self):
+        self.rage_timer = 2
+        if self.rage_timer <= 0:
+            self.hit_speed = 0.65 * self.hit_speed
+            self.load_time = 0.65 * self.load_time
+            self.move_speed = 1.35 * self.move_speed
+
     def slow(self, duration, source):
         if not self.invulnerable:
             if self.slow_timer < duration:
                 self.slow_timer = duration
-            self.hit_speed = 1.35 * self.normal_hit_speed
-            self.load_time = 1.35 * self.normal_load_time
+            self.hit_speed = 1.35 * self.hit_speed
+            self.load_time = 1.35 * self.load_time
             if source not in self.slow_sources:
                 self.move_speed = 0.65 * self.move_speed
                 self.slow_sources.append(source)
@@ -229,10 +246,25 @@ class Troop:
             self.slow_sources.append(source)
 
     def unslow(self):
-        self.hit_speed = self.normal_hit_speed
-        self.load_time = self.normal_load_time
-        self.move_speed = self.normal_move_speed
-        self.slow_sources = []
+        if self.rage_timer <= 0:
+            self.hit_speed = self.normal_hit_speed
+            self.load_time = self.normal_load_time
+            self.move_speed = self.normal_move_speed
+            self.slow_sources = []
+        else: #is raged
+            self.hit_speed = 0.65 * self.normal_hit_speed
+            self.load_time = 0.65 * self.normal_load_time
+            self.move_speed = 1.35 * self.move_speed
+    
+    def unrage(self):
+        if self.slow_timer <= 0:
+            self.hit_speed = self.normal_hit_speed
+            self.load_time = self.normal_load_time
+            self.move_speed = self.normal_move_speed
+        else:
+            self.hit_speed /= 0.65
+            self.load_time /= 0.65
+            self.move_speed /= 1.35
 
     def stun(self):
         if not self.invulnerable:
@@ -246,7 +278,7 @@ class Troop:
 
     def damage(self, amount):
         if not self.invulnerable:
-            self.cur_hp -= amount
+            self.cur_hp -= amount*self.damage_amplification
 
     def heal(self, amount):
         self.cur_hp = min(self.cur_hp + amount, self.hit_points)
@@ -266,6 +298,9 @@ class Troop:
         self.position.add(self.kb_vector.scaled(TICK_TIME/KB_TIME))
 
     def die(self, arena):
+        if not self.should_delete and self.goblin_cursed_level is not None:
+            from goblin_stadium_cards import Goblin
+            arena.troops.append(Goblin(not self.side, self.position, self.goblin_cursed_level))
         self.cur_hp = -1
         arena.troops.remove(self)
 
@@ -322,18 +357,33 @@ class Troop:
                 r_bridge = vector.distance(vector.Vector(5.6, 1 if self.position.y > 0 else -1), self.position)
                 l_bridge = vector.distance(vector.Vector(-5.6, 1 if self.position.y > 0 else -1), self.position)
 
+                closer_to_r = self.position.x > 0
+
                 tar_bridge = None
                 
+                x = self.position.x
+                t_x = None
+                if on_bridge(x):
+                    t_x = x
+                elif x > 6:
+                    t_x = 5.9
+                elif x < 5 and x > 0:
+                    t_x = 5
+                elif x > -5 and x < 0:
+                    t_x = -5
+                else:
+                    t_x = -5.9
                 
-                if (r_bridge < l_bridge): #find closest bridge
-                    tar_bridge = vector.Vector(5.6, 1 if self.position.y > 0 else -1)
+                
+                if (closer_to_r): #find closest bridge
+                    tar_bridge = vector.Vector(t_x, 1 if self.side else -1)
                 elif abs(r_bridge - l_bridge) > 0.1:
-                    tar_bridge = vector.Vector(-5.6, 1 if self.position.y > 0 else -1)
+                    tar_bridge = vector.Vector(t_x, 1 if self.side else -1)
                 else: # if similar dist
-                    if vector.distance(vector.Vector(5.6, 1 if self.position.y > 0 else -1), tower_target.position) < vector.distance(vector.Vector(-5.6, 1 if self.position.y > 0 else -1), tower_target.position):
-                        tar_bridge = vector.Vector(5.6, 1 if self.position.y > 0 else -1) #go to side closer to tower
+                    if vector.distance(vector.Vector(t_x, 1 if self.side else -1), tower_target.position) < vector.distance(vector.Vector(t_x, 1 if self.side else -1), tower_target.position):
+                        tar_bridge = vector.Vector(t_x, 1 if self.side else -1) #go to side closer to tower
                     else:
-                        tar_bridge = vector.Vector(-5.6, 1 if self.position.y > 0 else -1)
+                        tar_bridge = vector.Vector(t_x, 1 if self.side else -1)
             
                 direction_x = tar_bridge.x - self.position.x #set movement
                 direction_y = tar_bridge.y - self.position.y
@@ -392,9 +442,38 @@ class Troop:
             distance_to_target = 1
             m_s = self.jump_speed
         else:
-            direction_x = self.target.position.x - self.position.x
-            direction_y = self.target.position.y - self.position.y
-            distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
+            if self.position.y < 1 and self.position.y > -1 and on_bridge(self.position.x) and not (self.target.position.y < 1 and self.target.position.y > -1 and on_bridge(self.target.position.x)):
+                bridge_side = 1 if self.position.y < self.target.position.y else -1
+                bridge_min = -6 if self.position.x < 0 else 5
+                bridge_max = -5 if self.position.x < 0 else 6
+
+                to_tar = self.target.position.subtracted(self.position)
+                to_corner1 = vector.Vector(bridge_min + 0.1, bridge_side).subtracted(self.position)
+                to_corner2 = vector.Vector(bridge_max - 0.1, bridge_side).subtracted(self.position)
+
+                ratio = float('inf') if to_tar.x == 0 else abs(to_tar.y/to_tar.x)
+
+                t_x = self.target.position.x
+
+                if to_corner1.x == 0 or (t_x < bridge_min and abs(to_corner1.y/to_corner1.x) > ratio):
+                    tar_bridge = vector.Vector(bridge_min + 0.1, bridge_side)
+                    direction_x = tar_bridge.x - self.position.x
+                    direction_y = tar_bridge.y - self.position.y
+                    distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
+                elif to_corner2.x == 0 or (t_x > bridge_max and abs(to_corner2.y/to_corner2.x) > ratio):
+                    tar_bridge = to_corner2 = vector.Vector(bridge_max - 0.1, bridge_side).subtracted(self.position)
+                    direction_x = tar_bridge.x - self.position.x
+                    direction_y = tar_bridge.y - self.position.y
+                    distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
+                else:
+                    direction_x = self.target.position.x - self.position.x
+                    direction_y = self.target.position.y - self.position.y
+                    distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
+                
+            else:
+                direction_x = self.target.position.x - self.position.x
+                direction_y = self.target.position.y - self.position.y
+                distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
         
         if vector.distance(self.target.position, self.position) < self.hit_range + self.collision_radius + self.target.collision_radius: #within hit range, then dont move just attack
             self.move_vector = vector.Vector(0, 0)
@@ -455,12 +534,26 @@ class Troop:
 
         if self.cur_hp <= 0 or self.should_delete:
             self.die(arena)
+
+        if self.rage_timer < 0:
+            self.rage_timer = 0
+            self.unrage()
+        elif self.rage_timer > 0:
+            self.rage_timer -= TICK_TIME
         
-        if self.slow_timer < 0 :
+        if self.slow_timer < 0:
             self.slow_timer = 0
             self.unslow()
         elif self.slow_timer > 0:
             self.slow_timer -= TICK_TIME
+
+        if self.cursed_timer <= 0:
+            self.goblin_cursed_level = None
+            self.hog_cursed_level = None
+            self.damage_amplification = 1
+        else:
+            self.cursed_timer -= TICK_TIME
+        
 
         if self.deploy_time > 0: #if deploying, timer
             self.deploy_time -= TICK_TIME
@@ -507,6 +600,7 @@ class Tower:
         self.normal_hit_speed = h_s
 
         self.slow_timer = 0
+        self.rage_timer = 0
         self.stun_timer = 0
         self.sprite_path = ""
         self.animation_cycle_frames = 1
@@ -530,6 +624,21 @@ class Tower:
     def unslow(self):
         self.hit_speed = self.normal_hit_speed
         self.load_time = self.normal_load_time
+
+    def rage(self):
+        self.rage_timer = 2
+        if self.rage_timer <= 0:
+            self.hit_speed = 0.65 * self.hit_speed
+            self.load_time = 0.65 * self.load_time
+
+    def unrage(self):
+        if self.slow_timer <= 0:
+            self.hit_speed = self.normal_hit_speed
+            self.load_time = self.normal_load_time
+        else:
+            self.hit_speed /= 0.65
+            self.load_time /= 0.65
+            self.move_speed /= 1.35
 
     def stun(self):
         self.stun_timer = 0.5
@@ -587,6 +696,12 @@ class Tower:
             self.unslow()
         elif self.slow_timer > 0:
             self.slow_timer -= TICK_TIME
+        
+        if self.rage_timer < 0:
+            self.rage_timer = 0
+            self.unrage()
+        elif self.rage_timer > 0:
+            self.rage_timer -= TICK_TIME
 
 
         if self.stun_timer <= 0:
@@ -627,12 +742,17 @@ class Spell:
         self.pulse_time = float('inf')
         self.preplace = False
 
+    
+
     def detect_hits(self, arena): #override
         out = []
         for each in arena.troops + arena.buildings + arena.towers:
             if (isinstance(each, Tower) or not each.invulnerable) and each.side != self.side and (vector.distance(each.position, self.position) <= self.radius + each.collision_radius):
                 out.append(each)
         return out
+    
+    def passive_detect_hits(self, arena):
+        return self.detect_hits(arena)
     
     def apply_effect(self, target):
         pass
@@ -670,7 +790,7 @@ class Spell:
         
         if self.pulse_timer <= 0:
             self.pulse_timer = self.pulse_time
-            hits = self.detect_hits(arena)
+            hits = self.passive_detect_hits(arena)
             for each in hits:
                 self.passive_effect(each)
         else:
@@ -717,6 +837,7 @@ class Building:
 
         self.stun_timer = 0
         self.slow_timer = 0
+        self.rage_timer = 0
 
         self.facing_dir = 0
         class_name = self.__class__.__name__.lower()
@@ -738,6 +859,21 @@ class Building:
     def unslow(self):
         self.hit_speed = self.normal_hit_speed
         self.load_time = self.normal_load_time
+    
+    def rage(self):
+        self.rage_timer = 2
+        if self.rage_timer <= 0:
+            self.hit_speed = 0.65 * self.hit_speed
+            self.load_time = 0.65 * self.load_time
+
+    def unrage(self):
+        if self.slow_timer <= 0:
+            self.hit_speed = self.normal_hit_speed
+            self.load_time = self.normal_load_time
+        else:
+            self.hit_speed /= 0.65
+            self.load_time /= 0.65
+            self.move_speed /= 1.35
 
     def damage(self, amount):
         self.cur_hp -= amount
@@ -817,6 +953,12 @@ class Building:
         elif self.slow_timer > 0:
             self.slow_timer -= TICK_TIME
         
+        if self.rage_timer < 0:
+            self.rage_timer = 0
+            self.unrage()
+        elif self.rage_timer > 0:
+            self.rage_timer -= TICK_TIME    
+            
         if self.stun_timer <= 0:
             if not self.is_spawner and (self.target is None or (vector.distance(self.target.position, self.position) > self.hit_range + self.target.collision_radius and (self.attack_cooldown <= self.hit_speed - self.load_time))):
                     self.attack_cooldown = self.hit_speed - self.load_time #if not currently attacking but cooldown is less than first hit delay

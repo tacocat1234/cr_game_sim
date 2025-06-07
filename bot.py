@@ -4,6 +4,9 @@ import vector
 from abstract_classes import TICK_TIME
 from card_factory import get_type
 from card_factory import get_elixir
+from builders_workshop_cards import Mortar
+from hog_mountain_cards import XBow
+from card_factory import can_defend
 
 counters = {
     "minipekka" : ["skeletons", vector.Vector(0, 0)],
@@ -24,30 +27,47 @@ class Bot:
         self.buffer_check = 2
         self.buffer = []
 
-    def tick(self, elixir):
+    def tick(self, elixir, things = None):
+        if not things is None:
+            danger_level = 0
+            for each in things:
+                    if each.side:
+                        if (isinstance(each, XBow) or isinstance(each, Mortar)) and each.position.y >= -2:
+                            danger_level += 99 #immediate threat
+                        if each.position.y > 0:
+                            if each.position.y > 9.5 - each.hit_range:
+                                danger_level += 1.75
+                            elif each.position.y > 7:
+                                danger_level += 1.5
+                            elif each.position.y > 4:
+                                danger_level += 1
+                            elif each.position.y > 2:
+                                danger_level += 0.5
+                            else:
+                                danger_level += 0.25
+            if danger_level >= 2:
+                self.internal_timer = 0
         if self.internal_timer <= 0 or elixir >= 9:
             if elixir >= 7:
                 self.internal_timer = 0
             else:
                 self.internal_timer = random.triangular(0, 14, 5.6)
 
-            cur_min = 11
-            for each in self.cards:
-                if each.name not in self.buffer and each.elixir_cost < cur_min:
-                    cur_min = each.elixir_cost
-            if elixir >= cur_min:
-                selected = random.choice(self.cards)
-                while selected.elixir_cost > elixir or selected.name in self.buffer:
-                    selected = random.choice(self.cards)
-                
-                if len(self.buffer) < self.buffer_check:
-                    self.buffer.append(selected.name)
-                else:
-                    self.buffer.pop(0)
-                    self.buffer.append(selected.name)
-                return selected
+            remaining = copy.deepcopy(self.cards)
+            
+            selected = random.choice(remaining)
+            while selected.elixir_cost > elixir or selected.name in self.buffer or (danger_level >= 2 and not can_defend(selected.name)):
+                remaining.remove(selected)
+                if not remaining:
+                    return None
+                selected = random.choice(remaining)
+            
+            if len(self.buffer) < self.buffer_check:
+                self.buffer.append(selected.name)
             else:
-                return None
+                self.buffer.pop(0)
+                self.buffer.append(selected.name)
+            return selected
         else:
             self.internal_timer -= TICK_TIME
 
@@ -61,7 +81,46 @@ class Bot:
                         enemy.append(each)
                     else:
                         friendly.append(each)
+        danger_level = 0
+        offensive_count = 0
+        left_count = 0
+        most_dangerous = None
+        m_d_c = 0
+        for each in enemy:
+            if (isinstance(each, XBow) or isinstance(each, Mortar)) and each.position.y >= -2:
+                    danger_level += 99 #immediate threat
+                    most_dangerous = each
+                    m_d_c = 99
+                    offensive_count += 1
+            if each.position.y > 0:
+                offensive_count += 1
+                if each.position.y > 7:
+                    if (m_d_c < 1.5):
+                        m_d_c = 1.5
+                        most_dangerous = each
+                    danger_level += 1.5
+                elif each.position.y > 4:
+                    if (m_d_c < 1):
+                        m_d_c = 1
+                        most_dangerous = each
+                    danger_level += 1
+                elif each.position.y > 2:
+                    if (m_d_c < 0.5):
+                        m_d_c = 0.5
+                        most_dangerous = each
+                    danger_level += 0.5
+                else:
+                    if (m_d_c < 0.25):
+                        m_d_c = 0.25
+                        most_dangerous = each
+                    danger_level += 0.25
+
+            if each.position.x < 0:
+                left_count += 1
         if (isSpell):
+            if danger_level >= 2:
+                min = most_dangerous
+                return min.position.added(vector.Vector(0, 1.5))
             if len(enemy) > 0:
                 r = random.choice(enemy)
                 if name == "miner":
@@ -86,18 +145,22 @@ class Bot:
                         elif pos.y < 0:
                             pos.y = 0
                         return pos
+                    elif name == "royaldelivery":
+                        pos = r.position.added(vector.Vector(0, 2.0))
+                        if pos.y > 0:
+                            return pos
+                        else:
+                            return False
+                    elif name == "rage":
+                        return random.choice(friendly).position.added(vector.Vector(0, -2.75))
                     return r.position.added(vector.Vector(0, 1.5))
+                    
             return False
         else:
-            offensive_count = 0
-            left_count = 0
-            for each in enemy:
-                if each.position.y > 0:
-                    offensive_count += 1
-                if each.position.x < 0:
-                    left_count += 1
-
             if offensive_count > len(enemy) - offensive_count: # if more offensive opps than defensive
+                if danger_level >= 2:
+                    min = most_dangerous
+                    return min.position.added(vector.Vector(random.randint(-2, 2), random.randint(1, 3)))
                 if random.randint(0, 2) >= 1 and len(friendly) > 0:
                     friend_pos = random.choice(friendly).position
                     friend_pos = friend_pos.added(vector.Vector(random.randint(-2, 2), random.randint(1, 3)))
@@ -117,6 +180,9 @@ class Bot:
                 weight = -4.5 if left_count > len(enemy) - left_count else 4.5 #towards left if more troops on left else right
                 return vector.Vector(round(random.triangular(-9, 9, weight)), random.randint(0, 16))
             else: # if more defensive opps than offensive, or equal
+                if danger_level >= 4:
+                    min = most_dangerous
+                    return min.position.added(vector.Vector(random.randint(-2, 2), random.randint(1, 3)))
                 if len(friendly) > 0 and random.random() < 0.8:
                     friend_pos = random.choice(friendly).position
                     friend_pos = friend_pos.added(vector.Vector(random.randint(-1, 1), random.randint(0, 4)))
@@ -125,7 +191,6 @@ class Bot:
                         friend_pos.x = 9
                     elif friend_pos.x < -9:
                         friend_pos.x = -9
-                    
                     
                     if friend_pos.y < 0:
                         friend_pos.y = 0

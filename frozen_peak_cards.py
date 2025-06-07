@@ -163,9 +163,8 @@ class IceGolem(Troop):
     def attack(self):
         return IceGolemAttackEntity(self.side, self.hit_damage, self.position, self.target)
     def die(self, arena):
-        self.cur_hp = -1
         arena.active_attacks.append(IceGolemDeathAttackEntity(self.side, self.hit_damage, self.position, self.target))
-        arena.troops.remove(self)
+        super().die(arena)
 
 class Freeze(Spell):
     def __init__(self, side, target, level):
@@ -390,8 +389,7 @@ class GiantSkeleton(Troop):
 
     def die(self, arena):
         arena.troops.append(GiantSkeletonDeathBomb(self.side, self.position, self.level))
-        arena.troops.remove(self)
-        self.cur_hp = -1
+        super().die(arena)
 
 class GiantSkeletonDeathBombAttackEntity(AttackEntity):
     DAMAGE_RADIUS = 3

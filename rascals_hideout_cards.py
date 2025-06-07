@@ -228,7 +228,7 @@ class ElectroGiantReflectAttackEntity(MeleeAttackEntity):
     def detect_hits(self, arena):
         hits = []
         for each in arena.towers + arena.buildings + arena.troops:
-                if each.side != self.side and not each.invulnerable and (each.attack_cooldown == each.hit_speed or each.attack_cooldown == 0) and each.target is self.parent: # if different side
+                if each.side != self.side and not each.invulnerable and (each.attack_cooldown == each.hit_speed or each.attack_cooldown <= 0) and each.target is self.parent: # if different side
                     if vector.distance(self.position, each.position) < self.HIT_RANGE + self.COLLISION_RADIUS + each.collision_radius:
                         hits.append(each)
         return hits
@@ -283,8 +283,7 @@ class ElectroGiant(Troop):
 
     def die(self, arena):
         arena.active_attacks.remove(self.reflect_display)
-        self.cur_hp = -1
-        arena.troops.remove(self)
+        super().die(arena)
 
     def attack(self):
         return ElectroGiantAttackEntity(self.side, self.hit_damage, self.position, self.target)
@@ -312,7 +311,7 @@ class BowlerAttackEntity(RangedAttackEntity):
         hits = []
         for each in arena.towers + arena.buildings + arena.troops:
             if each.side != self.side and (isinstance(each, Tower) or (each.ground and not each.invulnerable)) and each not in self.has_hit: # if different side
-                if vector.distance(each.position, self.position) <= each.collision_radius + (-0.26 if self.duration > 2.45 else self.SPLASH_RADIUS):
+                if vector.distance(each.position, self.position) <= each.collision_radius + (0.74 if self.duration > 2.25 else self.SPLASH_RADIUS):
                     hits.append(each)
                     self.has_hit.append(each)
         return hits
@@ -576,8 +575,7 @@ class LavaHound(Troop):
             out.append(LavaPup(self.side, self.position.added(each), self.level))
         arena.troops.extend(out)
         arena.active_attacks.append(LavaHoundDeathAttackEntity(self.side, self.position))
-        arena.troops.remove(self)
-        self.cur_hp = -1
+        super().die(arena)
     
     def attack(self):
         return LavaHoundAttackEntity(self.side, self.hit_damage, self.position, self.target)

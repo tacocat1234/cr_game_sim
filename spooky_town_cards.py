@@ -26,6 +26,7 @@ class Earthquake(Spell):
             tar=target
         )
         self.pulse_time = 0.1
+        self.pulse_timer = 0
         self.building_damage = 136 * pow(1.1, level - 3)
 
     def detect_hits(self, arena):
@@ -585,8 +586,7 @@ class Phoenix(Troop):
     def die(self, arena):
         arena.active_attacks.append(PhoenixDeathAttackEntity(self.side, self.death_damage, self.crown_tower_death_damage, self.position, self.target))
         arena.troops.append(PhoenixEgg(self.side, self.position, self.level))
-        self.cur_hp = -1
-        arena.troops.remove(self)
+        super().die(arena)
     
 class PhoenixEgg(Troop):
     def __init__(self, side, position, level):

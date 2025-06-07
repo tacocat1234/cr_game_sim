@@ -1,8 +1,8 @@
 valkyrie 11
-skeletons 11
 firecracker 11
-icespirit 11
-suspiciousbush 11
+random.troop.2-5 11
+random.troop.1-1 11
+goblincurse 11
 random.building.3-7 11
 random.troop.3-9 11
 random.spell.4-7 11

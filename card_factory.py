@@ -15,6 +15,7 @@ import hog_mountain_cards
 import electro_valley_cards
 import spooky_town_cards
 import rascals_hideout_cards
+import serenity_peak_cards
 import random
 
 troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer", 
@@ -30,14 +31,16 @@ troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer",
           "zappies", "hunter", "minionhorde", "elitebarbarians", "golem",
           "log", "miner", "princess", "electrowizard", "infernodragon", "ramrider", "sparky", "megaknight",
           "wallbreakers", "icewizard", "royalghost", "firecracker", "phoenix", "electrodragon",
-          "healspirit", "suspiciousbush", "bandit", "magicarcher", "rascals", "bowler", "electrogiant", "lavahound"]
+          "healspirit", "suspiciousbush", "bandit", "magicarcher", "rascals", "bowler", "electrogiant", "lavahound",
+          "elixirgolem", "lumberjack", "nightwitch", "executioner"]
 
 spells = ["fireball", "arrows",
           "zap", "rocket",
           "goblinbarrel",
           "giantsnowball", "freeze", "lightning",
           "poison",
-          "earthquake", "graveyard"]
+          "earthquake", "graveyard",
+          "rage", "goblincurse", "royaldelivery"]
 
 buildings = ["goblinhut", "goblincage", 
              "tombstone",
@@ -69,7 +72,10 @@ effect_radius = {
     "megaknight" : 2.2,
     "icewizard" : 3,
     "earthquake" : 3.5,
-    "graveyard" : 4
+    "graveyard" : 4,
+    "rage" : 3,
+    "goblincurse" : 3,
+    "royaldelivery" : 3
 }
 
 def get_radius(name):
@@ -77,9 +83,18 @@ def get_radius(name):
         return effect_radius[name]
     else:
         return None
+    
+def can_defend(name):
+    return not name in ["suspiciousbush", "wallbreakers", "icegolem",
+                        "elixirgolem",
+                        "hogrider", "battleram", 
+                        "ramrider", "giant", "balloon", 
+                        "royalgiant", "goblingiant", 
+                        "lavahound", "electrogiant",
+                        "golem"]
 
 def can_anywhere(name):
-    return get_type(name) == "spell" or name == "miner"
+    return name != "royaldelivery" and (get_type(name) == "spell" or name == "miner")
 
 def get_type(name):
     if name in troops:
@@ -364,6 +379,14 @@ def troop_factory(side, position, name, level):
         return rascals_hideout_cards.ElectroGiant(side, position, level)
     elif name == "lavahound":
         return rascals_hideout_cards.LavaHound(side, position, level)
+    elif name == "elixirgolem":
+        return serenity_peak_cards.ElixirGolem(side, position, level)
+    elif name == "lumberjack":
+        return serenity_peak_cards.Lumberjack(side, position, level)
+    elif name == "nightwitch":
+        return serenity_peak_cards.NightWitch(side, position, level)
+    elif name == "executioner":
+        return serenity_peak_cards.Executioner(side, position, level)
     else:
         raise Exception("Invalid troop name.")
 
@@ -390,6 +413,12 @@ def spell_factory(side, position, name, level):
         return spooky_town_cards.Earthquake(side, position, level)
     elif name == "graveyard":
         return spooky_town_cards.Graveyard(side, position, level)
+    elif name == "rage":
+        return serenity_peak_cards.Rage(side, position, level)
+    elif name == "goblincurse":
+        return serenity_peak_cards.GoblinCurse(side, position, level)
+    elif name == "royaldelivery":
+        return serenity_peak_cards.RoyalDelivery(side, position, level)
     else:
         raise Exception("Invalid spell name.")
 
@@ -514,7 +543,14 @@ elixir_map = {
     "rascals" : 5,
     "bowler" : 5,
     "electrogiant" : 7,
-    "lavahound" : 7
+    "lavahound" : 7,
+    "rage" : 2,
+    "goblincurse" : 2,
+    "royaldelivery" : 3,
+    "elixirgolem" : 3,
+    "lumberjack" : 4,
+    "nightwitch" : 4,
+    "executioner" : 5
 }
 
 def filter_cards(card_list, min_elixir, max_elixir, used_cards):
@@ -564,6 +600,9 @@ def generate_random_deck():
     if random.randint(1, 4) == 1:
         deck[2] = random.choice(["goblinhut", "barbarianhut", "furnace", "xbow", "mortar", "goblincage", "tombstone"])
 
+    if random.randint(1, 5) == 1:
+        deck[3] = random_with_param("spell", 5, 9, used)
+
     return deck
 
 def parse_input(string, current_used):
@@ -578,7 +617,7 @@ def random_with_param(t, lower, upper, used):
     if t == "troop":
         options = filter_cards(troops, lower, upper, used)
     if t == "spell":
-        options = filter_cards(spells, lower, upper, used)
+        options = filter_cards(spells + ["log", "barbarianbarrel"], lower, upper, used)
     if t == "building":
         options = filter_cards(buildings, lower, upper, used)
     return random.choice(options)

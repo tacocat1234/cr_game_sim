@@ -34,6 +34,13 @@ class Vector:
         if (mg > 0):
             self.scale(1/mg)
 
+    def normalized(self):
+        mg = self.magnitude()
+        if (mg > 0):
+            return(self.scaled(1/mg))
+        else:
+            return Vector(0, 0)
+
     def rotated(self, degrees):
         angle_radians = math.radians(degrees)
         cos_theta = math.cos(angle_radians)

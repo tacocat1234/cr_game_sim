@@ -267,6 +267,7 @@ class Poison(Spell):
             tar=target
         )
         self.pulse_time = 0.25
+        self.pulse_timer = 0
 
     def passive_effect(self, each):
         if isinstance(each, Troop):

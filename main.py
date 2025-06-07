@@ -70,7 +70,7 @@ with open("decks/bot_deck.txt", "r") as file:
                 break
             actual = parse_input(card, used)
             used.append(actual)
-            bot_deck.append(Card(True, actual, int(level)))
+            bot_deck.append(Card(False, actual, int(level)))
 
     if not bot_random_deck:
         line = file.readline().strip()
@@ -141,10 +141,13 @@ SCALE = 20  # Scale factor to map game coordinates to screen
 # Colors
 WHITE = (255, 255, 255)
 RED = (255, 0, 0)
+R_RED = (255, 0, 150)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
+R_BLUE = (150, 0, 255)
 BLACK = (0, 0, 0)
 GRAY = (200, 200, 200)
+R_GRAY = (255, 150, 255)
 YELLOW = (255, 255, 0)
 PURPLE = (255, 0, 255)
 GRAY_PURPLE = (255, 150, 255)
@@ -152,6 +155,16 @@ GRAY_PURPLE = (255, 150, 255)
 BG_TEMP = (150, 150, 150)
 RIVER_TEMP = (79, 66, 181)
 BRIDGE_TEMP = (193, 154, 107)
+
+def raged_color(color):
+    if color == BLUE:
+        return R_BLUE
+    elif color == RED:
+        return R_RED
+    elif color == GRAY:
+        return R_GRAY
+    else:
+        return color
 
 def format_time(seconds):
     if seconds >= 180:
@@ -282,8 +295,13 @@ def draw():
         tower_rect_height = 3 * SCALE
         tower_x -= tower_rect_width / 2
         tower_y -= tower_rect_height / 2
+
+        tower_color = GRAY
+
+        if tower.rage_timer > 0:
+            tower_color = raged_color(tower_color)
         
-        pygame.draw.rect(screen, GRAY, (tower_x, tower_y, tower_rect_width, tower_rect_height))  # Tower square
+        pygame.draw.rect(screen, tower_color, (tower_x, tower_y, tower_rect_width, tower_rect_height))  # Tower square
 
         # Health bar
         pygame.draw.rect(screen, BLACK, (tower_x, tower_y - 5, tower_rect_width, 3))
@@ -301,6 +319,9 @@ def draw():
         if troop.ground:
             troop_x, troop_y = convert_to_pygame(troop.position)
             troop_color = GRAY if troop.preplace else (BLUE if troop.side else RED)
+
+            if troop.rage_timer > 0:
+                troop_color = raged_color(troop_color)
 
             # Draw troop circle
             if isinstance(troop, Log) or isinstance(troop, BarbarianBarrel):
@@ -372,6 +393,8 @@ def draw():
     for troop in flying:
         troop_x, troop_y = convert_to_pygame(troop.position)
         troop_color = GRAY if troop.preplace else (BLUE if troop.side else RED)
+        if troop.rage_timer > 0:
+                troop_color = raged_color(troop_color)
 
         # Draw troop circle
         if isinstance(troop, Log) or isinstance(troop, BarbarianBarrel):
@@ -445,6 +468,9 @@ def draw():
             building_color = GRAY
         elif not building.targetable:
             building_color = (255, 127, 127)
+
+        if building.rage_timer > 0:
+            building_color = raged_color(building_color)
 
         # Draw building square
         building_size = building.collision_radius * 2 * SCALE
@@ -601,7 +627,7 @@ game_arena.p2_elixir = 9
 while running:
     clock.tick(60)  # 60 FPS
 
-    bot_card = bot.tick(game_arena.p2_elixir)
+    bot_card = bot.tick(game_arena.p2_elixir, game_arena.troops + game_arena.buildings)
     if not bot_card is None:
         bot_pos = Bot.random_pos(bot_card.name, game_arena.troops + game_arena.buildings)
         if bot_pos:
@@ -641,7 +667,7 @@ while running:
 
                 cur_name = deck[hand[click_quarter - 1]].name
 
-                if mouse_x > 64 and mouse_x < WIDTH - 64 and mouse_y < HEIGHT - 128 and (get_type(cur_name) == "spell" or cur_name == "miner" or mouse_y > 340) or (not enemy_right and in_pocket(mouse_x, mouse_y, True)) or (not enemy_left and in_pocket(mouse_x, mouse_y, False)):
+                if mouse_x > 64 and mouse_x < WIDTH - 64 and mouse_y < HEIGHT - 128 and (can_anywhere(cur_name) or mouse_y > 340) or (not enemy_right and in_pocket(mouse_x, mouse_y, True)) or (not enemy_left and in_pocket(mouse_x, mouse_y, False)):
                     hovered = (((mouse_x - 64)// SCALE) * SCALE + 64, (mouse_y // SCALE) * SCALE)
                     select_radius = get_radius(cur_name)
 
