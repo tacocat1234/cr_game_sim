@@ -687,7 +687,7 @@ while running:
                 # Store the ending position of the drag
                 drag_end_pos = (mouse_x, mouse_y)
                 cur_card = deck[hand[click_quarter - 1]]
-                if mouse_x > 64 and mouse_x < WIDTH - 64 and mouse_y < HEIGHT - 128 and (get_type(cur_card.name) == "spell" or cur_card.name == "miner" or mouse_y > 340) or (not enemy_right and in_pocket(mouse_x, mouse_y, True)) or (not enemy_left and in_pocket(mouse_x, mouse_y, False)):
+                if mouse_x > 64 and mouse_x < WIDTH - 64 and mouse_y < HEIGHT - 128 and (can_anywhere(cur_card.name) or mouse_y > 340) or (not enemy_right and in_pocket(mouse_x, mouse_y, True)) or (not enemy_left and in_pocket(mouse_x, mouse_y, False)):
                     pos = convert_from_pygame(mouse_x, mouse_y)
                     name = cur_card.name
                     level = cur_card.level

@@ -108,8 +108,9 @@ class MotherWitchAttackEntity(RangedAttackEntity):
         self.level = level
 
     def apply_effect(self, target):
-        target.hog_cursed_level = self.level
-        target.cursed_timer = 5
+        if isinstance(target, Troop):
+            target.hog_cursed_level = self.level
+            target.cursed_timer = 5
 
 class MotherWitch(Troop):
     def __init__(self, side, position, level):
@@ -179,3 +180,277 @@ class CursedHog(Troop):
             arena.troops.append(Goblin(not self.side, self.position, self.goblin_cursed_level))
         self.cur_hp = -1
         arena.troops.remove(self)
+
+class FishermanAttackEntity(MeleeAttackEntity):
+    HIT_RANGE = 1.2
+    COLLISION_RADIUS = 0.5
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            side=side,
+            damage=damage,
+            position=position,
+            target=target
+            )
+
+class FishermanSpecialAttackEntity(RangedAttackEntity):
+    def __init__(self, side, damage, position, target, parent):
+        super().__init__(
+            side=side, 
+            damage=damage, 
+            velocity=800*TILES_PER_MIN, 
+            position=position, 
+            target=target
+        )
+        self.parent = parent
+    
+    def tick_func(self, arena):
+        if self.target is None:
+            self.parent.casting = False
+            self.parent.reeling = False
+            arena.active_attacks.remove(self)
+    
+    def apply_effect(self, target):
+        target.slow(2.5, "fisherman")
+        if target.cur_hp > 0:
+            self.parent.casting = False
+            self.parent.reeling = True
+            if self.parent.target is not None and isinstance(target, Troop):
+                self.parent.target_ms = self.parent.target.move_speed
+        else:
+            self.parent.casting = False
+            self.parent.reeling = False
+    
+class Fisherman(Troop):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 720 * pow(1.1, level - 9),         # Hit points (Example value)
+            h_d= 160 * pow(1.1, level - 9),          # Hit damage (Example value)
+            h_s=1.3,          # Hit speed (Seconds per hit)
+            l_t=1.2,            # First hit cooldown
+            h_r=0.75,            # Hit range
+            s_r=7.5,            # Sight Range
+            g=True,           # Ground troop
+            t_g_o=True,       # Targets ground-only
+            t_o=False,        # Not tower-only
+            m_s=60*TILES_PER_MIN,          # Movement speed 
+            d_t=1,            # Deploy time
+            m=10,            #mass
+            c_r=0.5,        #collision radius
+            p=position               # Position (vector.Vector object)
+        )
+        self.dash_timer = 0
+        self.casting = False
+        self.reeling = False
+        self.casted = False
+        self.jump_speed = 450*TILES_PER_MIN
+        self.target_ms = None
+
+        self.level = level
+        self.ticks_per_frame = 6
+        self.walk_cycle_frames = 6
+        class_name = self.__class__.__name__.lower()
+        self.sprite_path = f"sprites/{class_name}/{class_name}_dash.png"
+
+    def tick_func(self, arena):
+        
+        if self.stun_timer <= 0 and self.deploy_time <= 0:
+            if self.casting and not self.casted: #if launching, launch reel
+                arena.active_attacks.append(FishermanSpecialAttackEntity(self.side, self.hit_damage, self.position, self.target, self))
+                self.casted = True
+
+
+            if self.target is not None: #if existing target
+                d = vector.distance(self.position, self.target.position)
+                if not self.reeling and not self.casting and d > 3.5 + self.target.collision_radius and d < 7 + self.target.collision_radius and self.dash_timer == 0:
+                    self.casting = True #want to be casting
+                    self.casted = False #but not yet cast
+                    self.stun_timer = 1.3
+
+            else: #if no existing target
+                m_dist = float('inf')
+                for tower in arena.towers:
+                    dist = vector.distance(tower.position, self.position)
+                    if tower.side != self.side and dist > 3.5 + tower.collision_radius and dist < 7 + tower.collision_radius:
+                        if m_dist > dist:
+                            m_dist = dist
+                            self.target = tower
+                if self.target is not None:
+                    self.casting = True #want to be casting
+                    self.casted = False #but not yet cast
+                    self.stun_timer = 1.3
+
+            if self.reeling: #reel connected
+                if isinstance(self.target, Troop): #if troop
+                    if self.target is None or vector.distance(self.target.position, self.position) <= self.target.collision_radius + self.collision_radius + 0.1:
+                        self.reeling = False #end reeling
+                        self.casting = False
+                        self.target.move_speed = self.target_ms
+                    else:
+                        self.target.move_speed = 0 #immobilize
+                        self.target.position.add(self.position.subtracted(self.target.position).scaled(850*TILES_PER_MIN)) #reel to fisherman
+                    
+                else:
+                    if self.target is None or vector.distance(self.target.position, self.position) <= self.target.collision_radius + self.collision_radius + 0.1:
+                        self.reeling = False #end reeling
+                        self.ground = True
+                        self.move_speed = self.normal_move_speed #return to normal movement
+                    else:
+                        self.move_speed = 450 * TILES_PER_MIN
+                        self.ground = False
+                    
+    def attack(self):
+        if self.dash_timer == 0: #if not dashings
+            return FishermanAttackEntity(self.side, self.hit_damage, self.position, self.target)
+        
+class Void(Spell):
+    def __init__(self, side, target, level):
+        super().__init__(
+            s=side,
+            d=0,
+            c_t_d=0,
+            w=3,
+            t=1,
+            kb=0,
+            r=2.5,
+            v=0,
+            tar=target
+        )
+        self.level = level
+        '''self.single = 200 * pow(1.1, level - 6)
+        self.medium = 100 * pow(1.1, level - 6)
+        self.large = 47 * pow(1.1, level - 6)
+
+        self.single_ctd = 30 * pow(1.1, level - 6)
+        self.medium_ctd = 16 * pow(1.1, level - 6)
+        self.large_ctd = 11 * pow(1.1, level - 6)'''
+
+        self.single = 200 * pow(1.1, level - 6)
+        self.medium = 120 * pow(1.1, level - 6) #normally 100, slight buff
+        self.large = 55 * pow(1.1, level - 6)
+
+        self.single_ctd = 30 * pow(1.1, level - 6)
+        self.medium_ctd = 16 * pow(1.1, level - 6)
+        self.large_ctd = 11 * pow(1.1, level - 6)
+
+    def tick(self, arena):
+        if self.preplace:
+            return
+     
+        elif self.waves > 0 and self.damage_cd <= 0:
+            self.sprite_path = f"sprites/{self.class_name}/{self.class_name}_hit.png"
+            hits = self.detect_hits(arena)
+            ctd = self.single_ctd if len(hits) == 1 else (self.medium_ctd if len(hits) <= 4 else self.large_ctd)
+            dmg = self.single if len(hits) == 1 else (self.medium if len(hits) <= 4 else self.large)
+            for each in hits:
+                if (isinstance(each, Tower)):
+                    each.damage(ctd)
+                else:
+                    each.damage(dmg); #end damage, start kb
+            self.waves -= 1 #decrease waves
+            self.damage_cd = self.time_between #reset cooldown
+        elif self.damage_cd > 0:
+            self.damage_cd -= TICK_TIME #decrement cooldown
+        elif self.display_duration <= 0:
+            self.should_delete = True #mark for deletion
+
+class Tornado(Spell):
+    def __init__(self, side, target, level):
+        super().__init__(
+            s=side,
+            d=53*pow(1.1, level - 6),
+            c_t_d=9.5*pow(1.1, level - 6),
+            w=1,
+            t=0.55,
+            kb=0,
+            r=5.5,
+            v=0,
+            tar=target
+        )
+        self.display_duration = 1.051
+        self.level = level
+        self.pulse_time = 0.05
+        self.pulse_timer = 0
+
+    def passive_effect(self, target):
+        if isinstance(target, Troop):
+            total_kb = -3/20 * target.mass + 31/5
+            mag = total_kb/21
+            mag *= 16/5
+            target.kb(self.position.subtracted(target.position).scaled(mag))
+
+class CannonCartAttackEntity(RangedAttackEntity):
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            side=side, 
+            damage=damage, 
+            velocity=1000*TILES_PER_MIN, 
+            position=position, 
+            target=target
+        )
+
+class CannonCart(Troop):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 558 * pow(1.1, level - 6),         # Hit points (Example value)
+            h_d= 133 * pow(1.1, level - 6),          # Hit damage (Example value)
+            h_s=1,          # Hit speed (Seconds per hit)
+            l_t=0.4,            # First hit cooldown
+            h_r=5.5,            # Hit range
+            s_r=6,            # Sight Range
+            g=True,           # Ground troop
+            t_g_o=True,       # Targets ground-only
+            t_o=False,        # Not tower-only
+            m_s=60*TILES_PER_MIN,          # Movement speed 
+            d_t=1,            # Deploy time
+            m=3,            #mass
+            c_r=0.6,        #collision radius
+            p=position               # Position (vector.Vector object)
+        )
+        self.level = level
+
+    def die(self, arena):
+        arena.buildings.append(CartCannon(self.side, self.position, self.level))
+        super().die(arena)
+    
+    def attack(self):
+        return CannonCartAttackEntity(self.side, self.hit_damage, self.position, self.target)
+
+class CartCannonAttackEntity(RangedAttackEntity):
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            side=side,
+            damage=damage,
+            velocity=1000*TILES_PER_MIN,
+            position=position,
+            target=target,
+        )
+
+
+class CartCannon(Building):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,
+            h_p=513 * pow(1.1, level - 6),
+            h_d = 133 * pow(1.1, level - 6),
+            h_s = 0.9,
+            l_t = 0,
+            h_r = 5.5,
+            s_r = 5.5,
+            g = True,
+            t_g_o = True,
+            t_o = False,
+            l=30,
+            d_t=0.4,
+            c_r=0.6,
+            d_s_c=0,
+            d_s=None,
+            p=position
+        )
+        self.next_spawn = None
+        self.remaining_spawn_count = 0
+        self.level = level
+    
+    def attack(self):
+        return CartCannonAttackEntity(self.side, self.hit_damage, self.position, self.target)

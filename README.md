@@ -32,7 +32,9 @@ beserker, goblingang, dartgoblin, skeletonbarrel, goblingiant,
 zappies, hunter, minionhorde, elitebarbarians, golem, 
 miner, princess, electrowizard, infernodragon, sparky, megaknight
 wallbreakers, royalghost, icewizard, firecracker, phoenix, electrodragon
-healspirit, suspiciousbush, bandit, magicarcher, bowler, rascals, electrogiant, lavahound
+healspirit, suspiciousbush, bandit, magicarcher, bowler, rascals, electrogiant, lavahound,
+elixirgolem, lumberjack, nightwitch, executioner,
+fisherman, motherwitch, cannoncart
 ## Spells
 Implemented spells include:
 
@@ -42,7 +44,9 @@ goblinbarrel,
 giantsnowball, freeze, lightning, 
 poison, barbarianbarrel,
 log,
-earthquake, graveyard
+earthquake, graveyard,
+rage, goblincurse, royaldelivery,
+void, clone, tornado
 ## Buildings
 Implemented buildings include:
 
@@ -52,6 +56,8 @@ cannon,
 bombtower, infernotower, 
 mortar, 
 barbarianhut, 
-furnace, tesla, xbow
+furnace, tesla, xbow,
+goblindrill,
+elixirpump
 ## Towers
 kingtower, princesstower, cannoneer, daggerduchess

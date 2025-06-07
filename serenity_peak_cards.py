@@ -2,12 +2,16 @@ from abstract_classes import RangedAttackEntity
 from abstract_classes import MeleeAttackEntity
 from abstract_classes import AttackEntity
 from abstract_classes import Troop
+from abstract_classes import Building
 from abstract_classes import Tower
 from abstract_classes import Spell
 from royal_arena_cards import RoyalRecruit
+from goblin_stadium_cards import Goblin
 from builders_workshop_cards import Bat
 from abstract_classes import TILES_PER_MIN
 from abstract_classes import TICK_TIME
+from abstract_classes import same_sign
+from abstract_classes import on_bridge
 import vector
 import copy
 import math
@@ -378,7 +382,7 @@ class Executioner(Troop):
             s_r=5.5,            # Sight Range
             g=True,           # Ground troop
             t_g_o=False,       # Targets ground-only
-            t_o=False,        # Not tower-only
+            t_o=False,        # Not tower-only``
             m_s=60*TILES_PER_MIN,          # Movement speed 
             d_t=1,            # Deploy time
             m=4,            #mass
@@ -409,7 +413,205 @@ class GoblinCurse(Spell):
         self.level = level
 
     def passive_effect(self, each):
-        each.damage_amplificatgion = 1.2
-        each.goblin_cursed_level = self.level
-        if each.cursed_timer <= 0.1:
-            each.cursed_timer = 0.1
+        if isinstance(each, Troop):
+            each.damage_amplificatgion = 1.2
+            each.goblin_cursed_level = self.level
+            if each.cursed_timer <= 0.1:
+                each.cursed_timer = 0.1
+
+class GoblinDrillSpawnAttackEntity(AttackEntity):
+    SPLASH_RADIUS = 2
+    def __init__(self, side, damage, ctd, position):
+        super().__init__(
+            s=side,
+            d=damage,
+            v=0,
+            l=1/60 + 0.01,
+            i_p=copy.deepcopy(position)
+        )
+        self.display_size = self.SPLASH_RADIUS
+        self.ctd = ctd
+
+    def apply_effect(self, target):
+        if isinstance(target, Troop):
+            vec = target.position.subtracted(self.position)
+            vec.normalize()
+            vec.scale(1)
+            target.kb(vec)
+    
+    def detect_hits(self, arena):
+        hits = []
+        for each in arena.towers + arena.buildings + arena.troops:
+            if each.side != self.side: # if different side
+                if vector.distance(self.position, each.position) < self.SPLASH_RADIUS + each.collision_radius:
+                        hits.append(each)
+
+        return hits
+    
+    def tick(self, arena):
+        hits = self.detect_hits(arena)
+        for each in hits:
+            new = not each in self.has_hit
+            if (new):
+                if (isinstance(each, Tower)):
+                    each.damage(self.ctd)
+                else:
+                    each.damage(self.damage)
+                self.apply_effect(each)
+                self.has_hit.append(each)
+
+class GoblinDrillMineTroop(Troop):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 1,         # Hit points (Example value)
+            h_d= 0,          # Hit damage (Example value)
+            h_s=0,          # Hit speed (Seconds per hit)
+            l_t=0,            # First hit cooldown
+            h_r=0,            # Hit range
+            s_r=0,            # Sight Range
+            g=True,           # Ground troop
+            t_g_o=True,       # Targets ground-only
+            t_o=False,        # Not tower-only
+            m_s=300*TILES_PER_MIN,          # Movement speed 
+            d_t=0,            # Deploy time
+            m=0,            #mass
+            c_r=0.5,        #collision radius
+            p=vector.Vector(0, -13 if side else 13)               # Position (vector.Vector object)
+        )
+        self.target = position
+        self.level = level
+        self.invulnerable = True
+        self.targetable = False
+        self.collideable = False
+        self.preplace = False
+
+    def tick_func(self, arena):
+        if self.invulnerable and vector.distance(self.position, self.target) < 0.25:
+            arena.buildings.append(GoblinDrill(self.side, self.position, self.level))
+            arena.active_attacks.append(GoblinDrillSpawnAttackEntity(self.side, 51 * pow(1.1, self.level - 6), 16 * pow(1.1, self.level - 6), self.position))
+            arena.troops.remove(self)
+            self.cur_hp = -1 #just in case
+
+    def on_preplace(self):
+        self.invulnerable = True
+        self.targetable = False
+        self.collideable = False
+
+    def move(self, arena):
+        if (not same_sign(self.target.y, self.position.y) and ((self.position.y < -1 or self.position.y > 1) or not on_bridge(self.position.x))):
+            tar_bridge = None
+            
+            x = self.position.x
+            t_x = None
+            if on_bridge(x):
+                t_x = x
+            elif x >= 6.5:
+                t_x = 6.4
+            elif x <= 4.5 and x >= 0:
+                t_x = 4.5
+            elif x >= -4.5 and x < 0:
+                t_x = -4.5
+            else:
+                t_x = -6.4
+            
+            tar_bridge = vector.Vector(t_x, -1 if self.position.y < 0 else 1)
+        
+            direction_x = tar_bridge.x - self.position.x #set movement
+            direction_y = tar_bridge.y - self.position.y
+            distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
+        else:
+            if self.position.y < 1 and self.position.y > -1 and on_bridge(self.position.x) and not (self.target.y < 1 and self.target.y > -1 and on_bridge(self.target.x)):
+                bridge_side = 1 if self.position.y < self.target.y else -1
+                bridge_min = -6 if self.position.x < 0 else 5
+                bridge_max = -5 if self.position.x < 0 else 6
+
+                to_tar = self.target.subtracted(self.position)
+                to_corner1 = vector.Vector(bridge_min + 0.1, bridge_side).subtracted(self.position)
+                to_corner2 = vector.Vector(bridge_max - 0.1, bridge_side).subtracted(self.position)
+
+                ratio = float('inf') if to_tar.x == 0 else abs(to_tar.y/to_tar.x)
+
+                t_x = self.target.x
+
+                if to_corner1.x == 0 or (t_x < bridge_min and abs(to_corner1.y/to_corner1.x) > ratio):
+                    tar_bridge = vector.Vector(bridge_min + 0.1, bridge_side)
+                    direction_x = tar_bridge.x - self.position.x
+                    direction_y = tar_bridge.y - self.position.y
+                    distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
+                elif to_corner2.x == 0 or (t_x > bridge_max and abs(to_corner2.y/to_corner2.x) > ratio):
+                    tar_bridge = to_corner2 = vector.Vector(bridge_max - 0.1, bridge_side).subtracted(self.position)
+                    direction_x = tar_bridge.x - self.position.x
+                    direction_y = tar_bridge.y - self.position.y
+                    distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
+                else:
+                    direction_x = self.target.x - self.position.x
+                    direction_y = self.target.y - self.position.y
+                    distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
+                
+            else:
+                direction_x = self.target.x - self.position.x
+                direction_y = self.target.y - self.position.y
+                distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
+        
+        direction_x /= distance_to_target
+        direction_y /= distance_to_target
+        # Move in the direction of the target
+        m_s = self.move_speed
+        self.position.x += direction_x  * m_s
+        self.position.y += direction_y * m_s
+        angle = math.degrees(math.atan2(direction_y, direction_x))  # Get angle in degrees
+        self.facing_dir = angle
+        self.move_vector = vector.Vector(direction_x * m_s, direction_y * m_s)
+
+    def tick(self, arena):
+        if self.preplace:
+            return
+        self.tick_func(arena)
+        self.move(arena)
+
+    def cleanup(self, arena):
+        pass
+        
+class GoblinDrill(Building):
+    SPAWN_INTERVAL = 0.5
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,
+            h_p=900 * pow(1.1, level - 6),
+            h_d = 0,
+            h_s = 3,
+            l_t = 0,
+            h_r = 0,
+            s_r = 0,
+            g = True,
+            t_g_o = True,
+            t_o = False,
+            l=9,
+            d_t=1,
+            c_r=0.5,
+            d_s_c=2,
+            d_s=Goblin,
+            p=position
+        )
+        self.next_spawn = None
+        self.remaining_spawn_count = 0
+        self.is_spawner = True
+        self.level = level
+        self.attack_cooldown = 1
+    
+    def cleanup_func(self, arena):
+        if self.stun_timer <= 0:
+            if not self.next_spawn is None and self.next_spawn > 0:
+                self.next_spawn -= TICK_TIME
+        
+    def tick(self, arena):
+        if self.preplace:
+            return
+        if self.stun_timer <= 0:
+            if self.attack_cooldown <= 0: #attack code
+                front = vector.Vector(0, 1.5) if self.side else vector.Vector(0, -1.5)
+                newFire = Goblin(self.side, self.position.added(front), self.level)
+                newFire.deploy_time = 0
+                arena.troops.append(newFire)
+                self.attack_cooldown = self.hit_speed

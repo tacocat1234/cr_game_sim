@@ -33,8 +33,8 @@ troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer",
           "log", "miner", "princess", "electrowizard", "infernodragon", "ramrider", "sparky", "megaknight",
           "wallbreakers", "icewizard", "royalghost", "firecracker", "phoenix", "electrodragon",
           "healspirit", "suspiciousbush", "bandit", "magicarcher", "rascals", "bowler", "electrogiant", "lavahound",
-          "elixirgolem", "lumberjack", "nightwitch", "executioner",
-          "motherwitch"]
+          "elixirgolem", "goblindrill", "lumberjack", "nightwitch", "executioner",
+          "fisherman", "motherwitch", "cannoncart"]
 
 spells = ["fireball", "arrows",
           "zap", "rocket",
@@ -43,7 +43,7 @@ spells = ["fireball", "arrows",
           "poison",
           "earthquake", "graveyard",
           "rage", "goblincurse", "royaldelivery",
-          "clone"]
+          "clone", "void", "tornado"]
 
 buildings = ["goblinhut", "goblincage", 
              "tombstone",
@@ -80,7 +80,9 @@ effect_radius = {
     "rage" : 3,
     "goblincurse" : 3,
     "royaldelivery" : 3,
-    "clone" : 3
+    "clone" : 3,
+    "void" : 2.5,
+    "tornado" : 5.5
 }
 
 def get_radius(name):
@@ -99,7 +101,7 @@ def can_defend(name):
                         "golem"]
 
 def can_anywhere(name):
-    return name != "royaldelivery" and (get_type(name) == "spell" or name == "miner")
+    return name != "royaldelivery" and (get_type(name) == "spell" or name == "miner" or name == "goblindrill")
 
 def get_type(name):
     if name in troops:
@@ -386,14 +388,20 @@ def troop_factory(side, position, name, level):
         return rascals_hideout_cards.LavaHound(side, position, level)
     elif name == "elixirgolem":
         return serenity_peak_cards.ElixirGolem(side, position, level)
+    elif name == "goblindrill":
+        return serenity_peak_cards.GoblinDrillMineTroop(side, position, level)
     elif name == "lumberjack":
         return serenity_peak_cards.Lumberjack(side, position, level)
     elif name == "nightwitch":
         return serenity_peak_cards.NightWitch(side, position, level)
     elif name == "executioner":
         return serenity_peak_cards.Executioner(side, position, level)
+    elif name == "fisherman":
+        return miners_mine_cards.Fisherman(side, position, level)
     elif name == "motherwitch":
         return miners_mine_cards.MotherWitch(side, position, level)
+    elif name == "cannoncart":
+        return miners_mine_cards.CannonCart(side, position, level)
     else:
         raise Exception("Invalid troop name.")
 
@@ -428,6 +436,10 @@ def spell_factory(side, position, name, level):
         return serenity_peak_cards.RoyalDelivery(side, position, level)
     elif name == "clone":
         return miners_mine_cards.Clone(side, position, level)
+    elif name == "void":
+        return miners_mine_cards.Void(side, position, level)
+    elif name == "tornado":
+        return miners_mine_cards.Tornado(side, position, level)
     else:
         raise Exception("Invalid spell name.")
 
@@ -559,11 +571,16 @@ elixir_map = {
     "goblincurse" : 2,
     "royaldelivery" : 3,
     "elixirgolem" : 3,
+    "goblindrill" : 3,
     "lumberjack" : 4,
     "nightwitch" : 4,
     "executioner" : 5,
     "clone" : 3,
+    "void" : 3,
+    "tornado" : 3,
+    "fisherman" : 3,
     "motherwitch" : 4,
+    "cannoncart" : 5,
     "elixircollector" : 6
 }
 
@@ -612,7 +629,7 @@ def generate_random_deck():
     used.add(choice)
 
     if random.randint(1, 4) == 1:
-        deck[2] = random.choice(["goblinhut", "barbarianhut", "furnace", "xbow", "mortar", "goblincage", "tombstone"])
+        deck[2] = random.choice(["goblinhut", "barbarianhut", "furnace", "xbow", "mortar", "goblincage", "tombstone", "elixircollector"])
 
     if random.randint(1, 5) == 1:
         deck[3] = random_with_param("spell", 5, 9, used)

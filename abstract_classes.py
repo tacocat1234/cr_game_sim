@@ -365,10 +365,6 @@ class Troop:
                         min_dist = vector.distance(tower.position, self.position)
 
             if not tower_target is None and (self.ground and not self.cross_river) and (not same_sign(tower_target.position.y, self.position.y) and ((self.position.y < -1 or self.position.y > 1) or not on_bridge(self.position.x))): # if behind bridge and cant cross river
-                r_bridge = vector.distance(vector.Vector(5.6, 1 if self.position.y > 0 else -1), self.position)
-                l_bridge = vector.distance(vector.Vector(-5.6, 1 if self.position.y > 0 else -1), self.position)
-
-                closer_to_r = self.position.x > 0
 
                 tar_bridge = None
                 
@@ -376,25 +372,17 @@ class Troop:
                 t_x = None
                 if on_bridge(x):
                     t_x = x
-                elif x > 6:
-                    t_x = 5.9
-                elif x < 5 and x > 0:
-                    t_x = 5
-                elif x > -5 and x < 0:
-                    t_x = -5
+                elif x >= 6.5:
+                    t_x = 6.4
+                elif x <= 4.5 and x >= 0:
+                    t_x = 4.5
+                elif x >= -4.5 and x < 0:
+                    t_x = -4.5
                 else:
-                    t_x = -5.9
+                    t_x = -6.4
                 
                 
-                if (closer_to_r): #find closest bridge
-                    tar_bridge = vector.Vector(t_x, 1 if self.side else -1)
-                elif abs(r_bridge - l_bridge) > 0.1:
-                    tar_bridge = vector.Vector(t_x, 1 if self.side else -1)
-                else: # if similar dist
-                    if vector.distance(vector.Vector(t_x, 1 if self.side else -1), tower_target.position) < vector.distance(vector.Vector(t_x, 1 if self.side else -1), tower_target.position):
-                        tar_bridge = vector.Vector(t_x, 1 if self.side else -1) #go to side closer to tower
-                    else:
-                        tar_bridge = vector.Vector(t_x, 1 if self.side else -1)
+                tar_bridge = vector.Vector(t_x, 0.99 if self.position.y > 0 else -0.99)
             
                 direction_x = tar_bridge.x - self.position.x #set movement
                 direction_y = tar_bridge.y - self.position.y
@@ -433,18 +421,25 @@ class Troop:
             return False
         #and (not same side) while also (not at bridge) 
         if (self.ground and not self.cross_river) and (not same_sign(self.target.position.y, self.position.y) and ((self.position.y < -1 or self.position.y > 1) or not on_bridge(self.position.x))):
-            
-            r_bridge = vector.distance(vector.Vector(5.6, 1 if self.position.y > 0 else -1), self.target.position)
-            l_bridge = vector.distance(vector.Vector(-5.6, 1 if self.position.y > 0 else -1), self.target.position)
-            
+
             tar_bridge = None
             
-            if (r_bridge < l_bridge):
-                tar_bridge = vector.Vector(5.6, 1 if self.position.y > 0 else -1)
+            x = self.position.x
+            t_x = None
+            if on_bridge(x):
+                t_x = x
+            elif x >= 6.5:
+                t_x = 6.4
+            elif x <= 4.5 and x >= 0:
+                t_x = 4.5
+            elif x >= -4.5 and x < 0:
+                t_x = -4.5
             else:
-                tar_bridge = vector.Vector(-5.6, 1 if self.position.y > 0 else -1)
+                t_x = -6.4
             
-            direction_x = tar_bridge.x - self.position.x
+            tar_bridge = vector.Vector(t_x, -0.99 if self.position.y < 0 else 0.99)
+        
+            direction_x = tar_bridge.x - self.position.x #set movement
             direction_y = tar_bridge.y - self.position.y
             distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
         elif self.cross_river and (not on_bridge(self.position.x)) and ((self.target.position.y - self.position.y > 0 and (self.position.y > - 2 and self.position.y < 1)) or (not self.target.position.y - self.position.y > 0 and (self.position.y < 2 and self.position.y > -1))):

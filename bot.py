@@ -32,7 +32,7 @@ class Bot:
             danger_level = 0
             for each in things:
                     if each.side:
-                        if (isinstance(each, XBow) or isinstance(each, Mortar)) and each.position.y >= -2:
+                        if (isinstance(each, XBow) or isinstance(each, Mortar)) and each.position.y >= -3:
                             danger_level += 99 #immediate threat
                         if each.position.y > 0:
                             if each.position.y > 9.5 - each.hit_range:
@@ -87,7 +87,7 @@ class Bot:
         most_dangerous = None
         m_d_c = 0
         for each in enemy:
-            if (isinstance(each, XBow) or isinstance(each, Mortar)) and each.position.y >= -2:
+            if (isinstance(each, XBow) or isinstance(each, Mortar)) and each.position.y >= -3:
                     danger_level += 99 #immediate threat
                     most_dangerous = each
                     m_d_c = 99
@@ -118,12 +118,22 @@ class Bot:
             if each.position.x < 0:
                 left_count += 1
         if (isSpell):
+            if name == "rage":
+                if not friendly:
+                    return False
+                return random.choice(friendly).position.added(vector.Vector(0, -2.75))
+            elif name == "clone":
+                if not friendly:
+                    return False
+                return random.choice(friendly).position.added(vector.Vector(0, 0))
             if danger_level >= 2:
                 min = most_dangerous
                 return min.position.added(vector.Vector(0, 1.5))
             if len(enemy) > 0:
                 r = random.choice(enemy)
-                if name == "miner":
+                if name == "tornado":
+                    return r.position.subtracted(vector.Vector(5, 0)) if r.position.x > 0 else r.position.added(vector.Vector(5, 0))
+                elif name == "miner":
                     return copy.deepcopy(r.position)
                 if name == "goblinbarrel" or name == "graveyard":
                     if random.random() > 0.5:
@@ -151,8 +161,6 @@ class Bot:
                             return pos
                         else:
                             return False
-                    elif name == "rage":
-                        return random.choice(friendly).position.added(vector.Vector(0, -2.75))
                     return r.position.added(vector.Vector(0, 1.5))
                     
             return False
