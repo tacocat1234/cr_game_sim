@@ -530,7 +530,7 @@ class PhoenixDeathAttackEntity(AttackEntity):
         self.ctd = ctd
 
     def apply_effect(self, target):
-        if isinstance(target, Troop):
+        if isinstance(target, Troop) and target.can_kb and not target.invulnerable:
             vec = target.position.subtracted(self.position)
             vec.normalize()
             vec.scale(2)

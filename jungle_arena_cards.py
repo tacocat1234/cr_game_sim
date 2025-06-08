@@ -144,7 +144,8 @@ class SkeletonBarrelDeathBarrelAttackEntity(AttackEntity):
                 if isinstance(each, Troop):
                     vec = each.position.subtracted(self.position)
                     vec.normalize() #scale 1, useless
-                    each.kb(vec)
+                    if each.can_kb and not each.invulnerable:
+                        each.kb(vec)
                 self.has_hit.append(each)
 
 class SkeletonBarrelDeathBarrel(Troop):

@@ -284,6 +284,7 @@ class Prince(Troop):
             self.charging = False
             self.charge_charge_distance = 0
             self.move_speed = 60 * TILES_PER_MIN
+            super().kb(vec)
     
     def freeze(self, duration):
         self.stun_timer = duration
@@ -377,6 +378,7 @@ class DarkPrince(Troop):
             self.charging = False
             self.charge_charge_distance = 0
             self.move_speed = 60 * TILES_PER_MIN
+            super().kb(vec)
     
     def freeze(self, duration):
         self.stun_timer = duration

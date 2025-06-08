@@ -411,7 +411,7 @@ class CannonCart(Troop):
         self.level = level
 
     def die(self, arena):
-        arena.buildings.append(CartCannon(self.side, self.position, self.level))
+        arena.buildings.append(CartCannon(self.side, self.position, self.level, self.cloned))
         super().die(arena)
     
     def attack(self):
@@ -429,7 +429,7 @@ class CartCannonAttackEntity(RangedAttackEntity):
 
 
 class CartCannon(Building):
-    def __init__(self, side, position, level):
+    def __init__(self, side, position, level, cloned):
         super().__init__(
             s=side,
             h_p=513 * pow(1.1, level - 6),
@@ -446,7 +446,8 @@ class CartCannon(Building):
             c_r=0.6,
             d_s_c=0,
             d_s=None,
-            p=position
+            p=position,
+            cloned=cloned
         )
         self.next_spawn = None
         self.remaining_spawn_count = 0

@@ -298,9 +298,8 @@ class Troop:
         pass
     
     def kb(self, vector):
-        if self.can_kb and not self.invulnerable:
-            self.kb_timer = KB_TIME
-            self.kb_vector = vector
+        self.kb_timer = KB_TIME
+        self.kb_vector = vector
 
     def kb_tick(self):
         self.position.add(self.kb_vector.scaled(TICK_TIME/KB_TIME))
@@ -364,20 +363,21 @@ class Troop:
                         tower_target = tower
                         min_dist = vector.distance(tower.position, self.position)
 
-            if not tower_target is None and (self.ground and not self.cross_river) and (not same_sign(tower_target.position.y, self.position.y) and ((self.position.y < -1 or self.position.y > 1) or not on_bridge(self.position.x))): # if behind bridge and cant cross river
+            if not tower_target is None and (self.ground and not self.cross_river) and (not same_sign(tower_target.position.y, self.position.y) and (self.position.y < -1 or self.position.y > 1)): # if behind bridge and cant cross river
 
                 tar_bridge = None
                 
                 x = self.position.x
                 t_x = None
+                
                 if on_bridge(x):
                     t_x = x
                 elif x >= 6.5:
                     t_x = 6.4
                 elif x <= 4.5 and x >= 0:
-                    t_x = 4.5
+                    t_x = 4.6
                 elif x >= -4.5 and x < 0:
-                    t_x = -4.5
+                    t_x = -4.6
                 else:
                     t_x = -6.4
                 
@@ -420,22 +420,27 @@ class Troop:
             self.move_vector = vector.Vector(direction_x * m_s, direction_y * m_s)
             return False
         #and (not same side) while also (not at bridge) 
-        if (self.ground and not self.cross_river) and (not same_sign(self.target.position.y, self.position.y) and ((self.position.y < -1 or self.position.y > 1) or not on_bridge(self.position.x))):
+        if (self.ground and not self.cross_river) and (not same_sign(self.target.position.y, self.position.y) and (self.position.y < -1 or self.position.y > 1)):
 
             tar_bridge = None
             
             x = self.position.x
             t_x = None
-            if on_bridge(x):
-                t_x = x
-            elif x >= 6.5:
-                t_x = 6.4
-            elif x <= 4.5 and x >= 0:
-                t_x = 4.5
-            elif x >= -4.5 and x < 0:
-                t_x = -4.5
-            else:
-                t_x = -6.4
+            
+            if vector.distance(self.position, vector.Vector(-5.5, 0)) + vector.distance(self.target.position, vector.Vector(-5.5, 0)) <= vector.distance(self.position, vector.Vector(5.5, 0)) + vector.distance(self.target.position, vector.Vector(5.5, 0)):
+                if x <= -6.5: #left more optimal
+                    t_x = -6.4
+                elif x >= -4.5:
+                    t_x = -4.4
+                else:
+                    t_x = x
+            else: #right better
+                if x >= 6.5:
+                    t_x = 6.4
+                elif x <= 4.5:
+                    t_x = 4.4
+                else:
+                    t_x = x
             
             tar_bridge = vector.Vector(t_x, -0.99 if self.position.y < 0 else 0.99)
         
@@ -448,8 +453,8 @@ class Troop:
             distance_to_target = 1
             m_s = self.jump_speed
         else:
-            if self.position.y < 1 and self.position.y > -1 and on_bridge(self.position.x) and not (self.target.position.y < 1 and self.target.position.y > -1 and on_bridge(self.target.position.x)):
-                bridge_side = 1 if self.position.y < self.target.position.y else -1
+            if (self.position.y < 1 and self.position.y > -1 and on_bridge(self.position.x)) and not (self.target.position.y < 1 and self.target.position.y > -1 and on_bridge(self.target.position.x)):
+                bridge_side = 1 if self.position.y < self.target.position.y else -1 #move to other side of bridge while on bridge code
                 bridge_min = -6 if self.position.x < 0 else 5
                 bridge_max = -5 if self.position.x < 0 else 6
 
@@ -616,6 +621,7 @@ class Tower:
         self.ground = True
         self.type = None
         self.collideable = True
+        self.can_kb = False
 
     def damage(self, amount):
         if not self.invulnerable:
@@ -781,7 +787,7 @@ class Spell:
                     each.damage(self.crown_tower_damage)
                 else:
                     each.damage(self.damage); #end damage, start kb
-                if (isinstance(each, Troop)):
+                if isinstance(each, Troop) and (each.can_kb and not each.invulnerable):
                     displacement = each.position.subtracted(self.position)
                     displacement.normalize()
                     displacement.scale(self.knock_back)
@@ -814,7 +820,7 @@ class Spell:
         self.display_duration -= TICK_TIME
         
 class Building:
-    def __init__(self, s, h_p, h_d, h_s, l_t, h_r, s_r, g, t_g_o, t_o, l, d_t, c_r, d_s_c, d_s: type, p):
+    def __init__(self, s, h_p, h_d, h_s, l_t, h_r, s_r, g, t_g_o, t_o, l, d_t, c_r, d_s_c, d_s: type, p, cloned=False):
         self.side = s
         self.hit_points = h_p
         self.hit_damage = h_d
@@ -854,6 +860,11 @@ class Building:
         self.invulnerable = False
         self.preplace = False
         self.collideable = True
+
+        if cloned:
+            self.cur_hp = 1
+            self.hit_points = 1
+        self.cloned = cloned
 
     def slow(self, duration, source):
         if self.slow_timer < duration:

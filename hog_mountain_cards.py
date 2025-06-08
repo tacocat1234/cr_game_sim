@@ -319,7 +319,8 @@ class GolemDeathAttackEntity(AttackEntity):
             vec = target.position.subtracted(self.position)
             vec.normalize()
             vec.scale(1.8)
-            target.kb(vec)
+            if target.can_kb and not target.invulnerable:
+                target.kb(vec)
     
     def detect_hits(self, arena):
         hits = []
@@ -392,7 +393,8 @@ class GolemiteDeathAttackEntity(AttackEntity):
             vec = target.position.subtracted(self.position)
             vec.normalize()
             vec.scale(0.9)
-            target.kb(vec)
+            if target.can_kb and not target.invulnerable:
+                target.kb(vec)
     
     def detect_hits(self, arena):
         hits = []

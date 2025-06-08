@@ -317,7 +317,7 @@ class BowlerAttackEntity(RangedAttackEntity):
         return hits
 
     def apply_effect(self, target):
-        if isinstance(target, Troop):
+        if isinstance(target, Troop) and target.can_kb and not target.invulnerable:
             vec = target.position.subtracted(self.parent_pos)
             vec.normalize()
             vec.scale(1.8)
@@ -531,7 +531,7 @@ class LavaHoundDeathAttackEntity(AttackEntity):
         self.display_size = self.SPLASH_RADIUS
     
     def apply_effect(self, target):
-        if isinstance(target, Troop):
+        if isinstance(target, Troop) and target.can_kb and not target.invulnerable:
             vec = target.position.subtracted(self.position)
             vec.normalize()
             target.kb(vec)

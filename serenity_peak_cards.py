@@ -433,7 +433,7 @@ class GoblinDrillSpawnAttackEntity(AttackEntity):
         self.ctd = ctd
 
     def apply_effect(self, target):
-        if isinstance(target, Troop):
+        if isinstance(target, Troop) and target.can_kb and not target.invulnerable:
             vec = target.position.subtracted(self.position)
             vec.normalize()
             vec.scale(1)
@@ -504,11 +504,28 @@ class GoblinDrillMineTroop(Troop):
             
             x = self.position.x
             t_x = None
+
+            if vector.distance(self.position, vector.Vector(-5.5, 0)) + vector.distance(self.target, vector.Vector(-5.5, 0)) <= vector.distance(self.position, vector.Vector(5.5, 0)) + vector.distance(self.target, vector.Vector(5.5, 0)):
+                if x <= -6.5: #left more optimal
+                    t_x = -6.4
+                elif x >= -4.5:
+                    t_x = 4.4
+                else:
+                    t_x = x
+            else: #right better
+                if x >= 6.5:
+                    t_x = 6.4
+                elif x <= 4.5:
+                    t_x = 4.4
+                else:
+                    t_x = x
+
+
             if on_bridge(x):
                 t_x = x
             elif x >= 6.5:
                 t_x = 6.4
-            elif x <= 4.5 and x >= 0:
+            elif x <= 4.5 and x > 0:
                 t_x = 4.5
             elif x >= -4.5 and x < 0:
                 t_x = -4.5

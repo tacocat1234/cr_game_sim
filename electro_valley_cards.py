@@ -38,7 +38,8 @@ class LogAttackEntity(AttackEntity):
             new = not each in self.has_hit
             if (new):
                 if isinstance(each, Troop):
-                    each.kb(vector.Vector(0, 0.7 if self.side else -0.7))
+                    if each.can_kb and not each.invulnerable:
+                        each.kb(vector.Vector(0, 0.7 if self.side else -0.7))
                     each.damage(self.damage)
                 elif isinstance(each, Tower):
                     each.damage(self.crown_tower_damage)
@@ -607,7 +608,8 @@ class MegaKnightJumpAttackEntity(AttackEntity):
         if not isinstance(target, Tower) and vector.distance(self.position, target.position) < 1:
             vec = target.position.subtracted(self.position)
             vec.normalize()
-            target.kb(vec)
+            if target.can_kb and not target.invulnerable:
+                target.kb(vec)
     
     def detect_hits(self, arena):
         hits = []

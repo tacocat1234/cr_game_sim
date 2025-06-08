@@ -419,7 +419,7 @@ class GiantSkeletonDeathBombAttackEntity(AttackEntity):
             if (new):
                 if isinstance(each, Tower) or isinstance(each, Building):
                     each.damage(self.damage * 2)
-                else:
+                elif each.can_kb and not each.invulnerable:
                     each.damage(self.damage)
                     vec = each.position.subtracted(self.position)
                     vec.normalize()

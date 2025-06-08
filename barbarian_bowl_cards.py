@@ -167,6 +167,7 @@ class BattleRam(Troop):
             self.charging = False
             self.charge_charge_distance = 0
             self.move_speed = 60 * TILES_PER_MIN
+        super().kb(vec)
 
     def stun(self):
         self.charging = False

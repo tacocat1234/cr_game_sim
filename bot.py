@@ -132,7 +132,10 @@ class Bot:
             if len(enemy) > 0:
                 r = random.choice(enemy)
                 if name == "tornado":
-                    return r.position.subtracted(vector.Vector(5, 0)) if r.position.x > 0 else r.position.added(vector.Vector(5, 0))
+                    pos = r.position.subtracted(vector.Vector(5, 0)) if r.position.x > 0 else r.position.added(vector.Vector(5, 0))
+                    if r.position.x < 5 and r.position.x > -5:
+                        pos.x = 0
+                    return pos
                 elif name == "miner":
                     return copy.deepcopy(r.position)
                 if name == "goblinbarrel" or name == "graveyard":
@@ -186,7 +189,7 @@ class Bot:
                         return friend_pos # if legal friend pos
                 
                 weight = -4.5 if left_count > len(enemy) - left_count else 4.5 #towards left if more troops on left else right
-                return vector.Vector(round(random.triangular(-9, 9, weight)), random.randint(0, 16))
+                return vector.Vector(round(random.triangular(-9, 9, weight)), random.randint(1, 16))
             else: # if more defensive opps than offensive, or equal
                 if danger_level >= 4:
                     min = most_dangerous
@@ -201,14 +204,14 @@ class Bot:
                         friend_pos.x = -9
                     
                     if friend_pos.y < 0:
-                        friend_pos.y = 0
+                        friend_pos.y = 1
                     if friend_pos.y > 16:
                         friend_pos.y = 16
 
                     return friend_pos
                 #if illegal friend pos for any reason
                 weight = -4.5 if left_count < len(enemy) - left_count else 4.5 #towards left if more troops on right else left
-                return vector.Vector(round(random.triangular(-9, 9, weight)), random.randint(0, 16))
+                return vector.Vector(round(random.triangular(-9, 9, weight)), random.randint(1, 16))
 
 
     
