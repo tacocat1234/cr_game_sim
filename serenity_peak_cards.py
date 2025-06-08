@@ -345,7 +345,7 @@ class ExecutionerAttackEntity(RangedAttackEntity):
         self.set_initial_vec()
         self.set_move_vec()
         self.duration = 1.5
-        self.display_size = 0.75
+        self.display_size = 1
         self.resize = True
         self.returning = False
 

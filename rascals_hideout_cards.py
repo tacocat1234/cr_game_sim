@@ -228,7 +228,7 @@ class ElectroGiantReflectAttackEntity(MeleeAttackEntity):
     def detect_hits(self, arena):
         hits = []
         for each in arena.towers + arena.buildings + arena.troops:
-                if each.side != self.side and not each.invulnerable and (each.attack_cooldown == each.hit_speed or each.attack_cooldown <= 0) and each.target is self.parent: # if different side
+                if each.side != self.side and not each.invulnerable and (each.attack_cooldown >= each.hit_speed - TICK_TIME) and each.target is self.parent: # if different side
                     if vector.distance(self.position, each.position) < self.HIT_RANGE + self.COLLISION_RADIUS + each.collision_radius:
                         hits.append(each)
         return hits
@@ -267,6 +267,8 @@ class ElectroGiant(Troop):
         self.reflected_ctd = 80 * pow(1.1, level - 6)
         self.can_kb = False
 
+        self.new = True
+
         self.reflect_entity = ElectroGiantReflectAttackEntity(self.side, self.reflected_damage, self.reflected_ctd, self.position, self)
         self.reflect_display = ElectroGiantReflectDisplay(self.position)
 
@@ -274,6 +276,9 @@ class ElectroGiant(Troop):
         arena.active_attacks.append(self.reflect_display)
 
     def tick_func(self, arena):
+        if self.new and self.cloned:
+            arena.active_attacks.append(self.reflect_display)
+            self.new = False
         if self.stun_timer <= 0:
             self.reflect_entity.tick(arena)
 

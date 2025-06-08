@@ -72,7 +72,7 @@ class Bot:
         else:
             self.internal_timer -= TICK_TIME
 
-    def random_pos(name, things = None):
+    def random_pos(name, things = None, pocket = "None"):
         isSpell = get_type(name) == "spell" or name == "barbarianbarrel" or name == "log" or name == "miner" or name == "goblindrill"
         enemy = []
         friendly = []
@@ -131,7 +131,12 @@ class Bot:
                 if not enemy:
                     return False
                 r = random.choice(enemy)
-                pos = r.position.subtracted(vector.Vector(5, 0)) if r.position.x > 0 else r.position.added(vector.Vector(5, 0))
+                while r.position.y < -4:
+                    enemy.remove(r)
+                    if not enemy:
+                        return False
+                    r = random.choice(enemy)
+                pos = r.position.added(vector.Vector(-5, 1)) if r.position.x > 0 else r.position.added(vector.Vector(5, 1))
                 if r.position.x < 5 and r.position.x > -5:
                     pos.x = 0
                 return pos
@@ -192,7 +197,7 @@ class Bot:
                         friend_pos.x = -9
                     
                     
-                    if friend_pos.y >= 0:
+                    if friend_pos.y >= 1 or (friend_pos.y > -5 and (pocket == "all" or (friend_pos.x < 0 and pocket == "left") or (friend_pos.x >= 0 and pocket == "right"))):
                         if friend_pos.y > 16:
                             friend_pos.y = 16
 
@@ -213,15 +218,33 @@ class Bot:
                     elif friend_pos.x < -9:
                         friend_pos.x = -9
                     
-                    if friend_pos.y < 0:
-                        friend_pos.y = 1
+                    
+                    
+                    if (friend_pos.y < -5 and (pocket == "all" or (friend_pos.x < 0 and pocket == "left") or (friend_pos.x >= 0 and pocket == "right"))):
+                        friend_pos.y = -5 #if below pocket but in right pocket zone x, set pos y to be in pocket
+                    elif friend_pos.y < 1:
+                        friend_pos.y = 1 #not ahead of pockt, then set to river
                     if friend_pos.y > 16:
                         friend_pos.y = 16
 
                     return friend_pos
                 #if illegal friend pos for any reason
                 weight = -4.5 if left_count < len(enemy) - left_count else 4.5 #towards left if more troops on right else left
-                return vector.Vector(round(random.triangular(-9, 9, weight)), random.randint(1, 16))
+
+                if pocket == "all":
+                    return vector.Vector(round(random.triangular(-9, 9, weight)), random.randint(-5, 16))
+                elif pocket == "left":
+                    vec = vector.Vector(round(random.triangular(-9, 9, weight)), random.randint(-5, 16))
+                    if vec.y < 1 and vec.x > 0:
+                        vec.y = 1
+                    return vec
+                elif pocket == "right":
+                    vec = vector.Vector(round(random.triangular(-9, 9, weight)), random.randint(-5, 16))
+                    if vec.y < 1 and vec.x < 0:
+                        vec.y = 1
+                    return vec
+                else:
+                    return vector.Vector(round(random.triangular(-9, 9, weight)), random.randint(1, 16))
 
 
     

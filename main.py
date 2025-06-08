@@ -630,10 +630,19 @@ game_arena.p2_elixir = 9
 
 while running:
     clock.tick(60)  # 60 FPS
+    s = 0
+    for each in game_arena.towers:
+        if each.side:
+            if each.position.x > 0: #exists right
+                s -= 2
+            elif each.position.x < 0: #exists left
+                s += 1
+
+    s = "all" if s == 0 else ("none" if s == -1 else ("right" if s == 1 else "left"))
 
     bot_card = bot.tick(game_arena.p2_elixir, game_arena.troops + game_arena.buildings)
     if not bot_card is None:
-        bot_pos = Bot.random_pos(bot_card.name, game_arena.troops + game_arena.buildings)
+        bot_pos = Bot.random_pos(bot_card.name, game_arena.troops + game_arena.buildings, s)
         if bot_pos:
             if bot_card.name == "royalrecruits":
                 if bot_pos.x < -1.5:
@@ -743,18 +752,21 @@ else:
 
 # Get text rectangle and center it
 text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+tip = font.render("RIGHT CLICK TO RETURN TO LOBBY", True, WHITE)
+tip_rect = tip.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 60))
 
 while running:
     screen.fill(BLACK)  # Fill background
     screen.blit(text, text_rect)  # Draw text
+    screen.blit(tip, tip_rect)
 
     for event in pygame.event.get():
-        if event.type == pygame.QUIT:
+        if event.type == pygame.QUIT or event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
             running = False
 
     pygame.display.flip()  # Update display
 
 
     #count += 1
-
+print("\n---------------------------------------\n")
 pygame.quit()
