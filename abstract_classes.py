@@ -677,7 +677,7 @@ class Tower:
         self.tick_func(arena)
 
         if self.stun_timer <= 0:
-            if self.target is None or self.target.cur_hp <= 0 or vector.distance(self.target.position, self.position) > self.hit_range + self.target.collision_radius + self.collision_radius + 4:
+            if self.target is None or self.target.cur_hp <= 0 or not self.target.targetable or vector.distance(self.target.position, self.position) > self.hit_range + self.target.collision_radius + self.collision_radius + 3:
                 self.update_target(arena)
             if not self.target is None and self.attack_cooldown <= 0:
                 atk = self.attack()
@@ -972,7 +972,7 @@ class Building:
             self.rage_timer -= TICK_TIME    
             
         if self.stun_timer <= 0:
-            if not self.is_spawner and (self.target is None or (vector.distance(self.target.position, self.position) > self.hit_range + self.target.collision_radius and (self.attack_cooldown <= self.hit_speed - self.load_time))):
+            if not self.is_spawner and (self.target is None or (vector.distance(self.target.position, self.position) > self.hit_range + self.target.collision_radius + self.collision_radius and (self.attack_cooldown <= self.hit_speed - self.load_time))):
                     self.attack_cooldown = self.hit_speed - self.load_time #if not currently attacking but cooldown is less than first hit delay
             else: #otherwise
                 self.attack_cooldown -= TICK_TIME

@@ -1,4 +1,5 @@
 from abstract_classes import TICK_TIME
+from abstract_classes import Troop
 import card_factory
 import vector
 import itertools
@@ -100,14 +101,16 @@ class Arena:
                     each.collideable = True
                     each.targetable = True
                     each.on_preplace()
-                    each.on_deploy(self)
+                    if isinstance(each, Troop):
+                        each.on_deploy(self)
             else:
                 self.preplace.preplace = False
                 self.preplace.invulnerable = False
                 self.preplace.collideable = True
                 self.preplace.targetable = True
                 self.preplace.on_preplace()
-                self.preplace.on_deploy(self)
+                if isinstance(self.preplace, Troop):
+                    self.preplace.on_deploy(self)
             self.preplace = None
             self.preplace_side = None
 

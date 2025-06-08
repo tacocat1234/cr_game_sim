@@ -635,10 +635,12 @@ while running:
     if not bot_card is None:
         bot_pos = Bot.random_pos(bot_card.name, game_arena.troops + game_arena.buildings)
         if bot_pos:
-            game_arena.p2_elixir -= bot_card.elixir_cost
-            bot_card_type, bot_summon = bot_card.summon(bot_pos)
-            place(bot_card_type, bot_summon, game_arena)
-
+            if bot_card.name == "royalrecruits":
+                if bot_pos.x < -1.5:
+                    bot_pos.x = -1.5
+                elif bot_pos.x > 1.5:
+                    bot_pos.x = 1.5
+            game_arena.add(False, bot_pos, bot_card.name, bot_card.level)
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -689,6 +691,11 @@ while running:
                 cur_card = deck[hand[click_quarter - 1]]
                 if mouse_x > 64 and mouse_x < WIDTH - 64 and mouse_y < HEIGHT - 128 and (can_anywhere(cur_card.name) or mouse_y > 340) or (not enemy_right and in_pocket(mouse_x, mouse_y, True)) or (not enemy_left and in_pocket(mouse_x, mouse_y, False)):
                     pos = convert_from_pygame(mouse_x, mouse_y)
+                    if cur_card.name == "royalrecruits":
+                        if pos.x < -1.5:
+                            pos.x = -1.5
+                        elif pos.x > 1.5:
+                            pos.x = 1.5
                     name = cur_card.name
                     level = cur_card.level
                     

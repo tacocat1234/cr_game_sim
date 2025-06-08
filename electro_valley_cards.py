@@ -755,8 +755,7 @@ class InfernoDragon(Troop):
         self.damage_stages = [30 * pow(1.1, level - 9), 100 * pow(1.1, level - 9), 350 * pow(1.1, level - 9)]
     
     def tick_func(self, arena):
-        if self.target is None or self.target.cur_hp <= 0:
-            self.update_target(arena)
+        if self.target is None or self.target.cur_hp <= 0 or self.move_vector.x != 0 or self.move_vector.y != 0 or not self.target.targetable:
             self.stage = 1
             self.attack_cooldown = self.load_time - self.hit_speed
 

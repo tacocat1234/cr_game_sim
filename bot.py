@@ -2,6 +2,7 @@ import random
 import copy
 import vector
 from abstract_classes import TICK_TIME
+from abstract_classes import Troop
 from card_factory import get_type
 from card_factory import get_elixir
 from builders_workshop_cards import Mortar
@@ -72,7 +73,7 @@ class Bot:
             self.internal_timer -= TICK_TIME
 
     def random_pos(name, things = None):
-        isSpell = get_type(name) == "spell" or name == "barbarianbarrel" or name == "log" or name == "miner"
+        isSpell = get_type(name) == "spell" or name == "barbarianbarrel" or name == "log" or name == "miner" or name == "goblindrill"
         enemy = []
         friendly = []
         if not things is None:
@@ -126,19 +127,25 @@ class Bot:
                 if not friendly:
                     return False
                 return random.choice(friendly).position.added(vector.Vector(0, 0))
+            if name == "tornado":
+                pos = r.position.subtracted(vector.Vector(5, 0)) if r.position.x > 0 else r.position.added(vector.Vector(5, 0))
+                if r.position.x < 5 and r.position.x > -5:
+                    pos.x = 0
+                return pos
             if danger_level >= 2:
                 min = most_dangerous
                 return min.position.added(vector.Vector(0, 1.5))
             if len(enemy) > 0:
                 r = random.choice(enemy)
-                if name == "tornado":
-                    pos = r.position.subtracted(vector.Vector(5, 0)) if r.position.x > 0 else r.position.added(vector.Vector(5, 0))
-                    if r.position.x < 5 and r.position.x > -5:
-                        pos.x = 0
-                    return pos
-                elif name == "miner":
+                while name == "earthquake" or name == "log" or name == "barbarianbarrel" and isinstance(r, Troop) and r.ground == False:
+                    enemy.remove(r)
+                    if not enemy:
+                        return False
+                    r = random.choice(enemy)
+                
+                if name == "miner":
                     return copy.deepcopy(r.position)
-                if name == "goblinbarrel" or name == "graveyard":
+                if name == "goblinbarrel" or name == "graveyard" or name == "goblindrill":
                     if random.random() > 0.5:
                         return vector.Vector(-6 + random.random(), -10 + random.random())
                     else:

@@ -281,7 +281,11 @@ class Fisherman(Troop):
                     self.stun_timer = 1.3
 
             if self.reeling: #reel connected
-                if isinstance(self.target, Troop): #if troop
+                if self.target is None:
+                    self.reeling = False
+                    self.ground = True
+                    self.move_speed = self.normal_move_speed
+                elif isinstance(self.target, Troop): #if troop
                     if self.target is None or vector.distance(self.target.position, self.position) <= self.target.collision_radius + self.collision_radius + 0.1:
                         self.reeling = False #end reeling
                         self.casting = False
@@ -360,8 +364,8 @@ class Tornado(Spell):
             s=side,
             d=53*pow(1.1, level - 6),
             c_t_d=9.5*pow(1.1, level - 6),
-            w=1,
-            t=0.55,
+            w=2,
+            t=0.5,
             kb=0,
             r=5.5,
             v=0,
@@ -373,10 +377,9 @@ class Tornado(Spell):
         self.pulse_timer = 0
 
     def passive_effect(self, target):
-        if isinstance(target, Troop):
-            total_kb = -3/20 * target.mass + 31/5
-            mag = total_kb/21
-            mag *= 16/5
+        if isinstance(target, Troop) and not target.invulnerable:
+            total_kb = -3/10 * target.mass + 31/5
+            mag = total_kb/10
             target.kb(self.position.subtracted(target.position).scaled(mag))
 
 class CannonCartAttackEntity(RangedAttackEntity):
@@ -437,8 +440,8 @@ class CartCannon(Building):
             h_d = 133 * pow(1.1, level - 6),
             h_s = 0.9,
             l_t = 0,
-            h_r = 5.5,
-            s_r = 5.5,
+            h_r = 5.51,
+            s_r = 5.51,
             g = True,
             t_g_o = True,
             t_o = False,
