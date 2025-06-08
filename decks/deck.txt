@@ -4,7 +4,7 @@ random.troop.2-5 11
 random.troop.1-1 11
 random.spell.1-3 11
 random.building.3-7 11
-random.troop 11
+random.troop.5-9 11
 random.spell.4-7 11
 kingtower 11
 princesstower 11

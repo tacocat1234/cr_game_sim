@@ -128,6 +128,9 @@ class Bot:
                     return False
                 return random.choice(friendly).position.added(vector.Vector(0, 0))
             if name == "tornado":
+                if not enemy:
+                    return False
+                r = random.choice(enemy)
                 pos = r.position.subtracted(vector.Vector(5, 0)) if r.position.x > 0 else r.position.added(vector.Vector(5, 0))
                 if r.position.x < 5 and r.position.x > -5:
                     pos.x = 0
