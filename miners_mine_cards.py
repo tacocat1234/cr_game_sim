@@ -412,7 +412,8 @@ class CannonCart(Troop):
 
     def die(self, arena):
         arena.buildings.append(CartCannon(self.side, self.position, self.level, self.cloned))
-        super().die(arena)
+        self.cur_hp = -1 #bypass curse checks
+        arena.troops.remove(self)
     
     def attack(self):
         return CannonCartAttackEntity(self.side, self.hit_damage, self.position, self.target)

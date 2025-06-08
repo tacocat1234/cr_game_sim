@@ -32,8 +32,11 @@ class Arena:
 
             if card_type == "troop":
                 if isinstance(card, list):
+                    for each in card:
+                        each.on_deploy(self)
                     self.troops.extend(card)
                 else:
+                    card.on_deploy(self)
                     self.troops.append(card)
             elif card_type == "spell":
                 if isinstance(card, list):
@@ -97,12 +100,14 @@ class Arena:
                     each.collideable = True
                     each.targetable = True
                     each.on_preplace()
+                    each.on_deploy(self)
             else:
                 self.preplace.preplace = False
                 self.preplace.invulnerable = False
                 self.preplace.collideable = True
                 self.preplace.targetable = True
                 self.preplace.on_preplace()
+                self.preplace.on_deploy(self)
             self.preplace = None
             self.preplace_side = None
 

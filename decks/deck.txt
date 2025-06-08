@@ -1,4 +1,4 @@
-goblindrill 11
+knight 11
 speargoblins 11
 random.troop.2-5 11
 random.troop.1-1 11

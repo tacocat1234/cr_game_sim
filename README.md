@@ -1,4 +1,7 @@
 # cr_game_sim
+download python package from software center
+run run_me.bat
+if on school computer, move or diable the taskbar or the elxiir bar wont fit on screen
 modify deck.txt to set deck. type in lowercase.
 modify bot_deck.txt to set bot_deck
 format is 

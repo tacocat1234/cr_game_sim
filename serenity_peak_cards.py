@@ -499,17 +499,17 @@ class GoblinDrillMineTroop(Troop):
         self.collideable = False
 
     def move(self, arena):
-        if (not same_sign(self.target.y, self.position.y) and ((self.position.y < -1 or self.position.y > 1) or not on_bridge(self.position.x))):
+        if not same_sign(self.target.y, self.position.y) and ((self.position.y < -1 or self.position.y > 1)):
             tar_bridge = None
             
             x = self.position.x
             t_x = None
-
-            if vector.distance(self.position, vector.Vector(-5.5, 0)) + vector.distance(self.target, vector.Vector(-5.5, 0)) <= vector.distance(self.position, vector.Vector(5.5, 0)) + vector.distance(self.target, vector.Vector(5.5, 0)):
+            
+            if self.target.x < 0:
                 if x <= -6.5: #left more optimal
                     t_x = -6.4
                 elif x >= -4.5:
-                    t_x = 4.4
+                    t_x = -4.4
                 else:
                     t_x = x
             else: #right better
@@ -519,18 +519,6 @@ class GoblinDrillMineTroop(Troop):
                     t_x = 4.4
                 else:
                     t_x = x
-
-
-            if on_bridge(x):
-                t_x = x
-            elif x >= 6.5:
-                t_x = 6.4
-            elif x <= 4.5 and x > 0:
-                t_x = 4.5
-            elif x >= -4.5 and x < 0:
-                t_x = -4.5
-            else:
-                t_x = -6.4
             
             tar_bridge = vector.Vector(t_x, -1 if self.position.y < 0 else 1)
         

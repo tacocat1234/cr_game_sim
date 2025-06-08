@@ -214,7 +214,6 @@ class Troop:
         self.collideable = True
 
         self.preplace = False
-        self.placed = True
 
         self.cursed_timer = 0
         self.goblin_cursed_level = None
@@ -506,7 +505,7 @@ class Troop:
             
         
     def tick(self, arena):
-        if self.preplace:
+        if self.preplace or self.cur_hp <= 0:
             return
         #update arena before
         self.tick_func(arena)
@@ -538,10 +537,6 @@ class Troop:
             return
 
         self.cleanup_func(arena)
-
-        if self.placed:
-            self.on_deploy(arena)
-            self.placed = False
 
         if self.cur_hp <= 0 or self.should_delete:
             self.die(arena)
