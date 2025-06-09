@@ -54,21 +54,26 @@ class Bot:
             else:
                 self.internal_timer = random.triangular(0, 14, 5.6)
 
-            remaining = copy.deepcopy(self.cards)
-            
-            selected = random.choice(remaining)
-            while selected.elixir_cost > elixir or selected.name in self.buffer or (danger_level >= 2 and not can_defend(selected.name)):
-                remaining.remove(selected)
-                if not remaining:
-                    return None
-                selected = random.choice(remaining)
-            
-            if len(self.buffer) < self.buffer_check:
-                self.buffer.append(selected.name)
-            else:
-                self.buffer.pop(0)
-                self.buffer.append(selected.name)
-            return selected
+            remaining_indices = list(range(len(self.cards)))
+
+            while remaining_indices:
+                selected_index = random.choice(remaining_indices)
+                selected = self.cards[selected_index]
+
+                if (
+                    selected.elixir_cost <= elixir
+                    and selected.name not in self.buffer
+                    and (danger_level < 2 or can_defend(selected.name))
+                ):
+                    if len(self.buffer) < self.buffer_check:
+                        self.buffer.append(selected.name)
+                    else:
+                        self.buffer.pop(0)
+                        self.buffer.append(selected.name)
+                    return selected
+
+                remaining_indices.remove(selected_index)
+            return None
         else:
             self.internal_timer -= TICK_TIME
 

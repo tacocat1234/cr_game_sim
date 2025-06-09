@@ -18,11 +18,15 @@ class Arena:
         self.timer = 0
         self.state = ""
 
-    def add(self, side, position, name, level):
+    def add(self, side, position, name, level, evo=False):
         e = card_factory.get_elixir(name)
         if (side and e <= self.p1_elixir + 0.5) or (not side and e <= self.p2_elixir + 0.5): #if enough elixir
             did_preplace = False if (side and e <= self.p1_elixir) or (not side and e <= self.p2_elixir) else True
-            card_type, card = card_factory.card_factory(side, position, name, level)
+            
+            if evo:
+                card_type, card = card_factory.evolution_factory(side, position, name, level)
+            else:
+                card_type, card = card_factory.card_factory(side, position, name, level)
             
             if did_preplace:
                 self.preplace = card

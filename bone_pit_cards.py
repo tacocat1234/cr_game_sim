@@ -90,7 +90,7 @@ class BomberAttackEntity(AttackEntity):
             
             if vector.distance(self.position, self.target_pos) < 0.25:
                 self.display_size = 1.5
-                self.duration =  0.5
+                self.duration =  0.1
                 self.exploded = True
     
 class Bomber(Troop):

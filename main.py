@@ -40,9 +40,9 @@ with open("decks/deck.txt", "r") as file:
                 KING_LEVEL = PRINCESS_LEVEL = int(level)
                 TOWER_TYPE = random.choice(["princesstower", "cannoneer", "daggerduchess"])
                 break
-            actual = parse_input(card, used)
+            is_evo, actual = parse_input(card, used)
             used.append(actual)
-            deck.append(Card(True, actual, int(level)))
+            deck.append(Card(True, actual, int(level), is_evo))
 
     if not player_random_deck:
         line = file.readline().strip()
@@ -68,9 +68,12 @@ with open("decks/bot_deck.txt", "r") as file:
                 BOT_K_L = BOT_P_L = int(level)
                 BOT_TOWER_TYPE = random.choice(["princesstower", "cannoneer", "daggerduchess"])
                 break
-            actual = parse_input(card, used)
+            _, actual = parse_input(card, used)
             used.append(actual)
-            bot_deck.append(Card(False, actual, int(level)))
+            evo = False
+            if (actual == "knight" or actual == "archers" or actual == "musketeer" or actual == "skeletons" or actual == "bomber"):
+                evo = True
+            bot_deck.append(Card(True, actual, int(level), evo))
 
     if not bot_random_deck:
         line = file.readline().strip()
@@ -334,7 +337,7 @@ def draw():
                 pygame.draw.rect(screen, troop_color, pygame.Rect(rect_x, rect_y, width, height))
                 display_y = rect_y
             else:
-                pygame.draw.circle(screen, troop_color, (troop_x, troop_y), troop.collision_radius * SCALE)
+                pygame.draw.circle(screen, (120, 0, 160) if troop.evo else troop_color, (troop_x, troop_y), troop.collision_radius * SCALE)
                 display_y = troop_y - troop.collision_radius * SCALE  # Use circle's top for text position
             class_name = troop.__class__.__name__
             text_surface = font.render(class_name, True, (255, 255, 255))  # White color text
@@ -567,6 +570,34 @@ def draw():
         elixir_cost_circle_y = card_name_y - 30  # Align with the bar
         elixir_cost_circle_radius = 12  # Size of the circle
 
+        if card.is_evo:
+            all = card.cycles
+            full = all - card.cycles_left
+            radius = 6
+            color = (150, 0, 200)
+            background_color = (60, 60, 60)
+
+            # Circle layout setup
+            spacing = 2 * radius + 4  # Space between circles
+            total_width = (all - 1) * spacing
+            start_x = card_name_x - total_width // 2
+            y = card_name_y - 60  # 50 units above
+
+            # Calculate rectangle bounds
+            rect_padding = 4
+            rect_width = total_width + 2 * radius + rect_padding * 2
+            rect_height = 2 * radius + rect_padding * 2
+            rect_x = start_x - radius - rect_padding
+            rect_y = y - radius - rect_padding
+
+            # Draw rectangle background
+            pygame.draw.rect(screen, background_color, (rect_x, rect_y, rect_width, rect_height), border_radius=4)
+
+            # Draw evolution progress circles
+            for j in range(all):
+                circle_color = color if j < full else BLACK
+                x = start_x + j * spacing
+                pygame.draw.circle(screen, circle_color, (x, y), radius)
         pygame.draw.circle(screen, PURPLE, (elixir_cost_circle_x, elixir_cost_circle_y), elixir_cost_circle_radius)  # Draw elixir circle
 
         # Render the elixir amount text
@@ -649,7 +680,9 @@ while running:
                     bot_pos.x = -1.5
                 elif bot_pos.x > 1.5:
                     bot_pos.x = 1.5
-            game_arena.add(False, bot_pos, bot_card.name, bot_card.level)
+            print(bot_card.cycles_left)
+            game_arena.add(False, bot_pos, bot_card.name, bot_card.level, bot_card.cycles_left == 0)
+            bot_card.cycle_evo()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
@@ -708,9 +741,10 @@ while running:
                     name = cur_card.name
                     level = cur_card.level
                     
-                    succesful = game_arena.add(True, pos, name, level)
+                    succesful = game_arena.add(True, pos, name, level, cur_card.cycles_left == 0)
                     if succesful:
                         cycle(hand, click_quarter - 1, cycler)
+                        cur_card.cycle_evo()
 
                 # Reset drag start position after the release
                 drag_start_pos = None

@@ -425,7 +425,6 @@ class Troop:
             # Move in the direction of the target
             self.position.x += direction_x * m_s
             self.position.y += direction_y * m_s
-
             angle = math.degrees(math.atan2(direction_y, direction_x))  # Get angle in degrees
             self.facing_dir = angle
             self.move_vector = vector.Vector(direction_x * m_s, direction_y * m_s)
@@ -454,7 +453,6 @@ class Troop:
                     t_x = x
             
             tar_bridge = vector.Vector(t_x, -0.99 if self.position.y < 0 else 0.99)
-        
             direction_x = tar_bridge.x - self.position.x #set movement
             direction_y = tar_bridge.y - self.position.y
             distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
@@ -464,7 +462,7 @@ class Troop:
             distance_to_target = 1
             m_s = self.jump_speed
         else: #if in river
-            if (self.position.y <= 1 and self.position.y >= -1) and not (self.target.position.y <= 1 and self.target.position.y >= -1 and on_bridge(self.target.position.x)):
+            if (self.position.y < 1 and self.position.y > -1) and not (self.target.position.y <= 1 and self.target.position.y >= -1 and on_bridge(self.target.position.x)):
                 bridge_side = 1 if self.position.y < self.target.position.y else -1 #move to other side of bridge while on bridge code
                 bridge_min = -6.5 if self.position.x < 0 else 4.5
                 bridge_max = -4.5 if self.position.x < 0 else 6.5
@@ -483,19 +481,16 @@ class Troop:
                     direction_y = tar_bridge.y - self.position.y
                     distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
                 elif to_corner2.x == 0 or (t_x > bridge_max and abs(to_corner2.y/to_corner2.x) > ratio):
-                    tar_bridge = to_corner2 = vector.Vector(bridge_max - 0.1, bridge_side).subtracted(self.position)
+                    tar_bridge = vector.Vector(bridge_max - 0.1, bridge_side)
                     direction_x = tar_bridge.x - self.position.x
                     direction_y = tar_bridge.y - self.position.y
                     distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
                 else:
-                    print(self.__class__.__name__)
                     direction_x = self.target.position.x - self.position.x
                     direction_y = self.target.position.y - self.position.y
                     distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
                 
             else:
-                print(self.__class__.__name__, end=" pos correct = ")
-                print(self.position.y <= 1 and self.position.y >= -1)
                 direction_x = self.target.position.x - self.position.x
                 direction_y = self.target.position.y - self.position.y
                 distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)

@@ -158,8 +158,18 @@ def get_clone(obj):
             return training_camp_cards.Musketeer(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionSkeletons":
             return bone_pit_cards.Skeleton(obj.side, copy.deepcopy(obj.position, obj.level))
+        elif n == "EvolutionBomber":
+            return bone_pit_cards.Bomber(obj.side, copy.deepcopy(obj.position), obj.level)
         else:
-            raise Exception("not actually a evo")
+            raise Exception("not actually an evo")
+        
+def evolution_factory(side, position, name, level):
+    if name in troops:
+        return "troop", evolution_troop_factory(side, position, name, level)
+    elif name in spells:
+        return "spell", evolution_spell_factory(side, position, name, level)
+    elif name in buildings:
+        return "building", evolution_building_factory(side, position, name, level)
 
 def evolution_troop_factory(side, position, name, level):
     if name == "knight":
@@ -176,11 +186,19 @@ def evolution_troop_factory(side, position, name, level):
         pos1 = vector.Vector(0, 1/2 * flip)
         pos2 = vector.Vector(-math.sqrt(3)/4, -1/4 * flip)
         pos3 = vector.Vector(math.sqrt(3)/4, -1/4 * flip)
-        count = bone_pit_evos.EvolutionSkeletonCounter
+        count = bone_pit_evos.EvolutionSkeletonCounter()
         count.count = 3
-        return [bone_pit_evos.EvolutionSkeleton(side, position.added(pos1), level), 
-                bone_pit_evos.EvolutionSkeleton(side, position.added(pos2), level),
-                bone_pit_evos.EvolutionSkeleton(side, position.added(pos3), level)]
+        return [bone_pit_evos.EvolutionSkeleton(side, position.added(pos1), level, count), 
+                bone_pit_evos.EvolutionSkeleton(side, position.added(pos2), level, count),
+                bone_pit_evos.EvolutionSkeleton(side, position.added(pos3), level, count)]
+    elif name == "bomber":
+        return bone_pit_evos.EvolutionBomber(side, position, level)
+    
+def evolution_spell_factory(side, position, name, level):
+    pass
+
+def evolution_building_factory(side, position, name, level):
+    pass
 
 def troop_factory(side, position, name, level):
     if name == "knight":
@@ -680,10 +698,13 @@ def generate_random_deck():
 def parse_input(string, current_used):
     components = string.split(".")
     if components[0] != "random":
-        return components[0]
+        sp = components[0].split(" ")
+        if len(sp) > 1:
+            return sp[0] == "evolution", sp[1]
+        return False, components[0]
     else:
         lower, upper = components[2].split("-")
-        return random_with_param(components[1], int(lower), int(upper), current_used)
+        return False, random_with_param(components[1], int(lower), int(upper), current_used)
 
 def random_with_param(t, lower, upper, used):
     if t == "troop":

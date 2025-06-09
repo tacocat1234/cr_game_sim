@@ -1,10 +1,10 @@
-goblincage 11
-bombtower 11
-random.troop.2-5 11
-random.troop.1-1 11
+evolution knight 11
+evolution archers 11
+evolution musketeer 11
+evolution skeletons 11
 random.spell.1-3 11
 random.building.3-7 11
-random.troop.5-9 11
+evolution bomber 11
 random.spell.4-7 11
 kingtower 11
 princesstower 11

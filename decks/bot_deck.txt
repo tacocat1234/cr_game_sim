@@ -1,10 +1,10 @@
-icegolem 11
-golem 11
-elixirgolem -11
-icegolem 11
-golem 11
-elixirgolem -11
-icegolem 11
-elixirgolem -11
-kingtower 11
-princesstower 11
+evolution knight 13
+evolution archers 13
+evolution musketeer 13
+evolution skeletons 13
+random.spell.1-3 13
+random.building.3-7 13
+evolution bomber 13
+random.spell.4-7 13
+kingtower 13
+princesstower 13

@@ -101,7 +101,7 @@ class Graveyard(Spell):
                 if pos.y > 16:
                     pos.y = 16
                 if pos.y < -16:
-                    pos .y = 16
+                    pos .y = -16
                 arena.troops.append(Skeleton(self.side, pos, self.level))
                 self.damage_cd = self.time_between
                 self.spawn_dir += 1

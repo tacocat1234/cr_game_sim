@@ -5,7 +5,8 @@ evo_cycles = {
     "knight" : 2,
     "archers" : 2,
     "musketeer" : 2,
-    "skeletons" : 2
+    "skeletons" : 2,
+    "bomber" : 2
 }
 
 class Card:
@@ -14,8 +15,8 @@ class Card:
         self.name = name
         self.level = level
         self.is_evo = evo
-        self.cycles = evo_cycles.get(self.name, 0)
-        self.cycle_left = self.cycles
+        self.cycles = int(evo_cycles.get(self.name, -1))
+        self.cycles_left = self.cycles
 
         error = False
         try:
@@ -25,3 +26,10 @@ class Card:
         if error:
             error_msg = "You spelled \"" + self.name + "\" wrong. Make sure its all lowercase with no spaces, and is as appears in README.md."
             raise Exception(error_msg)
+    
+    def cycle_evo(self):
+        if self.is_evo:
+            if self.cycles_left <= 0:
+                self.cycles_left = self.cycles
+            else:
+                self.cycles_left -= 1
