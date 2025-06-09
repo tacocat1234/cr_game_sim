@@ -1,1 +1,10 @@
-allrandom 13
+icegolem 11
+golem 11
+elixirgolem -11
+icegolem 11
+golem 11
+elixirgolem -11
+icegolem 11
+elixirgolem -11
+kingtower 11
+princesstower 11

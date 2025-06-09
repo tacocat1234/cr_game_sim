@@ -463,11 +463,11 @@ class Troop:
             direction_y = 1 if (self.side if self.target is None else self.target.position.y - self.position.y) > 0 else -1 #forwards 
             distance_to_target = 1
             m_s = self.jump_speed
-        else:
-            if (self.position.y < 1 and self.position.y > -1 and on_bridge(self.position.x)) and not (self.target.position.y < 1 and self.target.position.y > -1 and on_bridge(self.target.position.x)):
+        else: #if in river
+            if (self.position.y <= 1 and self.position.y >= -1) and not (self.target.position.y <= 1 and self.target.position.y >= -1 and on_bridge(self.target.position.x)):
                 bridge_side = 1 if self.position.y < self.target.position.y else -1 #move to other side of bridge while on bridge code
-                bridge_min = -6 if self.position.x < 0 else 5
-                bridge_max = -5 if self.position.x < 0 else 6
+                bridge_min = -6.5 if self.position.x < 0 else 4.5
+                bridge_max = -4.5 if self.position.x < 0 else 6.5
 
                 to_tar = self.target.position.subtracted(self.position)
                 to_corner1 = vector.Vector(bridge_min + 0.1, bridge_side).subtracted(self.position)
@@ -488,11 +488,14 @@ class Troop:
                     direction_y = tar_bridge.y - self.position.y
                     distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
                 else:
+                    print(self.__class__.__name__)
                     direction_x = self.target.position.x - self.position.x
                     direction_y = self.target.position.y - self.position.y
                     distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
                 
             else:
+                print(self.__class__.__name__, end=" pos correct = ")
+                print(self.position.y <= 1 and self.position.y >= -1)
                 direction_x = self.target.position.x - self.position.x
                 direction_y = self.target.position.y - self.position.y
                 distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
