@@ -153,11 +153,16 @@ class Bot:
                 
                 if name == "miner":
                     return copy.deepcopy(r.position)
-                if name == "goblinbarrel" or name == "graveyard" or name == "goblindrill":
+                if name == "goblinbarrel" or name == "goblindrill":
                     if random.random() > 0.5:
                         return vector.Vector(-6 + random.random(), -10 + random.random())
                     else:
                         return vector.Vector(6 + random.random(), -10 + random.random())
+                if name == "graveyard":
+                    if random.random() > 0.5:
+                        return vector.Vector(-9 + random.random(), -10 + random.random())
+                    else:
+                        return vector.Vector(9 + random.random(), -10 + random.random())
                 if r.cur_hp < 900: #cannot use rocket properly
                     if name == "barbarianbarrel":
                         pos = copy.deepcopy(r.position)

@@ -17,6 +17,10 @@ import spooky_town_cards
 import rascals_hideout_cards
 import serenity_peak_cards
 import miners_mine_cards
+
+import training_camp_evos
+import bone_pit_evos
+import copy
 import random
 
 troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer", 
@@ -140,6 +144,43 @@ def tower_factory(side, name, level):
         ]
     else:
         raise Exception("Invalid tower type.")
+
+def get_clone(obj):
+    if not obj.evo:
+        return type(obj)(obj.side, copy.deepcopy(obj.position), obj.level)
+    else:
+        n = obj.__class__.__name__
+        if n == "EvolutionKnight":
+            return training_camp_cards.Knight(obj.side, copy.deepcopy(obj.position), obj.level)
+        elif n == "EvolutionArcher":
+            return training_camp_cards.Archer(obj.side, copy.deepcopy(obj.position), obj.level)
+        elif n == "EvolutionMusketeer":
+            return training_camp_cards.Musketeer(obj.side, copy.deepcopy(obj.position), obj.level)
+        elif n == "EvolutionSkeletons":
+            return bone_pit_cards.Skeleton(obj.side, copy.deepcopy(obj.position, obj.level))
+        else:
+            raise Exception("not actually a evo")
+
+def evolution_troop_factory(side, position, name, level):
+    if name == "knight":
+        return training_camp_evos.EvolutionKnight(side, position, level)
+    elif name == "archers":
+        pos1 = vector.Vector(1/2, 0)
+        pos2 = vector.Vector(-1/2, 0)
+        return [training_camp_evos.EvolutionArcher(side, position.added(pos1), level),
+                training_camp_evos.EvolutionArcher(side, position.added(pos2), level)]
+    elif name == "musketeer":
+        return training_camp_evos.EvolutionMusketeer(side, position, level)
+    elif name == "skeletons":
+        flip = 1 if side else -1
+        pos1 = vector.Vector(0, 1/2 * flip)
+        pos2 = vector.Vector(-math.sqrt(3)/4, -1/4 * flip)
+        pos3 = vector.Vector(math.sqrt(3)/4, -1/4 * flip)
+        count = bone_pit_evos.EvolutionSkeletonCounter
+        count.count = 3
+        return [bone_pit_evos.EvolutionSkeleton(side, position.added(pos1), level), 
+                bone_pit_evos.EvolutionSkeleton(side, position.added(pos2), level),
+                bone_pit_evos.EvolutionSkeleton(side, position.added(pos3), level)]
 
 def troop_factory(side, position, name, level):
     if name == "knight":

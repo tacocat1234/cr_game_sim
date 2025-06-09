@@ -227,6 +227,7 @@ class Troop:
                 self.shield_hp = 1
                 self.shield_max_hp = 1
         self.cloned = cloned
+        self.evo = False
 
     def rage(self):
         self.rage_timer = 2
@@ -306,10 +307,10 @@ class Troop:
     def die(self, arena):
         if not self.should_delete and self.goblin_cursed_level is not None:
             from goblin_stadium_cards import Goblin
-            arena.troops.append(Goblin(not self.side, copy.deepcopy(self.position), self.goblin_cursed_level))
+            arena.troops.append(Goblin(not self.side, copy.deepcopy(self.position), self.goblin_cursed_level, self.cloned))
         if not self.should_delete and self.hog_cursed_level is not None:
             from miners_mine_cards import CursedHog
-            arena.troops.append(CursedHog(not self.side, copy.deepcopy(self.position), self.hog_cursed_level))
+            arena.troops.append(CursedHog(not self.side, copy.deepcopy(self.position), self.hog_cursed_level, self.cloned))
         self.cur_hp = -1
         arena.troops.remove(self)
 
@@ -392,9 +393,20 @@ class Troop:
                 distance_to_target = 1
                 m_s = self.jump_speed
             elif not tower_target is None:
-                direction_x = tower_target.position.x - self.position.x #set to directly move to tower
-                direction_y = tower_target.position.y - self.position.y
-                distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
+                tar = None
+                if (self.position.y < 1 and self.side) or (self.position.y > -1 and not self.side):
+                    if self.position.x > 0 and tower_target.position.x < 0: #if on right and targeting left
+                        tar = vector.Vector(4.5, 1.01 if self.side else -1.01)
+                    if self.position.x < 0 and tower_target.position.x > 0: #if on left and targeting right
+                        tar = vector.Vector(-4.5, 1.01 if self.side else -1.01)
+                if tar is None:
+                    direction_x = tower_target.position.x - self.position.x #set to directly move to tower
+                    direction_y = tower_target.position.y - self.position.y
+                    distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
+                else:
+                    direction_x = tar.x - self.position.x
+                    direction_y = tar.y - self.position.y
+                    distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
 
             # Normalize direction
             
@@ -748,7 +760,7 @@ class Spell:
         self.pulse_timer = float('inf')
         self.pulse_time = float('inf')
         self.preplace = False
-
+        self.evo = False
     
 
     def detect_hits(self, arena): #override
@@ -855,6 +867,7 @@ class Building:
         self.invulnerable = False
         self.preplace = False
         self.collideable = True
+        self.evo = False
 
         if cloned:
             self.cur_hp = 1

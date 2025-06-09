@@ -7,6 +7,7 @@ from abstract_classes import Building
 from abstract_classes import TILES_PER_MIN
 from abstract_classes import TICK_TIME
 from goblin_stadium_cards import Goblin
+import card_factory
 import vector
 import copy
 import math
@@ -82,7 +83,7 @@ class Clone(Spell):
                 each.stun_timer = 0.5
                 each.kb(vector.Vector(0, 0.25 if self.side else -0.25))
 
-                c = type(each)(each.side, copy.deepcopy(each.position), each.level)
+                c = card_factory.get_clone(each)
 
                 c.cur_hp = 1
                 c.hit_points = 1
@@ -147,7 +148,7 @@ class CursedHogAttackEntity(MeleeAttackEntity):
             )
         
 class CursedHog(Troop):
-    def __init__(self, side, position, level):
+    def __init__(self, side, position, level, cloned=False):
         super().__init__(
             s=side,              # Side (True for one player, False for the other)
             h_p= 520 * pow(1.1, level - 9),         # Hit points (Example value)
@@ -163,7 +164,8 @@ class CursedHog(Troop):
             d_t=0.2,            # Deploy time
             m=2,            #mass
             c_r=0.6,        #collision radius
-            p=position               # Position (vector.Vector object)
+            p=position,               # Position (vector.Vector object)
+            cloned=cloned
         ) 
         self.level = level
         self.walk_cycle_frames = 4
@@ -364,7 +366,7 @@ class Tornado(Spell):
             s=side,
             d=53*pow(1.1, level - 6),
             c_t_d=9.5*pow(1.1, level - 6),
-            w=2,
+            w=1,
             t=0.5,
             kb=0,
             r=5.5,
