@@ -96,7 +96,7 @@ class EvolutionBomber(bone_pit_cards.Bomber):
         dir.scale(2.5)
         return EvolutionBomberAttackEntity(self.side, self.hit_damage, self.position, copy.deepcopy(self.target.position), dir)
 
-class EvolutionVakyrieSpecialAttackEntity(AttackEntity):
+class EvolutionValkyrieSpecialAttackEntity(AttackEntity):
     SPLASH_RADIUS = 5.5
     COLLISION_RADIUS = 0.5
     def __init__(self, side, damage, ctd, position):
@@ -113,7 +113,7 @@ class EvolutionVakyrieSpecialAttackEntity(AttackEntity):
     def detect_hits(self, arena):
         hits = []
         for each in arena.towers + arena.buildings + arena.troops:
-            if each.side != self.side and (isinstance(each, Tower) or (each.ground and not each.invulnerable)): # if different side
+            if each.side != self.side and not each.invulnerable: # if different side
                 if vector.distance(self.position, each.position) < self.SPLASH_RADIUS + each.collision_radius:
                     hits.append(each)
         return hits
@@ -148,4 +148,4 @@ class EvolutionValkyrie(bone_pit_cards.Valkyrie):
         self.special_ctd = 23 * pow(1.1, level - 6)
 
     def attack(self):
-        return [super().attack(), EvolutionVakyrieSpecialAttackEntity(self.side, self.special_damage, self.special_ctd, self.position)]
+        return [super().attack(), EvolutionValkyrieSpecialAttackEntity(self.side, self.special_damage, self.special_ctd, self.position)]

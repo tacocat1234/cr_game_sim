@@ -947,7 +947,7 @@ class Building:
         if self.preplace or self.deploy_time > 0 or self.stun_timer > 0:
             return
         self.tick_func(arena)
-        if self.target is None or self.target.cur_hp <= 0:
+        if self.target is None or self.target.cur_hp <= 0 or not self.target.targetable:
             self.update_target(arena)
         if not self.target is None and self.attack_cooldown <= 0:
             atk = self.attack()
@@ -956,6 +956,15 @@ class Building:
             elif not atk is None:
                 arena.active_attacks.append(self.attack())
             self.attack_cooldown = self.hit_speed
+
+    def die(self, arena):
+        arena.buildings.remove(self)
+        self.cur_hp = -1
+        if not self.death_spawn is None:
+            for i in range(self.death_spawn_count):
+                arena.troops.append(self.death_spawn(self.side, 
+                    self.position.added(vector.Vector(random.uniform(-self.collision_radius, self.collision_radius), random.uniform(-self.collision_radius, self.collision_radius))), 
+                    self.level))
     
     def cleanup(self, arena):
         if self.preplace:
@@ -972,12 +981,7 @@ class Building:
 
         self.cur_hp -= self.hit_points * TICK_TIME / self.lifespan
         if self.cur_hp <= 0:
-            arena.buildings.remove(self)
-            if not self.death_spawn is None:
-                for i in range(self.death_spawn_count):
-                    arena.troops.append(self.death_spawn(self.side, 
-                        self.position.added(vector.Vector(random.uniform(-self.collision_radius, self.collision_radius), random.uniform(-self.collision_radius, self.collision_radius))), 
-                        self.level))
+            self.die(arena)
         
         if self.slow_timer < 0 :
             self.slow_timer = 0

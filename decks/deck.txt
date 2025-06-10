@@ -1,10 +1,10 @@
-evolution valkyrie 11
-random.troop.1-9 11
-evolution musketeer 11
-evolution skeletons 11
-random.spell.2-3 11
+evolution battleram 11
+knight 11
 evolution cannon 11
-evolution bomber 11
+random.troop.1-9 11
+random.troop.3-6 11
+random.troop.1-2 11
+random.spell.2-3 11
 random.spell.4-7 11
 kingtower 11
 princesstower 11

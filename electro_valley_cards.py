@@ -814,12 +814,12 @@ class RamRider(Troop):
 
         self.rider = RamRiderRider(self.side, self.position, self.level)
 
-    def kb(self, vec):
+    def kb(self, vec, t=None):
         if vec.magnitude() > 0:
             self.charging = False
             self.charge_charge_distance = 0
             self.move_speed = 60 * TILES_PER_MIN
-            self.position.add(vec)
+        super().kb(vec, t)
     
     def freeze(self, duration):
         self.stun_timer = duration

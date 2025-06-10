@@ -5,7 +5,7 @@ from abstract_classes import Building
 from abstract_classes import TILES_PER_MIN
 from abstract_classes import TICK_TIME
 import vector
-import copy
+import math
 
 class BarbarianAttackEntity(MeleeAttackEntity):
     HIT_RANGE = 0.7
@@ -182,10 +182,19 @@ class BattleRam(Troop):
         self.charge_charge_distance = 0
         self.move_speed = 60 * TILES_PER_MIN
         self.attack_cooldown = self.hit_speed
-    
+
     def die(self, arena):
-        arena.troops.append(Barbarian(self.side, self.position.added(vector.Vector(0, 0.3)), self.level, self.cloned))
-        arena.troops.append(Barbarian(self.side, self.position.added(vector.Vector(0, -0.3)), self.level, self.cloned))
+        radians = math.radians(self.facing_dir)
+        # Use cosine for x offset and sine for y offset
+        dx = math.cos(radians) * 0.3
+        dy = math.sin(radians) * 0.3
+
+        # Spawn two troops offset in opposite directions perpendicular to the facing direction
+        offset1 = vector.Vector(-dy, dx)
+        offset2 = vector.Vector(dy, -dx)
+        
+        arena.troops.append(Barbarian(self.side, self.position.added(offset1), self.level, self.cloned))
+        arena.troops.append(Barbarian(self.side, self.position.added(offset2), self.level, self.cloned))
         arena.troops.remove(self)
         self.cur_hp = -1
 

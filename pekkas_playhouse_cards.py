@@ -256,9 +256,9 @@ class Guard(Troop):
 
     def damage(self, amount):
         if self.shield_hp > 0:
-            self.shield_hp -= amount
+            self.shield_hp -= amount * self.damage_amplification
         else:
-            self.cur_hp -= amount
+            self.cur_hp -= amount * self.damage_amplification
 
     def attack(self):
         return GuardAttackEntity(self.side, self.hit_damage, self.position, self.target)

@@ -19,8 +19,10 @@ import serenity_peak_cards
 import miners_mine_cards
 
 import training_camp_evos
+import goblin_stadium_evos
 import bone_pit_evos
 import barbarian_bowl_evos
+import spell_valley_evos
 import copy
 import random
 
@@ -157,7 +159,7 @@ def get_clone(obj):
             return training_camp_cards.Archer(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionMusketeer":
             return training_camp_cards.Musketeer(obj.side, copy.deepcopy(obj.position), obj.level)
-        elif n == "EvolutionSkeletons":
+        elif n == "EvolutionSkeleton":
             return bone_pit_cards.Skeleton(obj.side, copy.deepcopy(obj.position, obj.level))
         elif n == "EvolutionBomber":
             return bone_pit_cards.Bomber(obj.side, copy.deepcopy(obj.position), obj.level)
@@ -167,6 +169,8 @@ def get_clone(obj):
             return barbarian_bowl_cards.Barbarian(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionBattleRam":
             return barbarian_bowl_cards.BattleRam(obj.side, copy.deepcopy(obj.position), obj.level)
+        elif n == "EvolutionWizard":
+            return spell_valley_cards.Wizard(obj.side, copy.deepcopy(obj.position), obj.level)
         else:
             raise Exception(n + " is not actually an evo")
         
@@ -213,12 +217,16 @@ def evolution_troop_factory(side, position, name, level):
         return out    
     elif name == "battleram":
         return barbarian_bowl_evos.EvolutionBattleRam(side, position, level)
+    elif name == "wizard":
+        return spell_valley_evos.EvolutionWizard(side, position, level)
     
 def evolution_spell_factory(side, position, name, level):
     pass
 
 def evolution_building_factory(side, position, name, level):
-    if name == "cannon":
+    if name == "goblincage":
+        return goblin_stadium_evos.EvolutionGoblinCage(side, position, level)
+    elif name == "cannon":
         return barbarian_bowl_evos.EvolutionCannon(side, position, level)
 
 def troop_factory(side, position, name, level):

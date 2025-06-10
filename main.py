@@ -30,8 +30,10 @@ bot_random_deck = False
 
 def can_evo(n):
     return (n == "knight" or n == "archers" or n == "musketeer" or 
-            n == "skeletons" or n == "bomber" or n == "valkyrie"
-            or n == "barbarians" or n == "battleram" or n == "cannon")
+            n == "goblincage" or 
+            n == "skeletons" or n == "bomber" or n == "valkyrie" or
+            n == "barbarians" or n == "battleram" or n == "cannon" or
+            n == "wizard")
     
 used = []
 # Load Player Deck
@@ -39,7 +41,13 @@ with open("decks/deck.txt", "r") as file:
     for _ in range(8):
         line = file.readline().strip()
         if line:
-            card, level = line.rsplit(" ", 1)
+            err = False
+            try:
+                card, level = line.rsplit(" ", 1)
+            except:
+                err = True
+            if err:
+                raise Exception("you typed \"" + line + "\" you forgot to type the level")
             if card == "allrandom":
                 player_random_deck = True
                 KING_LEVEL = PRINCESS_LEVEL = int(level)
@@ -125,13 +133,20 @@ elif BOT_TOWER_TYPE.lower() == "daggerduchess":
     bot_tower_a = towers.DaggerDuchess(False, BOT_P_L, True)
     bot_tower_b = towers.DaggerDuchess(False, BOT_P_L, False)
 
-game_arena.towers = [towers.KingTower(True, PRINCESS_LEVEL), 
-                        player_tower_a,  # a
-                        player_tower_b,  # b
-                        towers.KingTower(False, BOT_K_L), 
-                        bot_tower_a,
-                        bot_tower_b
-                       ]
+err = False
+try:
+    game_arena.towers = [towers.KingTower(True, PRINCESS_LEVEL), 
+                            player_tower_a,  # a
+                            player_tower_b,  # b
+                            towers.KingTower(False, BOT_K_L), 
+                            bot_tower_a,
+                            bot_tower_b
+                        ]
+except:
+    err = True
+
+if err:
+    raise Exception("you either typed too many cards (8 only + 1 kingtower + 1 towertroop) or misspelled a tower type")
 
 #player deck 
 
@@ -335,6 +350,49 @@ def draw():
             pygame.draw.rect(screen, BLACK, (tower_x + 9, tower_y + 5, tower_rect_width - 12, 4))  # Background
             pygame.draw.rect(screen, YELLOW, (tower_x + 9, tower_y + 5, ((tower_rect_width - 12) * ammo_ratio), 4))  # Ammo bar
             screen.blit(dd_symbol_img, (tower_x - 3, tower_y))
+    
+    for building in game_arena.buildings:
+        building_x, building_y = convert_to_pygame(building.position)
+        building_color = BLUE if building.side else RED
+
+        if building.preplace:
+            building_color = GRAY
+        elif not building.targetable:
+            building_color = (255, 127, 127)
+
+        if building.rage_timer > 0:
+            building_color = raged_color(building_color)
+
+        # Draw building square
+        building_size = building.collision_radius * 2 * SCALE
+        true_color = ((255, 0, 255) if building.rage_timer > 0 else (120, 0, 160)) if building.evo else building_color
+        pygame.draw.rect(screen, true_color, (building_x - building_size / 2, building_y - building_size / 2, building_size, building_size))
+
+        class_name = building.__class__.__name__
+        text_surface = font.render(class_name, True, (255, 255, 255))  # White color text
+        text_rect = text_surface.get_rect(center=(building_x, building_y))  # 10 pixels above the troop
+        screen.blit(text_surface, text_rect)
+
+        # Health bar
+        hp_bar_x = building_x - 10
+        hp_bar_y = building_y - 12 - building_size // 2  # Slightly above the building
+        hp_bar_width = 20
+        hp_bar_height = 3
+
+        pygame.draw.rect(screen, BLACK, (hp_bar_x, hp_bar_y, hp_bar_width, hp_bar_height))
+        pygame.draw.rect(screen, GREEN, (hp_bar_x, hp_bar_y, int(hp_bar_width * (building.cur_hp / building.hit_points)), hp_bar_height))
+
+        # Draw Level Indicator
+        level_box_size = 10  # Square size for level indicator
+        level_box_x = hp_bar_x - level_box_size - 2  # Slight padding to the left
+        level_box_y = hp_bar_y - 2  # Align with HP bar
+
+        pygame.draw.rect(screen, building_color, (level_box_x, level_box_y, level_box_size, level_box_size))
+
+        # Render level number text
+        level_text = font.render(str(building.level), True, WHITE)  # White text
+        text_rect = level_text.get_rect(center=(level_box_x + level_box_size / 2, level_box_y + level_box_size / 2))
+        screen.blit(level_text, text_rect)
 
     # Draw Troops
     flying = []
@@ -485,49 +543,6 @@ def draw():
 
         # Render level number text 
         level_text = font.render(str(troop.level), True, WHITE)  # White text
-        text_rect = level_text.get_rect(center=(level_box_x + level_box_size / 2, level_box_y + level_box_size / 2))
-        screen.blit(level_text, text_rect)
-
-    for building in game_arena.buildings:
-        building_x, building_y = convert_to_pygame(building.position)
-        building_color = BLUE if building.side else RED
-
-        if building.preplace:
-            building_color = GRAY
-        elif not building.targetable:
-            building_color = (255, 127, 127)
-
-        if building.rage_timer > 0:
-            building_color = raged_color(building_color)
-
-        # Draw building square
-        building_size = building.collision_radius * 2 * SCALE
-        true_color = ((255, 0, 255) if building.rage_timer > 0 else (120, 0, 160)) if building.evo else building_color
-        pygame.draw.rect(screen, true_color, (building_x - building_size / 2, building_y - building_size / 2, building_size, building_size))
-
-        class_name = building.__class__.__name__
-        text_surface = font.render(class_name, True, (255, 255, 255))  # White color text
-        text_rect = text_surface.get_rect(center=(building_x, building_y))  # 10 pixels above the troop
-        screen.blit(text_surface, text_rect)
-
-        # Health bar
-        hp_bar_x = building_x - 10
-        hp_bar_y = building_y - 12 - building_size // 2  # Slightly above the building
-        hp_bar_width = 20
-        hp_bar_height = 3
-
-        pygame.draw.rect(screen, BLACK, (hp_bar_x, hp_bar_y, hp_bar_width, hp_bar_height))
-        pygame.draw.rect(screen, GREEN, (hp_bar_x, hp_bar_y, int(hp_bar_width * (building.cur_hp / building.hit_points)), hp_bar_height))
-
-        # Draw Level Indicator
-        level_box_size = 10  # Square size for level indicator
-        level_box_x = hp_bar_x - level_box_size - 2  # Slight padding to the left
-        level_box_y = hp_bar_y - 2  # Align with HP bar
-
-        pygame.draw.rect(screen, building_color, (level_box_x, level_box_y, level_box_size, level_box_size))
-
-        # Render level number text
-        level_text = font.render(str(building.level), True, WHITE)  # White text
         text_rect = level_text.get_rect(center=(level_box_x + level_box_size / 2, level_box_y + level_box_size / 2))
         screen.blit(level_text, text_rect)
 

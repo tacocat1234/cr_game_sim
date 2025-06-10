@@ -20,11 +20,17 @@ examples:
 "random.spell.4-4 200" is a random spell with 4 elxir, at level 200
 "random 13" randomizes the entire deck according to an algorithim, where every card is level 13
 
+after you select your 8 cards, type
+kingtower {level}
+{towertroop} {level}
+to set king and towertroop levels, and towertroop
+
+
 recommended bot_deck.txt levels is 13 comapred to your 11, becuase bot is stupid.
 
 special note:
 only evos are:
-knight, archers, musketeer, archers, skeletons, bomber, valkyrie, barbarians, battleram, cannon
+knight, archers, musketeer, archers, goblincage, skeletons, bomber, valkyrie, barbarians, battleram, cannon, wizard
 more coming soon
 
 ## Troops
