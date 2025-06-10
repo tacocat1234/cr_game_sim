@@ -6,7 +6,11 @@ evo_cycles = {
     "archers" : 2,
     "musketeer" : 2,
     "skeletons" : 2,
-    "bomber" : 2
+    "bomber" : 2,
+    "valkyrie" : 2,
+    "barbarians" : 1,
+    "battleram" : 2,
+    "cannon" : 2
 }
 
 class Card:
@@ -16,7 +20,7 @@ class Card:
         self.level = level
         self.is_evo = evo
         self.cycles = int(evo_cycles.get(self.name, -1))
-        self.cycles_left = self.cycles
+        self.cycles_left = self.cycles if not self.is_evo else 0
 
         error = False
         try:

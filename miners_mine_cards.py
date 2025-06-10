@@ -380,9 +380,9 @@ class Tornado(Spell):
 
     def passive_effect(self, target):
         if isinstance(target, Troop) and not target.invulnerable:
-            total_kb = -3/10 * target.mass + 31/5
-            mag = total_kb/10
-            target.kb(self.position.subtracted(target.position).scaled(mag))
+            total_kb = -1/5 * target.mass + 6
+            mag = total_kb/21
+            target.kb(self.position.subtracted(target.position).scaled(mag), 0.05)
 
 class CannonCartAttackEntity(RangedAttackEntity):
     def __init__(self, side, damage, position, target):

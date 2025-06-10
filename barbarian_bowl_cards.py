@@ -141,7 +141,7 @@ class BattleRam(Troop):
             h_p= 430 * pow(1.1, level - 3),         # Hit points
             h_d= 135 * pow(1.1, level - 3),          # Hit damage (charge is 2x)
             h_s=0.4,          # Hit speed (Seconds per hit)
-            l_t=0.05,            # First hit cooldown
+            l_t=0.35,            # First hit cooldown
             h_r=0.5,            # Hit range
             s_r=5.5,            # Sight Range
             g=True,           # Ground troop
@@ -162,12 +162,12 @@ class BattleRam(Troop):
 
         self.sprite_path = "sprites/battleram/battleram.png"
 
-    def kb(self, vec):
+    def kb(self, vec, t=None):
         if vec.magnitude() > 0:
             self.charging = False
             self.charge_charge_distance = 0
             self.move_speed = 60 * TILES_PER_MIN
-        super().kb(vec)
+        super().kb(vec, t)
 
     def stun(self):
         self.charging = False

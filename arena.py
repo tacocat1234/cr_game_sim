@@ -1,5 +1,6 @@
 from abstract_classes import TICK_TIME
 from abstract_classes import Troop
+from abstract_classes import Spell
 import card_factory
 import vector
 import itertools
@@ -50,8 +51,11 @@ class Arena:
                     self.spells.append(card)
             elif card_type == "building":
                 if isinstance(card, list):
+                    for each in card:
+                        each.on_deploy(self)
                     self.buildings.extend(card)
                 else:
+                    card.on_deploy(self)
                     self.buildings.append(card)
 
             if did_preplace:
@@ -105,7 +109,7 @@ class Arena:
                     each.collideable = True
                     each.targetable = True
                     each.on_preplace()
-                    if isinstance(each, Troop):
+                    if not isinstance(each, Spell):
                         each.on_deploy(self)
             else:
                 self.preplace.preplace = False
@@ -113,7 +117,7 @@ class Arena:
                 self.preplace.collideable = True
                 self.preplace.targetable = True
                 self.preplace.on_preplace()
-                if isinstance(self.preplace, Troop):
+                if not isinstance(self.preplace, Spell):
                     self.preplace.on_deploy(self)
             self.preplace = None
             self.preplace_side = None

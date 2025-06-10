@@ -20,6 +20,7 @@ import miners_mine_cards
 
 import training_camp_evos
 import bone_pit_evos
+import barbarian_bowl_evos
 import copy
 import random
 
@@ -160,8 +161,14 @@ def get_clone(obj):
             return bone_pit_cards.Skeleton(obj.side, copy.deepcopy(obj.position, obj.level))
         elif n == "EvolutionBomber":
             return bone_pit_cards.Bomber(obj.side, copy.deepcopy(obj.position), obj.level)
+        elif n == "EvolutionValkyrie":
+            return bone_pit_cards.Valkyrie(obj.side, copy.deepcopy(obj.position), obj.level)
+        elif n == "EvolutionBarbarian":
+            return barbarian_bowl_cards.Barbarian(obj.side, copy.deepcopy(obj.position), obj.level)
+        elif n == "EvolutionBattleRam":
+            return barbarian_bowl_cards.BattleRam(obj.side, copy.deepcopy(obj.position), obj.level)
         else:
-            raise Exception("not actually an evo")
+            raise Exception(n + " is not actually an evo")
         
 def evolution_factory(side, position, name, level):
     if name in troops:
@@ -193,12 +200,26 @@ def evolution_troop_factory(side, position, name, level):
                 bone_pit_evos.EvolutionSkeleton(side, position.added(pos3), level, count)]
     elif name == "bomber":
         return bone_pit_evos.EvolutionBomber(side, position, level)
+    elif name == "valkyrie":
+        return bone_pit_evos.EvolutionValkyrie(side, position, level)
+    elif name == "barbarians":
+        flip = 1 if side else -1
+        radius = 0.7
+        angles = [(2 * math.pi * k / 5) + (math.pi / 2) for k in range(5)]
+        positions = [vector.Vector(radius * math.cos(a), radius * math.sin(a) * flip) for a in angles]
+        out = []
+        for each in positions:
+            out.append(barbarian_bowl_evos.EvolutionBarbarian(side, position.added(each), level))
+        return out    
+    elif name == "battleram":
+        return barbarian_bowl_evos.EvolutionBattleRam(side, position, level)
     
 def evolution_spell_factory(side, position, name, level):
     pass
 
 def evolution_building_factory(side, position, name, level):
-    pass
+    if name == "cannon":
+        return barbarian_bowl_evos.EvolutionCannon(side, position, level)
 
 def troop_factory(side, position, name, level):
     if name == "knight":

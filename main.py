@@ -28,6 +28,11 @@ TOWER_TYPE = BOT_TOWER_TYPE = ""
 player_random_deck = False
 bot_random_deck = False
 
+def can_evo(n):
+    return (n == "knight" or n == "archers" or n == "musketeer" or 
+            n == "skeletons" or n == "bomber" or n == "valkyrie"
+            or n == "barbarians" or n == "battleram" or n == "cannon")
+    
 used = []
 # Load Player Deck
 with open("decks/deck.txt", "r") as file:
@@ -70,10 +75,7 @@ with open("decks/bot_deck.txt", "r") as file:
                 break
             _, actual = parse_input(card, used)
             used.append(actual)
-            evo = False
-            if (actual == "knight" or actual == "archers" or actual == "musketeer" or actual == "skeletons" or actual == "bomber"):
-                evo = True
-            bot_deck.append(Card(True, actual, int(level), evo))
+            bot_deck.append(Card(True, actual, int(level), can_evo(actual)))
 
     if not bot_random_deck:
         line = file.readline().strip()
@@ -205,15 +207,31 @@ dd_symbol_img = pygame.image.load("sprites/daggerduchess/duchess_symbol.png").co
 elixir_int_img = pygame.image.load("sprites/elixir_bar.png").convert_alpha()
 
 #temp
-#game_arena.troops.append(training_camp_cards.Giant(True, vector.Vector(-2, -3), 1))
-#game_arena.troops.append(training_camp_cards.Archer(True, vector.Vector(-3, -4), 1))
-#game_arena.troops.append(training_camp_cards.Giant(False, vector.Vector(-3, 3), 1))
-#game_arena.troops.append(training_camp_cards.MiniPekka(True, vector.Vector(-3, -4), 1))
+#game_arena.troops.append(training_camp_cards.Giant(True, vector.Vector(-2, -3)
+#game_arena.troops.append(training_camp_cards.Archer(True, vector.Vector(-3, -4)
+#game_arena.troops.append(training_camp_cards.Giant(False, vector.Vector(-3, 3)
+#game_arena.troops.append(training_camp_cards.MiniPekka(True, vector.Vector(-3, -4)
 #temp
 
 def cycle(hand, index, queue):
     queue.append(hand[index])
     hand[index] = queue.pop(0)
+
+def display_evo_cannon(pos, side):
+    all = [
+        vector.Vector(2.5, pos.y + 1.5 if side else -1.5),
+        vector.Vector(-2.5, pos.y + 1.5 if side else -1.5), 
+        vector.Vector(7.5, pos.y + 1.5 if side else -1.5),
+        vector.Vector(-7.5, pos.y + 1.5 if side else -1.5),
+        vector.Vector(0, pos.y + 8.5 if side else -8.5), 
+        vector.Vector(4.5, pos.y + 8.5 if side else -8.5),
+        vector.Vector(-4.5, pos.y + 8.5 if side else -8.5),
+        vector.Vector(8.5, pos.y + 8.5 if side else -8.5),
+        vector.Vector(-8.5, pos.y + 8.5 if side else -8.5)
+    ]
+
+    for each in all:
+        pygame.draw.circle(screen, (224, 255, 232), convert_to_pygame(each), 1.5 * SCALE, width=1)
 
 def draw():
     screen.fill(BG_TEMP)
@@ -245,6 +263,8 @@ def draw():
                     pygame.draw.circle(screen, (224, 255, 232), (hovered[0] + 10, hovered[1] + 10), each * SCALE, width=1)
             else:
                 pygame.draw.circle(screen, (224, 255, 232), (hovered[0] + 10, hovered[1] + 10), select_radius * SCALE, width=1)
+                if deck[hand[click_quarter - 1]].name == "cannon" and deck[hand[click_quarter - 1]].cycles_left == 0:
+                    display_evo_cannon(convert_from_pygame(0, hovered[1]), True)
         
     if not drag_start_pos is None:
         cur_name = deck[hand[click_quarter - 1]].name
@@ -337,7 +357,8 @@ def draw():
                 pygame.draw.rect(screen, troop_color, pygame.Rect(rect_x, rect_y, width, height))
                 display_y = rect_y
             else:
-                pygame.draw.circle(screen, (120, 0, 160) if troop.evo else troop_color, (troop_x, troop_y), troop.collision_radius * SCALE)
+                true_color = ((255, 0, 255) if troop.rage_timer > 0 else (120, 0, 160)) if troop.evo else troop_color
+                pygame.draw.circle(screen, true_color, (troop_x, troop_y), troop.collision_radius * SCALE)
                 display_y = troop_y - troop.collision_radius * SCALE  # Use circle's top for text position
             class_name = troop.__class__.__name__
             text_surface = font.render(class_name, True, (255, 255, 255))  # White color text
@@ -481,7 +502,8 @@ def draw():
 
         # Draw building square
         building_size = building.collision_radius * 2 * SCALE
-        pygame.draw.rect(screen, building_color, (building_x - building_size / 2, building_y - building_size / 2, building_size, building_size))
+        true_color = ((255, 0, 255) if building.rage_timer > 0 else (120, 0, 160)) if building.evo else building_color
+        pygame.draw.rect(screen, true_color, (building_x - building_size / 2, building_y - building_size / 2, building_size, building_size))
 
         class_name = building.__class__.__name__
         text_surface = font.render(class_name, True, (255, 255, 255))  # White color text
@@ -680,7 +702,6 @@ while running:
                     bot_pos.x = -1.5
                 elif bot_pos.x > 1.5:
                     bot_pos.x = 1.5
-            print(bot_card.cycles_left)
             game_arena.add(False, bot_pos, bot_card.name, bot_card.level, bot_card.cycles_left == 0)
             bot_card.cycle_evo()
     for event in pygame.event.get():

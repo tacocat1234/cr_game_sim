@@ -201,6 +201,7 @@ class Troop:
         self.slow_timer = 0
         self.rage_timer = 0
         self.kb_timer = 0
+        self.kb_max = 0
 
         self.kb_vector = None
         self.slow_sources = []
@@ -297,12 +298,17 @@ class Troop:
     def on_preplace(self):
         pass
     
-    def kb(self, vector):
-        self.kb_timer = KB_TIME
+    def kb(self, vector, kb_time = None):
+        if kb_time is None:
+            self.kb_timer = KB_TIME
+            self.kb_max = KB_TIME
+        else:
+            self.kb_timer = kb_time
+            self.kb_max = kb_time
         self.kb_vector = vector
 
     def kb_tick(self):
-        self.position.add(self.kb_vector.scaled(TICK_TIME/KB_TIME))
+        self.position.add(self.kb_vector.scaled(TICK_TIME/self.kb_max))
 
     def die(self, arena):
         if not self.should_delete and self.goblin_cursed_level is not None:
@@ -918,6 +924,9 @@ class Building:
 
     def attack(self):
         return None
+    
+    def on_deploy(self, arena):
+        pass
     
     def on_preplace(self):
         pass
