@@ -151,7 +151,7 @@ class EvolutionCannonSpecialAttackEntity(AttackEntity):
         return hits
 
     def apply_effect(self, target):
-        if target.can_kb and not target.invulnerable:
+        if isinstance(target, Troop) and target.can_kb and not target.invulnerable:
             vec = target.position.subtracted(self.position)
             vec.normalize()
             vec.scale(2)
