@@ -14,7 +14,11 @@ evo_cycles = {
     "wizard" : 1,
     "bats" : 2,
     "zap" : 2,
-    "mortar" : 2
+    "mortar" : 2,
+    "pekka" : 1,
+    "goblinbarrel" : 2,
+    "royalgiant" : 1,
+    "royalrecruits" : 2
 }
 
 class Card:

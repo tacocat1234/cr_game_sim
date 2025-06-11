@@ -34,7 +34,9 @@ def can_evo(n):
             n == "skeletons" or n == "bomber" or n == "valkyrie" or
             n == "barbarians" or n == "battleram" or n == "cannon" or
             n == "wizard" or
-            n == "bats" or n == "zap")
+            n == "bats" or n == "zap" or n == "mortar" or
+            n == "pekka" or n == "goblinbarrel" or 
+            n == "royalgiant" or n == "royalrecruits")
     
 used = []
 # Load Player Deck
@@ -99,7 +101,7 @@ with open("decks/bot_deck.txt", "r") as file:
 
 # Generate Random Player Deck
 if player_random_deck:
-    deck = [Card(True, card, KING_LEVEL) for card in generate_random_deck()]
+    deck = [Card(True, card, KING_LEVEL, can_evo(card)) for card in generate_random_deck()]
     print("your deck is:")
 
     for i in range(len(deck)):
@@ -204,7 +206,7 @@ def convert_to_pygame(coordinate):
 
 def convert_from_pygame(pygame_x, pygame_y):
     x = (pygame_x - WIDTH / 2) // SCALE + 0.5
-    y = (HEIGHT / 2 - 60 - pygame_y) // SCALE + 0.5# Invert Y-axis back
+    y = (HEIGHT / 2 - 64 - pygame_y) // SCALE + 0.5# Invert Y-axis back
     return vector.Vector(x, y)
 
 def in_pocket(x, y, isRight): #360 + 128, 640 + 128
@@ -761,7 +763,21 @@ while running:
                 # Store the ending position of the drag
                 drag_end_pos = (mouse_x, mouse_y)
                 cur_card = deck[hand[click_quarter - 1]]
-                if mouse_x > 64 and mouse_x < WIDTH - 64 and mouse_y < HEIGHT - 128 and (can_anywhere(cur_card.name) or mouse_y > 340) or (not enemy_right and in_pocket(mouse_x, mouse_y, True)) or (not enemy_left and in_pocket(mouse_x, mouse_y, False)):
+                legal_place = False
+                c = can_anywhere(cur_card.name)
+                if (c or mouse_y > 340) or (not enemy_right and in_pocket(mouse_x, mouse_y, True)) or (not enemy_left and in_pocket(mouse_x, mouse_y, False)):
+                    legal_place = True
+                if not c and mouse_y > 320 and mouse_y <= 340:
+                    legal_place = True
+                    mouse_y = 341
+                elif mouse_y > 10 * SCALE and not enemy_right and in_pocket(mouse_x, mouse_y - 20, True):
+                    legal_place = True
+                    mouse_y = 11 * SCALE + 1
+                elif mouse_y > 10 * SCALE and not enemy_left and in_pocket(mouse_x, mouse_y, False):
+                    legal_place = True
+                    mouse_y = 11 * SCALE + 1
+                
+                if mouse_x > 64 and mouse_x < WIDTH - 64 and mouse_y < HEIGHT - 128 and legal_place:
                     pos = convert_from_pygame(mouse_x, mouse_y)
                     if cur_card.name == "royalrecruits":
                         if pos.x < -1.5:

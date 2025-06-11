@@ -13,6 +13,7 @@ class EvolutionBarbarian(barbarian_bowl_cards.Barbarian):
         self.evo = True
         self.normal_hit_damage = self.hit_damage
         self.hit_points = self.hit_points * 1.1
+        self.cur_hp = self.cur_hp * 1.1
     
     def attack(self):
         self.rage()

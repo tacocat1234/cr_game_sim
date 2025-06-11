@@ -1,10 +1,10 @@
-knight 11
-archers 11
-evolution cannon 11
-random.troop.1-9 11
-random.troop.1-6 11
-random.troop.1-2 11
-evolution zap 11
-random.spell.4-7 11
-kingtower 11
+miner 11
+clone 11
+miner 11
+clone 11
+miner 11
+clone 11
+miner 11
+clone 11
+k 11
 princesstower 11

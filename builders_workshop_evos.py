@@ -93,6 +93,7 @@ class EvolutionMortar(builders_workshop_cards.Mortar):
         self.hit_speed = 4
         self.load_time = 3
         self.cur_hp = self.cur_hp * 1.25
+        self.hit_points = self.hit_points * 1.25
 
     def attack(self):
         return EvolutionMortarAttackEntity(self.side, self.hit_damage, self.position, copy.deepcopy(self.target.position), self.level)

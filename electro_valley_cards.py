@@ -224,7 +224,7 @@ class MinerAttackEntity(MeleeAttackEntity):
         
             
 class Miner(Troop):
-    def __init__(self, side, position, level):
+    def __init__(self, side, position, level, cloned=False):
         super().__init__(
             s=side,              # Side (True for one player, False for the other)
             h_p= 1000 * pow(1.1, level - 9),         # Hit points (Example value)
@@ -240,7 +240,8 @@ class Miner(Troop):
             d_t=0,            # Deploy time
             m=6,            #mass
             c_r=0.5,        #collision radius
-            p=vector.Vector(0, -13 if side else 13)               # Position (vector.Vector object)
+            p=vector.Vector(0, -13 if side else 13),               # Position (vector.Vector object)
+            cloned=cloned
         )
         self.target = position
         self.level = level
@@ -249,6 +250,9 @@ class Miner(Troop):
         self.collideable = False
         self.preplace = False
         self.normal_move_speed = 90*TILES_PER_MIN
+
+        if self.cloned:
+            self.position = position
 
     def tick_func(self, arena):
         if self.invulnerable and vector.distance(self.position, self.target) < 0.25:

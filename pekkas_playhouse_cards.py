@@ -263,8 +263,43 @@ class Guard(Troop):
     def attack(self):
         return GuardAttackEntity(self.side, self.hit_damage, self.position, self.target)
     
+class FakeGoblinAttackEntity(MeleeAttackEntity):
+    HIT_RANGE = 0.5
+    COLLISION_RADIUS = 0.5
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            side=side,
+            damage=damage,
+            position=position,
+            target=target
+            )
+    
+class FakeGoblin(Troop):
+    def __init__(self, side, position, level, cloned=False):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 31.6 * pow(1.1, level - 1),         # Hit points (Example value)
+            h_d= 47 * pow(1.1, level - 1),          # Hit damage (Example value)
+            h_s=1.1,          # Hit speed (Seconds per hit)
+            l_t=0.7,            # First hit cooldown
+            h_r=0.5,            # Hit range
+            s_r=5.5,            # Sight Range
+            g=True,           # Ground troop
+            t_g_o=True,       # Targets ground-only
+            t_o=False,        # Not tower-only
+            m_s=120*TILES_PER_MIN,          # Movement speed 
+            d_t=1,            # Deploy time
+            m=2,            #mass
+            c_r=0.5,        #collision radius
+            p=position,               # Position (vector.Vector object)
+            cloned=cloned
+        )
+        self.level = level
+    def attack(self):
+        return FakeGoblinAttackEntity(self.side, self.hit_damage, self.position, self.target)
+    
 class GoblinBarrel(Spell):
-    def __init__(self, side, target, level):
+    def __init__(self, side, target, level, fake=False):
         super().__init__(
             s=side,
             d=0,
@@ -277,20 +312,29 @@ class GoblinBarrel(Spell):
             tar=target
         )
         self.level = level
+        self.fake = fake
+
+    def tick_func(self, arena):
+        pass
     
     def tick(self, arena):
+        if self.preplace:
+            return
+        self.tick_func(arena)
+
         if self.spawn_timer > 0:
             tower_to_target  = self.target_pos.subtracted(self.king_pos)
             self.position.add(tower_to_target.scaled(self.velocity / tower_to_target.magnitude()))
             self.spawn_timer -= 1 #spawn in
         elif self.waves > 0:
+            summon_type = FakeGoblin if self.fake else Goblin
             flip = 1 if self.side else -1
             pos1 = vector.Vector(0, 1/2 * flip)
             pos2 = vector.Vector(-math.sqrt(3)/4, -1/4 * flip)
             pos3 = vector.Vector(math.sqrt(3)/4, -1/4 * flip)
-            arena.troops.extend([Goblin(self.side, self.position.added(pos1), self.level), 
-                    Goblin(self.side, self.position.added(pos2), self.level),
-                    Goblin(self.side, self.position.added(pos3), self.level)])
+            arena.troops.extend([summon_type(self.side, self.position.added(pos1), self.level), 
+                    summon_type(self.side, self.position.added(pos2), self.level),
+                    summon_type(self.side, self.position.added(pos3), self.level)])
             self.damage_cd = self.time_between #reset cooldown
             self.waves = 0
         else:

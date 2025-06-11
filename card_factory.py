@@ -24,6 +24,8 @@ import bone_pit_evos
 import barbarian_bowl_evos
 import spell_valley_evos
 import builders_workshop_evos
+import pekkas_playhouse_evos
+import royal_arena_evos
 import copy
 import random
 
@@ -150,6 +152,8 @@ def tower_factory(side, name, level):
         raise Exception("Invalid tower type.")
 
 def get_clone(obj):
+    if obj.__class__.__name__ == "Miner":
+        return electro_valley_cards.Miner(obj.side, copy.deepcopy(obj.position), obj.level, True)
     if not obj.evo:
         return type(obj)(obj.side, copy.deepcopy(obj.position), obj.level)
     else:
@@ -174,6 +178,12 @@ def get_clone(obj):
             return spell_valley_cards.Wizard(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionBat":
             return builders_workshop_cards.Bat(obj.side, copy.deepcopy(obj.position), obj.level)
+        elif n == "EvolutionPekka":
+            return pekkas_playhouse_cards.Pekka(obj.side, copy.deepcopy(obj.position), obj.level)
+        elif n == "EvolutionRoyalGiant":
+            return royal_arena_cards.RoyalGiant(obj.side, copy.deepcopy(obj.position), obj.level)
+        elif n == "EvolutionRoyalRecruit":
+            return royal_arena_cards.RoyalRecruit(obj.side, copy.deepcopy(obj.position), obj.level)
         else:
             raise Exception(n + " is not actually an evo")
         
@@ -231,10 +241,21 @@ def evolution_troop_factory(side, position, name, level):
         for each in positions:
             out.append(builders_workshop_evos.EvolutionBat(side, position.added(each), level))
         return out
+    elif name == "pekka":
+        return pekkas_playhouse_evos.EvolutionPekka(side, position, level)
+    elif name == "royalgiant":
+        return royal_arena_evos.EvolutionRoyalGiant(side, position, level)
+    elif name == "royalrecruits":
+        out = []
+        for i in range(6):
+            out.append(royal_arena_evos.EvolutionRoyalRecruit(side, position.added(vector.Vector(-7 + (14/5 * i), 0)), level))
+        return out
     
 def evolution_spell_factory(side, position, name, level):
     if name == "zap":
         return builders_workshop_evos.EvolutionZap(side, position, level)
+    elif name == "goblinbarrel":
+        return pekkas_playhouse_evos.EvolutionGoblinBarrel(side, position, level)
 
 def evolution_building_factory(side, position, name, level):
     if name == "goblincage":

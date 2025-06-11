@@ -245,7 +245,6 @@ class Fisherman(Troop):
         self.casting = False
         self.reeling = False
         self.casted = False
-        self.jump_speed = 450*TILES_PER_MIN
         self.target_ms = None
 
         self.level = level
@@ -257,11 +256,19 @@ class Fisherman(Troop):
     def tick_func(self, arena):
         
         if self.stun_timer <= 0 and self.deploy_time <= 0:
-            if self.casting and not self.casted: #if launching, launch reel
+            if (self.target is None or self.target.cur_hp <= 0) and (self.reeling or self.casting):
+                self.casted = False
+                self.reeling = False
+                self.casting = False
+                self.ground = True
+                self.stun_timer = 0
+                self.move_speed = self.normal_move_speed
+                return
+
+            if self.casting and not self.casted and self.target.cur_hp > 0: #if launching, launch reel
                 arena.active_attacks.append(FishermanSpecialAttackEntity(self.side, self.hit_damage, self.position, self.target, self))
-                self.casted = True
-
-
+                self.casted = True            
+            
             if self.target is not None: #if existing target
                 d = vector.distance(self.position, self.target.position)
                 if not self.reeling and not self.casting and d > 3.5 + self.target.collision_radius and d < 7 + self.target.collision_radius and self.dash_timer == 0:
