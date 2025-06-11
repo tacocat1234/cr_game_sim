@@ -33,7 +33,8 @@ def can_evo(n):
             n == "goblincage" or 
             n == "skeletons" or n == "bomber" or n == "valkyrie" or
             n == "barbarians" or n == "battleram" or n == "cannon" or
-            n == "wizard")
+            n == "wizard" or
+            n == "bats" or n == "zap")
     
 used = []
 # Load Player Deck
@@ -109,7 +110,7 @@ if player_random_deck:
 
 # Generate Random Bot Deck
 if bot_random_deck:
-    bot_deck = [Card(False, card, BOT_K_L) for card in generate_random_deck()]
+    bot_deck = [Card(False, card, BOT_K_L, can_evo(card)) for card in generate_random_deck()]
 
 # Initialize Player Towers
 if TOWER_TYPE.lower() == "princesstower":
@@ -483,16 +484,9 @@ def draw():
             troop_color = (troop_color[0], min(troop_color[1] + 160, 255), min(troop_color[2] + 160, 255))
 
         # Draw troop circle
-        if isinstance(troop, Log) or isinstance(troop, BarbarianBarrel):
-            width = troop.collision_radius * SCALE
-            height = 1.2 * SCALE
-            rect_x = troop_x - width / 2
-            rect_y = troop_y - height / 2
-            pygame.draw.rect(screen, troop_color, pygame.Rect(rect_x, rect_y, width, height))
-            display_y = rect_y
-        else:
-            pygame.draw.circle(screen, troop_color, (troop_x, troop_y), troop.collision_radius * SCALE)
-            display_y = troop_y - troop.collision_radius * SCALE  # Use circle's top for text position
+        true_color = ((255, 0, 255) if troop.rage_timer > 0 else (120, 0, 160)) if troop.evo else troop_color
+        pygame.draw.circle(screen, true_color, (troop_x, troop_y), troop.collision_radius * SCALE)
+        display_y = troop_y - troop.collision_radius * SCALE  # Use circle's top for text position
         class_name = troop.__class__.__name__
         text_surface = font.render(class_name, True, (255, 255, 255))  # White color text
         text_rect = text_surface.get_rect(center=(troop_x, display_y + 10))  # 10 pixels above the troop

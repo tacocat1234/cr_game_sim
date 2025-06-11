@@ -24,20 +24,8 @@ class Zap(Spell):
             tar=target
         )
     
-    def tick(self, arena):
-        if self.preplace:
-            return
-        if self.waves > 0:
-            hits = self.detect_hits(arena)
-            for each in hits:
-                each.stun()
-                if (isinstance(each, Tower)):
-                    each.cur_hp -= self.crown_tower_damage #crown tower damage
-                else:
-                    each.damage(self.damage)
-            self.waves -= 1
-        else:
-            self.should_delete = True #mark for deletion
+    def apply_effect(self, target):
+        target.stun()
 
 class MortarAttackEntity(RangedAttackEntity):
     def __init__(self, side, damage, position, target):

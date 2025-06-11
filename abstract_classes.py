@@ -782,10 +782,14 @@ class Spell:
 
     def on_preplace(self):
         pass
+
+    def tick_func(self, arena):
+        pass
         
     def tick(self, arena):
         if self.preplace:
             return
+        self.tick_func(arena)
         if self.spawn_timer > 0:
             tower_to_target  = self.target_pos.subtracted(self.king_pos)
             self.position.add(tower_to_target.scaled(self.velocity / tower_to_target.magnitude()))
@@ -805,7 +809,8 @@ class Spell:
                     each.kb(displacement)
                 self.apply_effect(each)
             self.waves -= 1 #decrease waves
-            self.damage_cd = self.time_between #reset cooldown
+            if self.waves > 0:
+                self.damage_cd = self.time_between #reset cooldown
         elif self.damage_cd > 0:
             self.damage_cd -= TICK_TIME #decrement cooldown
         elif self.display_duration <= 0:

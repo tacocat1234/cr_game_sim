@@ -23,6 +23,7 @@ import goblin_stadium_evos
 import bone_pit_evos
 import barbarian_bowl_evos
 import spell_valley_evos
+import builders_workshop_evos
 import copy
 import random
 
@@ -171,6 +172,8 @@ def get_clone(obj):
             return barbarian_bowl_cards.BattleRam(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionWizard":
             return spell_valley_cards.Wizard(obj.side, copy.deepcopy(obj.position), obj.level)
+        elif n == "EvolutionBat":
+            return builders_workshop_cards.Bat(obj.side, copy.deepcopy(obj.position), obj.level)
         else:
             raise Exception(n + " is not actually an evo")
         
@@ -219,15 +222,27 @@ def evolution_troop_factory(side, position, name, level):
         return barbarian_bowl_evos.EvolutionBattleRam(side, position, level)
     elif name == "wizard":
         return spell_valley_evos.EvolutionWizard(side, position, level)
+    elif name == "bats":
+        flip = 1 if side else -1
+        radius = 0.75
+        angles = [(2 * math.pi * k / 5) + (math.pi / 2) for k in range(5)]
+        positions = [vector.Vector(radius * math.cos(a), radius * math.sin(a) * flip) for a in angles]
+        out = []
+        for each in positions:
+            out.append(builders_workshop_evos.EvolutionBat(side, position.added(each), level))
+        return out
     
 def evolution_spell_factory(side, position, name, level):
-    pass
+    if name == "zap":
+        return builders_workshop_evos.EvolutionZap(side, position, level)
 
 def evolution_building_factory(side, position, name, level):
     if name == "goblincage":
         return goblin_stadium_evos.EvolutionGoblinCage(side, position, level)
     elif name == "cannon":
         return barbarian_bowl_evos.EvolutionCannon(side, position, level)
+    elif name == "mortar":
+        return builders_workshop_evos.EvolutionMortar(side, position, level)
 
 def troop_factory(side, position, name, level):
     if name == "knight":
