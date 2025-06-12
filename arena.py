@@ -38,11 +38,13 @@ class Arena:
 
             if card_type == "troop":
                 if isinstance(card, list):
-                    for each in card:
-                        each.on_deploy(self)
+                    if not did_preplace:
+                        for each in card:
+                            each.on_deploy(self)
                     self.troops.extend(card)
                 else:
-                    card.on_deploy(self)
+                    if not did_preplace:
+                        card.on_deploy(self)
                     self.troops.append(card)
             elif card_type == "spell":
                 if isinstance(card, list):
@@ -51,11 +53,13 @@ class Arena:
                     self.spells.append(card)
             elif card_type == "building":
                 if isinstance(card, list):
-                    for each in card:
-                        each.on_deploy(self)
+                    if not did_preplace:
+                        for each in card:
+                            each.on_deploy(self)
                     self.buildings.extend(card)
                 else:
-                    card.on_deploy(self)
+                    if not did_preplace:
+                        card.on_deploy(self)
                     self.buildings.append(card)
 
             if did_preplace:

@@ -770,10 +770,10 @@ while running:
                 if not c and mouse_y > 320 and mouse_y <= 340:
                     legal_place = True
                     mouse_y = 341
-                elif mouse_y > 10 * SCALE and not enemy_right and in_pocket(mouse_x, mouse_y - 20, True):
+                elif mouse_y > 10 * SCALE and mouse_y <= 11 * SCALE and not enemy_right and in_pocket(mouse_x, mouse_y - 20, True):
                     legal_place = True
                     mouse_y = 11 * SCALE + 1
-                elif mouse_y > 10 * SCALE and not enemy_left and in_pocket(mouse_x, mouse_y, False):
+                elif mouse_y > 10 * SCALE and mouse_y <= 11 * SCALE and not enemy_left and in_pocket(mouse_x, mouse_y, False):
                     legal_place = True
                     mouse_y = 11 * SCALE + 1
                 

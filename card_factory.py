@@ -26,6 +26,7 @@ import spell_valley_evos
 import builders_workshop_evos
 import pekkas_playhouse_evos
 import royal_arena_evos
+import frozen_peak_evos
 import copy
 import random
 
@@ -184,6 +185,8 @@ def get_clone(obj):
             return royal_arena_cards.RoyalGiant(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionRoyalRecruit":
             return royal_arena_cards.RoyalRecruit(obj.side, copy.deepcopy(obj.position), obj.level)
+        elif n == "EvolutionIceSpirit":
+            return frozen_peak_cards.IceSpirit(obj.side, copy.deepcopy(obj.position), obj.level)
         else:
             raise Exception(n + " is not actually an evo")
         
@@ -250,12 +253,16 @@ def evolution_troop_factory(side, position, name, level):
         for i in range(6):
             out.append(royal_arena_evos.EvolutionRoyalRecruit(side, position.added(vector.Vector(-7 + (14/5 * i), 0)), level))
         return out
+    elif name == "icespirit":
+        return frozen_peak_evos.EvolutionIceSpirit(side, position, level)
     
 def evolution_spell_factory(side, position, name, level):
     if name == "zap":
         return builders_workshop_evos.EvolutionZap(side, position, level)
     elif name == "goblinbarrel":
         return pekkas_playhouse_evos.EvolutionGoblinBarrel(side, position, level)
+    elif name == "giantsnowball":
+        return frozen_peak_evos.EvolutionGiantSnowball(side, position, level)
 
 def evolution_building_factory(side, position, name, level):
     if name == "goblincage":

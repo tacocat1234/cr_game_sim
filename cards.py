@@ -18,7 +18,9 @@ evo_cycles = {
     "pekka" : 1,
     "goblinbarrel" : 2,
     "royalgiant" : 1,
-    "royalrecruits" : 2
+    "royalrecruits" : 2,
+    "icespirit" : 2,
+    "giantsnowball" : 2
 }
 
 class Card:
