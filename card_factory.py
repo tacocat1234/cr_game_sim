@@ -27,6 +27,8 @@ import builders_workshop_evos
 import pekkas_playhouse_evos
 import royal_arena_evos
 import frozen_peak_evos
+import jungle_arena_evos
+import hog_mountain_evos
 import copy
 import random
 
@@ -187,6 +189,12 @@ def get_clone(obj):
             return royal_arena_cards.RoyalRecruit(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionIceSpirit":
             return frozen_peak_cards.IceSpirit(obj.side, copy.deepcopy(obj.position), obj.level)
+        elif n == "EvolutionDartGoblin":
+            return jungle_arena_cards.DartGoblin(obj.side, copy.deepcopy(obj.position), obj.level)
+        elif n == "EvolutionGoblinGiant":
+            return jungle_arena_cards.GoblinGiant(obj.side, copy.deepcopy(obj.position), obj.level)
+        elif n == "EvolutionHunter":
+            return hog_mountain_cards.Hunter(obj.side, copy.deepcopy(obj.position), obj.level)
         else:
             raise Exception(n + " is not actually an evo")
         
@@ -255,6 +263,12 @@ def evolution_troop_factory(side, position, name, level):
         return out
     elif name == "icespirit":
         return frozen_peak_evos.EvolutionIceSpirit(side, position, level)
+    elif name == "dartgoblin":
+        return jungle_arena_evos.EvolutionDartGoblin(side, position, level)
+    elif name == "goblingiant":
+        return jungle_arena_evos.EvolutionGoblinGiant(side, position, level)
+    elif name == "hunter":
+        return hog_mountain_evos.EvolutionHunter(side, position, level)
     
 def evolution_spell_factory(side, position, name, level):
     if name == "zap":
@@ -271,6 +285,8 @@ def evolution_building_factory(side, position, name, level):
         return barbarian_bowl_evos.EvolutionCannon(side, position, level)
     elif name == "mortar":
         return builders_workshop_evos.EvolutionMortar(side, position, level)
+    elif name == "tesla":
+        return hog_mountain_evos.EvolutionTesla(side, position, level)
 
 def troop_factory(side, position, name, level):
     if name == "knight":

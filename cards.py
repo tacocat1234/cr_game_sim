@@ -20,7 +20,11 @@ evo_cycles = {
     "royalgiant" : 1,
     "royalrecruits" : 2,
     "icespirit" : 2,
-    "giantsnowball" : 2
+    "giantsnowball" : 2,
+    "goblingiant" : 1,
+    "dartgoblin" : 2,
+    "hunter" : 2,
+    "tesla" : 2
 }
 
 class Card:
@@ -30,7 +34,7 @@ class Card:
         self.level = level
         self.is_evo = evo
         self.cycles = int(evo_cycles.get(self.name, -1))
-        self.cycles_left = self.cycles #if not self.is_evo else 0
+        self.cycles_left = self.cycles if not self.is_evo else 0
 
         error = False
         try:

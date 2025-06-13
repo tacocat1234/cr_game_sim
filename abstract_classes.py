@@ -89,7 +89,8 @@ class RangedAttackEntity(AttackEntity):
             self.move_vec = self.initial_vec.normalized().scaled(self.velocity)
 
     def detect_hits(self, arena):
-        if (vector.distance(self.target.position, self.position) < self.target.collision_radius):
+        if (vector.distance(self.target.position, self.position) < self.target.collision_radius) and self.target not in self.has_hit:
+            self.has_hit.append(self.target)
             return [self.target] # has hit
         else:
             return [] #hasnt hit 
@@ -535,7 +536,7 @@ class Troop:
 
         if self.stun_timer <= 0:
             if self.deploy_time <= 0:
-                if self.target is None or self.target.cur_hp <= 0 or not self.target.targetable:
+                if self.target is None or self.target.cur_hp <= 0 or not self.target.targetable or (self.ground_only and not self.target.ground):
                     self.update_target(arena)
                 elif vector.distance(self.position, self.target.position) > self.sight_range + self.collision_radius + self.target.collision_radius: #add 0.2 so there is tiny buffer for ranged troops
                     self.update_target(arena)
@@ -798,10 +799,14 @@ class Spell:
             self.sprite_path = f"sprites/{self.class_name}/{self.class_name}_hit.png"
             hits = self.detect_hits(arena)
             for each in hits:
-                if (isinstance(each, Tower)):
-                    each.damage(self.crown_tower_damage)
-                else:
-                    each.damage(self.damage); #end damage, start kb
+                is_tesla = self.__class__.__name__ == "Earthquake" and (each.__class__.__name__ == "Tesla" or each.__class__.__name__ == "EvolutionTesla")
+                
+                if not each.invulnerable or is_tesla:
+                    if (isinstance(each, Tower)):
+                        each.damage(self.crown_tower_damage)
+                    else:
+                        each.damage(self.damage); #end damage, start kb
+                
                 if isinstance(each, Troop) and (each.can_kb and not each.invulnerable):
                     displacement = each.position.subtracted(self.position)
                     displacement.normalize()
@@ -952,7 +957,7 @@ class Building:
         if self.preplace or self.deploy_time > 0 or self.stun_timer > 0:
             return
         self.tick_func(arena)
-        if self.target is None or self.target.cur_hp <= 0 or not self.target.targetable:
+        if self.target is None or self.target.cur_hp <= 0 or not self.target.targetable or (self.ground_only and not self.target.ground):
             self.update_target(arena)
         if not self.target is None and self.attack_cooldown <= 0:
             atk = self.attack()

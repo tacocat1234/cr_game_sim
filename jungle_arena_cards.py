@@ -326,8 +326,9 @@ class GoblinGiant(Troop):
         self.backpack_goblins[0].position = self.position.added(v1)
         self.backpack_goblins[1].position = self.position.added(v2)
 
-        self.backpack_goblins[0].tick(arena)
-        self.backpack_goblins[1].tick(arena)
+        if self.stun_timer <= 0:
+            self.backpack_goblins[0].tick(arena)
+            self.backpack_goblins[1].tick(arena)
 
     def cleanup_func(self, arena):
         self.backpack_goblins[0].cleanup(arena)

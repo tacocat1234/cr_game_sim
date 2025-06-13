@@ -263,6 +263,7 @@ class Fisherman(Troop):
                 self.ground = True
                 self.stun_timer = 0
                 self.move_speed = self.normal_move_speed
+                self.collideable = True
                 return
 
             if self.casting and not self.casted and self.target.cur_hp > 0: #if launching, launch reel

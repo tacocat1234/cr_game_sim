@@ -272,8 +272,13 @@ class Tesla(Building):
         self.level = level
         
         self.targetable = True
+        self.invulnerable = False
         self.switch_timer = -99
-    
+
+    def change_state(self, arena):
+        self.targetable = not self.targetable
+        self.invulnerable = not self.invulnerable
+
     def tick_func(self, arena):
         if self.targetable and (self.target is None) and self.switch_timer == -99:
             self.switch_timer = 0.8
@@ -281,7 +286,7 @@ class Tesla(Building):
             self.switch_timer = 0.8
 
         if self.switch_timer <= 0 and self.switch_timer != -99:
-            self.targetable = not self.targetable
+            self.change_state(arena)
             self.switch_timer = -99 #settled
         elif self.switch_timer != -99:
             self.attack_cooldown = self.switch_timer

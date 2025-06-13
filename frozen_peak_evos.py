@@ -143,7 +143,7 @@ class EvolutionGiantSnowball(frozen_peak_cards.GiantSnowball):
             self.position.add(tower_to_target.scaled(self.velocity / tower_to_target.magnitude()))
             self.spawn_timer -= 1 #spawn in
             if self.spawn_timer <= 0:
-                self.roll_timer = 0.34
+                self.roll_timer = 0.67
             self.sprite_path = f"sprites/{self.class_name}/{self.class_name}_hit.png"
         else:
             hits = self.detect_hits(arena)

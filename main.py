@@ -36,7 +36,9 @@ def can_evo(n):
             n == "wizard" or
             n == "bats" or n == "zap" or n == "mortar" or
             n == "pekka" or n == "goblinbarrel" or 
-            n == "royalgiant" or n == "royalrecruits")
+            n == "royalgiant" or n == "royalrecruits" or
+            n == "icespirit" or n == "giantsnowball" or
+            n == "dartgoblin" or n == "goblingiant")
     
 used = []
 # Load Player Deck
@@ -569,10 +571,11 @@ def draw():
             screen.blit(spell_surface, (spell_x - size, spell_y - size))  # Centering the spell's circle
         else:
             spell_x, spell_y = convert_to_pygame(spell.position)
-            size = spell.radius * SCALE if spell.spawn_timer <= 0 else 1 * SCALE
+            is_gs = spell.__class__.__name__ == "EvolutionGiantSnowball"
+            size = spell.radius * SCALE if spell.spawn_timer <= 0 and not is_gs else 1 * SCALE
 
 
-            if spell.spawn_timer <= 0:
+            if spell.spawn_timer <= 0 and not is_gs:
                 # Partially transparent when the spell has spawned
                 # Create a surface to represent the spell
                 spell_surface = pygame.Surface((size * 2, size * 2), pygame.SRCALPHA)  # Creating transparent surface

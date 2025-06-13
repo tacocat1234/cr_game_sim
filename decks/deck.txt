@@ -1,10 +1,1 @@
-miner 11
-clone 11
-miner 11
-clone 11
-miner 11
-clone 11
-miner 11
-clone 11
-k 11
-princesstower 11
+allrandom 11
