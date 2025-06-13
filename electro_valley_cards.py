@@ -759,16 +759,29 @@ class InfernoDragon(Troop):
         self.damage_stages = [30 * pow(1.1, level - 9), 100 * pow(1.1, level - 9), 350 * pow(1.1, level - 9)]
     
     def tick_func(self, arena):
-        if self.target is None or self.target.cur_hp <= 0 or self.move_vector.x != 0 or self.move_vector.y != 0 or not self.target.targetable:
+        if self.target is None or self.target.cur_hp <= 0 or vector.distance(self.position, self.target.position) > self.hit_range + self.collision_radius + self.target.collision_radius or not self.target.targetable:
             self.stage = 1
+            self.stage_duration = 2
             self.attack_cooldown = self.load_time - self.hit_speed
+
+    def freeze(self, duration):
+        self.stage = 1
+        self.stage_duration = 2
+        self.attack_cooldown = self.load_time - self.hit_speed
+        return super().freeze(duration)
+
+    def stun(self):
+        self.stage = 1
+        self.stage_duration = 2
+        self.attack_cooldown = self.load_time - self.hit_speed
+        super().stun()
 
     def cleanup_func(self, arena):
         if self.stun_timer <= 0:
             if self.stage_duration <= 0:
                 self.stage = self.stage + 1 if self.stage < 3 else self.stage
                 self.stage_duration = 2
-            else:
+            elif not (self.target is None or self.target.cur_hp <= 0 or vector.distance(self.position, self.target.position) > self.hit_range or not self.target.targetable):
                 self.stage_duration -= TICK_TIME
 
     def attack(self):

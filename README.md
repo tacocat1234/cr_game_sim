@@ -30,7 +30,7 @@ recommended bot_deck.txt levels is 13 comapred to your 11, becuase bot is stupid
 
 special note:
 only evos are:
-knight, archers, musketeer, archers, goblincage, skeletons, bomber, valkyrie, barbarians, battleram, cannon, wizard
+knight, archers, musketeer, archers, goblincage, skeletons, bomber, valkyrie, barbarians, battleram, cannon, wizard, bats, zap, mortar, pekka, goblinbarrel, royalgiant, royalrecruits, icespirit, giantsnowball, dartgoblin, goblingiant, hunter, tesla, infernodragon, megaknight
 more coming soon
 
 ## Troops

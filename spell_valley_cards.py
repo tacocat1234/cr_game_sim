@@ -368,8 +368,14 @@ class InfernoTower(Building):
     def stun(self):
         self.stun_timer = 0.5
         self.target = None
-        self.stage - 1
+        self.stage = 1
         self.stage_duration = 2
+
+    def freeze(self, duration):
+        self.stage = 1
+        self.stage_duration = 2
+        self.attack_cooldown = self.load_time - self.hit_speed
+        return super().freeze(duration)
 
     def attack(self):
         return InfernoTowerAttackEntity(self.side, self.damage_stages[self.stage - 1], self.position, self.target)
@@ -381,6 +387,7 @@ class InfernoTower(Building):
         if self.target is None or self.target.cur_hp <= 0:
             self.update_target(arena)
             self.stage = 1
+            self.stage_duration = 2
             self.attack_cooldown = self.load_time - self.hit_speed
         if not self.target is None and self.attack_cooldown <= 0:
             atk = self.attack()
@@ -395,7 +402,7 @@ class InfernoTower(Building):
             if self.stage_duration <= 0:
                 self.stage = self.stage + 1 if self.stage < 3 else self.stage
                 self.stage_duration = 2
-            else:
+            elif not (self.target is None or self.target.cur_hp <= 0):
                 self.stage_duration -= TICK_TIME
         else:
             self.stun_timer -= TICK_TIME

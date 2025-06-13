@@ -38,7 +38,9 @@ def can_evo(n):
             n == "pekka" or n == "goblinbarrel" or 
             n == "royalgiant" or n == "royalrecruits" or
             n == "icespirit" or n == "giantsnowball" or
-            n == "dartgoblin" or n == "goblingiant")
+            n == "dartgoblin" or n == "goblingiant" or
+            n == "hunter" or n == "tesla" or
+            n == "infernodragon" or n == "megaknight")
     
 used = []
 # Load Player Deck

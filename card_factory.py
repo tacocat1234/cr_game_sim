@@ -29,6 +29,7 @@ import royal_arena_evos
 import frozen_peak_evos
 import jungle_arena_evos
 import hog_mountain_evos
+import electro_valley_evos
 import copy
 import random
 
@@ -195,6 +196,10 @@ def get_clone(obj):
             return jungle_arena_cards.GoblinGiant(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionHunter":
             return hog_mountain_cards.Hunter(obj.side, copy.deepcopy(obj.position), obj.level)
+        elif n == "EvolutionInfernoDragon":
+            return electro_valley_cards.InfernoDragon(obj.side, copy.deepcopy(obj.position), obj.level)
+        elif n == "EvolutionMegaKnight":
+            return electro_valley_cards.MegaKnight(obj.side, copy.deepcopy(obj.position), obj.level)
         else:
             raise Exception(n + " is not actually an evo")
         
@@ -269,6 +274,10 @@ def evolution_troop_factory(side, position, name, level):
         return jungle_arena_evos.EvolutionGoblinGiant(side, position, level)
     elif name == "hunter":
         return hog_mountain_evos.EvolutionHunter(side, position, level)
+    elif name == "infernodragon":
+        return electro_valley_evos.EvolutionInfernoDragon(side, position, level)
+    elif name == "megaknight":
+        return electro_valley_evos.EvolutionMegaKnight(side, position, level)
     
 def evolution_spell_factory(side, position, name, level):
     if name == "zap":
