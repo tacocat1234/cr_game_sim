@@ -31,6 +31,7 @@ import jungle_arena_evos
 import hog_mountain_evos
 import electro_valley_evos
 import spooky_town_evos
+import serenity_peak_evos
 import copy
 import random
 
@@ -207,6 +208,8 @@ def get_clone(obj):
             return spooky_town_cards.ElectroDragon(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionWallBreaker":
             return spooky_town_cards.WallBreaker(obj.side, copy.deepcopy(obj.position), obj.level)
+        elif n == "EvolutionLumberjack":
+            return serenity_peak_cards.Lumberjack(obj.side, copy.deepcopy(obj.position), obj.level)
         else:
             raise Exception(n + " is not actually an evo")
         
@@ -294,6 +297,10 @@ def evolution_troop_factory(side, position, name, level):
         pos2 = vector.Vector(-0.75, 0)
         return [spooky_town_evos.EvolutionWallBreaker(side, position.added(pos1), level),
                 spooky_town_evos.EvolutionWallBreaker(side, position.added(pos2), level)]
+    elif name == "lumberjack":
+        return serenity_peak_evos.EvolutionLumberjack(side, position, level)
+    elif name == "goblindrill":
+        return serenity_peak_evos.EvolutionGoblinDrillMineTroop(side, position, level)
     
 def evolution_spell_factory(side, position, name, level):
     if name == "zap":

@@ -482,13 +482,16 @@ class GoblinDrillMineTroop(Troop):
         self.target = position
         self.level = level
         self.invulnerable = True
+        self.moveable = False
         self.targetable = False
         self.collideable = False
         self.preplace = False
 
     def tick_func(self, arena):
         if self.invulnerable and vector.distance(self.position, self.target) < 0.25:
-            arena.buildings.append(GoblinDrill(self.side, self.position, self.level))
+            gd = GoblinDrill(self.side, self.position, self.level)
+            arena.buildings.append(gd)
+            gd.on_deploy(arena)
             arena.active_attacks.append(GoblinDrillSpawnAttackEntity(self.side, 51 * pow(1.1, self.level - 6), 16 * pow(1.1, self.level - 6), self.position))
             arena.troops.remove(self)
             self.cur_hp = -1 #just in case
@@ -583,7 +586,7 @@ class GoblinDrill(Building):
     def __init__(self, side, position, level):
         super().__init__(
             s=side,
-            h_p=900 * pow(1.1, level - 6),
+            h_p=820 * pow(1.1, level - 6),
             h_d = 0,
             h_s = 3,
             l_t = 0,
@@ -604,6 +607,28 @@ class GoblinDrill(Building):
         self.is_spawner = True
         self.level = level
         self.attack_cooldown = 1
+        self.on_tower = None
+
+    def snap_around_tower(self, tower):
+
+        if abs(self.position.y - tower.position.y) >= abs(self.position.x - tower.position.x):
+            if self.position.y <= tower.position.y:
+                self.position.y = round(tower.position.y - tower.collision_radius)
+            else:
+                self.position.y = round(tower.position.y + tower.collision_radius)
+        else:
+            if self.position.x <= tower.position.x:
+                self.position.x = round(tower.position.x - tower.collision_radius)
+            else:
+                self.position.x = round(tower.position.x + tower.collision_radius)
+
+    def on_deploy(self, arena):
+        for each in arena.towers:
+            if each.side != self.side and vector.distance(each.position, self.position) <= each.collision_radius + self.collision_radius:
+                self.on_tower = each
+                self.snap_around_tower(each)
+                return
+
     
     def cleanup_func(self, arena):
         if self.stun_timer <= 0:
@@ -611,12 +636,13 @@ class GoblinDrill(Building):
                 self.next_spawn -= TICK_TIME
         
     def tick(self, arena):
-        if self.preplace:
+        if self.preplace or self.stun_timer > 0:
             return
-        if self.stun_timer <= 0:
-            if self.attack_cooldown <= 0: #attack code
-                front = vector.Vector(0, 1.5) if self.side else vector.Vector(0, -1.5)
-                newFire = Goblin(self.side, self.position.added(front), self.level)
-                newFire.deploy_time = 0
-                arena.troops.append(newFire)
-                self.attack_cooldown = self.hit_speed
+        self.tick_func(arena)
+        
+        if self.attack_cooldown <= 0: #attack code
+            front = vector.Vector(0, 1.5) if self.side else vector.Vector(0, -1.5)
+            newFire = Goblin(self.side, self.position.added(front), self.level)
+            newFire.deploy_time = 0
+            arena.troops.append(newFire)
+            self.attack_cooldown = self.hit_speed

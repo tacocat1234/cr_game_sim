@@ -29,8 +29,7 @@ to set king and towertroop levels, and towertroop
 recommended bot_deck.txt levels is 13 comapred to your 11, becuase bot is stupid.
 
 special note:
-only evos are:
-all the way to spooky_town_cads evos (firecracker, wallbreakers, electrodragon)
+all evos except witch and executioner, becuase they may be nerfed very soon
 more coming soon
 
 ## Troops

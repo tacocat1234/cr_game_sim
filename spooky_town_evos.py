@@ -341,7 +341,7 @@ class EvolutionWallBreakerRunner(Troop):
             t_g_o=True,       # Targets ground-only
             t_o=True,        # Not tower-only
             m_s=120*TILES_PER_MIN,          # Movement speed 
-            d_t=1,            # Deploy time
+            d_t=0,            # Deploy time
             m=4,            #mass
             c_r=0.4,     #collision radius
             p=position               # Position (vector.Vector object)

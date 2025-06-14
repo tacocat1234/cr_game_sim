@@ -436,6 +436,7 @@ class BarbarianBarrel(Troop):
         self.level = level
         self.targetable = False
         self.invulnerable = True
+        self.moveable = False
         self.timer = 1.35
 
         self.collideable = False
@@ -445,6 +446,7 @@ class BarbarianBarrel(Troop):
     def on_deploy(self, arena):
         self.targetable = False
         self.invulnerable = True
+        self.moveable = False
         self.collideable = False
 
     def move(self, arena):

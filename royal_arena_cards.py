@@ -226,6 +226,7 @@ class BalloonDeathBomb(Troop):
         ) 
         self.level = level
         self.invulnerable=True
+        self.moveable=False
         self.targetable=False
         self.target=None
 

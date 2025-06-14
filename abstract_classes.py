@@ -209,6 +209,7 @@ class Troop:
 
         self.targetable = True
         self.invulnerable = False
+        self.moveable = True
         self.cross_river = False
         self.has_shield = False
         self.should_delete = False #only for kamikaze troops
@@ -807,7 +808,7 @@ class Spell:
                     else:
                         each.damage(self.damage); #end damage, start kb
                 
-                if isinstance(each, Troop) and (each.can_kb and not each.invulnerable):
+                if isinstance(each, Troop) and (each.can_kb and each.moveable):
                     displacement = each.position.subtracted(self.position)
                     displacement.normalize()
                     displacement.scale(self.knock_back)

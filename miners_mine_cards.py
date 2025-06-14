@@ -79,7 +79,7 @@ class Clone(Spell):
             return
         hits = self.detect_hits(arena)
         for each in hits:
-            if (isinstance(each, Troop)) and not each.cloned:
+            if (isinstance(each, Troop)) and not each.cloned and not each.invulnerable:
                 each.stun_timer = 0.5
                 each.kb(vector.Vector(0, 0.25 if self.side else -0.25))
 
@@ -387,7 +387,7 @@ class Tornado(Spell):
         self.pulse_timer = 0
 
     def passive_effect(self, target):
-        if isinstance(target, Troop) and not target.invulnerable:
+        if isinstance(target, Troop) and target.moveable:
             total_kb = -1/5 * target.mass + 6
             mag = total_kb/21
             target.kb(self.position.subtracted(target.position).scaled(mag), 0.05)

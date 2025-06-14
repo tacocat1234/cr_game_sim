@@ -144,6 +144,7 @@ class Bandit(Troop):
                     self.collideable = False
                     self.should_dash = False
                     self.invulnerable = True
+                    self.moveable = False
                     self.move_speed = 500*TILES_PER_MIN
                     self.dash_timer = 0.72
                 elif self.target is not None:
@@ -164,6 +165,7 @@ class Bandit(Troop):
             self.collideable = True
             self.move_speed = 60*TILES_PER_MIN
             self.invulnerable = False
+            self.moveable = True
             self.attack_cooldown = self.hit_speed
             if self.target is not None:
                 arena.active_attacks.append(BanditDashAttackEntity(self.side, self.hit_damage * 2, self.position, self.target))
