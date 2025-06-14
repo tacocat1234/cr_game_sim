@@ -253,7 +253,7 @@ class ElixirGolemiteAttackEntity(MeleeAttackEntity):
             )
 
 class ElixirGolemite(Troop):
-    def __init__(self, side, position, level, cloned):
+    def __init__(self, side, position, level, cloned=False):
         super().__init__(
             s=side,              # Side (True for one player, False for the other)
             h_p= 360 * pow(1.1, level - 3),         # Hit points (Example value)

@@ -738,7 +738,7 @@ class InfernoDragon(Troop):
     def __init__(self, side, position, level):
         super().__init__(
             s=side,              # Side (True for one player, False for the other)
-            h_p= 1070 * pow(1.1, level - 9),         # Hit points (Example value)
+            h_p= 991070 * pow(1.1, level - 9),         # Hit points (Example value)
             h_d= 30 * pow(1.1, level - 9),          # Hit damage (Example value)
             h_s=0.4,          # Hit speed (Seconds per hit)
             l_t=1.2,            # First hit cooldown
@@ -759,7 +759,7 @@ class InfernoDragon(Troop):
         self.damage_stages = [30 * pow(1.1, level - 9), 100 * pow(1.1, level - 9), 350 * pow(1.1, level - 9)]
     
     def tick_func(self, arena):
-        if self.target is None or self.target.cur_hp <= 0 or vector.distance(self.position, self.target.position) > self.hit_range + self.collision_radius + self.target.collision_radius or not self.target.targetable:
+        if self.target is None or self.target.cur_hp <= 0 or vector.distance(self.position, self.target.position) > self.hit_range + self.collision_radius + self.target.collision_radius + 0.1 or not self.target.targetable:
             self.stage = 1
             self.stage_duration = 2
             self.attack_cooldown = self.load_time - self.hit_speed
@@ -781,7 +781,7 @@ class InfernoDragon(Troop):
             if self.stage_duration <= 0:
                 self.stage = self.stage + 1 if self.stage < 3 else self.stage
                 self.stage_duration = 2
-            elif not (self.target is None or self.target.cur_hp <= 0 or vector.distance(self.position, self.target.position) > self.hit_range or not self.target.targetable):
+            elif not (self.target is None or self.target.cur_hp <= 0 or vector.distance(self.position, self.target.position) > self.hit_range  + self.target.collision_radius + self.collision_radius or not self.target.targetable):
                 self.stage_duration -= TICK_TIME
 
     def attack(self):

@@ -26,7 +26,10 @@ evo_cycles = {
     "hunter" : 2,
     "tesla" : 2,
     "infernodragon" : 2,
-    "megaknight" : 1
+    "megaknight" : 1,
+    "firecracker" : 2,
+    "electrodragon" : 1,
+    "wallbreakers" : 2
 }
 
 class Card:

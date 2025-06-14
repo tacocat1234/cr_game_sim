@@ -19,6 +19,8 @@ from jungle_arena_cards import BarbarianBarrel
 
 game_arena = arena.Arena()
 
+#completely broken
+
 
 deck = []
 bot_deck = []
@@ -40,8 +42,7 @@ def can_evo(n):
             n == "icespirit" or n == "giantsnowball" or
             n == "dartgoblin" or n == "goblingiant" or
             n == "hunter" or n == "tesla" or
-            n == "infernodragon" or n == "megaknight" or 
-            n == "wallbreakers" or n == "firecracker" or n == "electrodragon")
+            n == "infernodragon" or n == "megaknight")
     
 used = []
 # Load Player Deck
@@ -254,21 +255,40 @@ def display_evo_cannon(pos, side):
     ]
 
     for each in all:
-        pygame.draw.circle(screen, (224, 255, 232), convert_to_pygame(each), 1.5 * SCALE, width=1)
+        x, y = convert_to_pygame(each)
+        if not side:
+            x = WIDTH - x
+            y += 128
+        pygame.draw.circle(screen, (224, 255, 232), (x, y), 1.5 * SCALE, width=1)
 
-def draw():
+def draw(player):
     screen.fill(BG_TEMP)
-    bg_rect = background_img.get_rect(center=(WIDTH / 2, (HEIGHT - 128) / 2))
-    screen.blit(background_img, bg_rect)
+    if player:
+        bg_rect = background_img.get_rect(center=(WIDTH / 2, (HEIGHT - 128) / 2))
+        screen.blit(background_img, bg_rect)
+    else:
+        bg_rect = background_img.get_rect(center=(WIDTH / 2, (HEIGHT - 128) / 2 + 128))
+        screen.blit(background_img, bg_rect)
     # Draw river
-    pygame.draw.rect(screen, RIVER_TEMP, (0, HEIGHT/2 - 64 - SCALE, WIDTH, SCALE * 2)) 
+
+    if player:
+        pygame.draw.rect(screen, RIVER_TEMP, (0, HEIGHT/2 - 64 - SCALE, WIDTH, SCALE * 2)) 
+    else:
+        pygame.draw.rect(screen, RIVER_TEMP, (0, HEIGHT/2 - 64 - SCALE + 128, WIDTH, SCALE * 2)) 
    
     #draw card area
-    pygame.draw.rect(screen, GRAY, (0, HEIGHT - 128, WIDTH, 128))
+    if player:
+        pygame.draw.rect(screen, GRAY, (0, HEIGHT - 128, WIDTH, 128))
+    else:
+        pygame.draw.rect(screen, GRAY, (0, 0, WIDTH, 128))
 
     #Draw bridges
-    pygame.draw.rect(screen, BRIDGE_TEMP, (64 + 2.5 * SCALE, HEIGHT/2 - 64 - 1.5 * SCALE, SCALE * 2, SCALE * 3)) 
-    pygame.draw.rect(screen, BRIDGE_TEMP, (WIDTH - (64 + 4.5 * SCALE), HEIGHT/2 - 64 - 1.5 *SCALE, SCALE * 2, SCALE * 3)) 
+    if player:
+        pygame.draw.rect(screen, BRIDGE_TEMP, (64 + 2.5 * SCALE, HEIGHT/2 - 64 - 1.5 * SCALE, SCALE * 2, SCALE * 3)) 
+        pygame.draw.rect(screen, BRIDGE_TEMP, (WIDTH - (64 + 4.5 * SCALE), HEIGHT/2 - 64 - 1.5 *SCALE, SCALE * 2, SCALE * 3)) 
+    else:
+        pygame.draw.rect(screen, BRIDGE_TEMP, (64 + 2.5 * SCALE, HEIGHT/2 - 64 - 1.5 * SCALE + 128, SCALE * 2, SCALE * 3)) 
+        pygame.draw.rect(screen, BRIDGE_TEMP, (WIDTH - (64 + 4.5 * SCALE), HEIGHT/2 - 64 - 1.5 *SCALE + 128, SCALE * 2, SCALE * 3)) 
 
     #Time Left:
     #format_time(game_arena.timer)
@@ -286,11 +306,11 @@ def draw():
                     pygame.draw.circle(screen, (224, 255, 232), (hovered[0] + 10, hovered[1] + 10), each * SCALE, width=1)
             else:
                 pygame.draw.circle(screen, (224, 255, 232), (hovered[0] + 10, hovered[1] + 10), select_radius * SCALE, width=1)
-                if deck[hand[click_quarter - 1]].name == "cannon" and deck[hand[click_quarter - 1]].cycles_left == 0:
+                if deck[p1_hand[click_quarter - 1]].name == "cannon" and deck[p1_hand[click_quarter - 1]].cycles_left == 0:
                     display_evo_cannon(convert_from_pygame(0, hovered[1]), True)
         
     if not drag_start_pos is None:
-        cur_name = deck[hand[click_quarter - 1]].name
+        cur_name = deck[p1_hand[click_quarter - 1]].name
 
         if not can_anywhere(cur_name):
             place_surface = pygame.Surface((488, 340), pygame.SRCALPHA)
@@ -310,6 +330,10 @@ def draw():
     time_surface = nfont.render(time_text, True, (255, 255, 255))  # White text
     state_surface = nfont.render(game_arena.state, True, (255, 255, 255))
 
+    if not player:
+        time_surface = pygame.transform.rotate(time_surface, 180)
+        state_surface = pygame.transform.rotate(state_surface, 180)
+
     # Position: top right with some padding
     padding = 10
     time_rect = time_surface.get_rect(topright=(WIDTH - padding, padding))
@@ -328,6 +352,8 @@ def draw():
         center_text = "Tiebreaker"
     
     center_surface = cfont.render(center_text, True, (255, 255, 255))
+    if not player:
+        center_surface = pygame.transform.rotate(center_surface, 180)
     center_rect = center_surface.get_rect(center=(WIDTH/2, HEIGHT/2 - 64))
 
     screen.blit(center_surface, center_rect)
@@ -335,6 +361,10 @@ def draw():
     # Draw Towers
     for tower in game_arena.towers:
         tower_x, tower_y = convert_to_pygame(tower.position)
+
+        if not player:
+            tower_x = WIDTH - tower_x
+            tower_y += 128
         
         # Adjust position so that the rectangle is centered at the tower's coordinates
         tower_rect_width = 3 * SCALE
@@ -361,7 +391,12 @@ def draw():
     
     for building in game_arena.buildings:
         building_x, building_y = convert_to_pygame(building.position)
-        building_color = BLUE if building.side else RED
+
+        if not player:
+            building_x = WIDTH - building_x
+            building_y += 128
+
+        building_color = BLUE if building.side == player else RED
 
         if building.preplace:
             building_color = GRAY
@@ -378,12 +413,14 @@ def draw():
 
         class_name = building.__class__.__name__
         text_surface = font.render(class_name, True, (255, 255, 255))  # White color text
+        if not player:
+            text_surface = pygame.transform.rotate(text_surface, 180)
         text_rect = text_surface.get_rect(center=(building_x, building_y))  # 10 pixels above the troop
         screen.blit(text_surface, text_rect)
 
         # Health bar
         hp_bar_x = building_x - 10
-        hp_bar_y = building_y - 12 - building_size // 2  # Slightly above the building
+        hp_bar_y = building_y - (12 + building_size // 2 if player else -12 - building_size // 2)  # Slightly above the building
         hp_bar_width = 20
         hp_bar_height = 3
 
@@ -392,14 +429,17 @@ def draw():
 
         # Draw Level Indicator
         level_box_size = 10  # Square size for level indicator
-        level_box_x = hp_bar_x - level_box_size - 2  # Slight padding to the left
+        level_box_x = hp_bar_x - (level_box_size + 2 if player else - level_box_size - 2)  # Slight padding to the left
         level_box_y = hp_bar_y - 2  # Align with HP bar
 
         pygame.draw.rect(screen, building_color, (level_box_x, level_box_y, level_box_size, level_box_size))
 
         # Render level number text
         level_text = font.render(str(building.level), True, WHITE)  # White text
+        if not player:
+            level_text = pygame.transform.rotate(level_text, 180)
         text_rect = level_text.get_rect(center=(level_box_x + level_box_size / 2, level_box_y + level_box_size / 2))
+        
         screen.blit(level_text, text_rect)
 
     # Draw Troops
@@ -407,7 +447,12 @@ def draw():
     for troop in game_arena.troops:
         if troop.ground:
             troop_x, troop_y = convert_to_pygame(troop.position)
-            troop_color = GRAY if troop.preplace else (BLUE if troop.side else RED)
+
+            if not player:
+                troop_x = WIDTH - troop_x
+                troop_y += 128
+
+            troop_color = GRAY if troop.preplace else (BLUE if troop.side == player else RED)
 
             if troop.rage_timer > 0:
                 troop_color = raged_color(troop_color)
@@ -418,8 +463,8 @@ def draw():
             if isinstance(troop, Log) or isinstance(troop, BarbarianBarrel):
                 width = troop.collision_radius * SCALE
                 height = 1.2 * SCALE
-                rect_x = troop_x - width / 2
-                rect_y = troop_y - height / 2
+                rect_x = troop_x - (width / 2 if player else -width / 2)
+                rect_y = troop_y - (height / 2 if player else -height / 2)
                 pygame.draw.rect(screen, troop_color, pygame.Rect(rect_x, rect_y, width, height))
                 display_y = rect_y
             else:
@@ -428,12 +473,14 @@ def draw():
                 display_y = troop_y - troop.collision_radius * SCALE  # Use circle's top for text position
             class_name = troop.__class__.__name__
             text_surface = font.render(class_name, True, (255, 255, 255))  # White color text
+            if not player:
+                text_surface = pygame.transform.rotate(text_surface, 180)
             text_rect = text_surface.get_rect(center=(troop_x, display_y + 10))  # 10 pixels above the troop
             screen.blit(text_surface, text_rect)
 
             # Health bar
             hp_bar_x = troop_x - 10
-            hp_bar_y = troop_y - 12
+            hp_bar_y = troop_y - (12 if player else -12)
             hp_bar_width = 20
             hp_bar_height = 3
 
@@ -448,7 +495,7 @@ def draw():
 
             # Draw Level Indicator
             level_box_size = 10  # Square size for level indicator
-            level_box_x = hp_bar_x - level_box_size - 2  # Slight padding to the left
+            level_box_x = (hp_bar_x - level_box_size + 2) if player else (hp_bar_x + hp_bar_width + level_box_size - 2) # Slight padding to the left
             level_box_y = hp_bar_y - 2  # Align with HP bar
 
             if troop.has_shield and troop.shield_hp > 0:
@@ -476,6 +523,8 @@ def draw():
 
             # Render level number text 
             level_text = font.render(str(troop.level), True, WHITE)  # White text
+            if not player:
+                level_text = pygame.transform.rotate(level_text, 180)
             text_rect = level_text.get_rect(center=(level_box_x + level_box_size / 2, level_box_y + level_box_size / 2))
             screen.blit(level_text, text_rect)
         else:
@@ -484,7 +533,12 @@ def draw():
 
     for troop in flying:
         troop_x, troop_y = convert_to_pygame(troop.position)
-        troop_color = GRAY if troop.preplace else (BLUE if troop.side else RED)
+
+        if not player:
+            troop_x = WIDTH - troop_x
+            troop_y += 128
+
+        troop_color = GRAY if troop.preplace else (BLUE if troop.side == player else RED)
         if troop.rage_timer > 0:
             troop_color = raged_color(troop_color)
         if troop.cloned:
@@ -496,12 +550,14 @@ def draw():
         display_y = troop_y - troop.collision_radius * SCALE  # Use circle's top for text position
         class_name = troop.__class__.__name__
         text_surface = font.render(class_name, True, (255, 255, 255))  # White color text
+        if not player:
+            text_surface = pygame.transform.rotate(text_surface, 180)
         text_rect = text_surface.get_rect(center=(troop_x, display_y + 10))  # 10 pixels above the troop
         screen.blit(text_surface, text_rect)
 
         # Health bar
         hp_bar_x = troop_x - 10
-        hp_bar_y = troop_y - 12
+        hp_bar_y = troop_y - (12 if player else -12)
         hp_bar_width = 20
         hp_bar_height = 3
 
@@ -516,7 +572,7 @@ def draw():
 
         # Draw Level Indicator
         level_box_size = 10  # Square size for level indicator
-        level_box_x = hp_bar_x - level_box_size - 2  # Slight padding to the left
+        level_box_x = hp_bar_x - 2 - (level_box_size  if player else -level_box_size)  # Slight padding to the left
         level_box_y = hp_bar_y - 2  # Align with HP bar
 
         if troop.has_shield and troop.shield_hp > 0:
@@ -544,11 +600,18 @@ def draw():
 
         # Render level number text 
         level_text = font.render(str(troop.level), True, WHITE)  # White text
+        if not player:
+            level_text = pygame.transform.rotate(level_text, 180)
         text_rect = level_text.get_rect(center=(level_box_x + level_box_size / 2, level_box_y + level_box_size / 2))
         screen.blit(level_text, text_rect)
 
     for attack in game_arena.active_attacks:
         attack_x, attack_y= convert_to_pygame(attack.position)
+
+        if not player:
+            attack_y += 128
+            attack_x = WIDTH - attack_x
+
         if attack.display_size != 0.25 and attack.resize == False:
             # Create a transparent surface
             attack_size = attack.display_size * SCALE
@@ -565,6 +628,11 @@ def draw():
     for spell in game_arena.spells:
         if spell.preplace:
             spell_x, spell_y = convert_to_pygame(spell.target_pos)
+
+            if not player:
+                spell_y += 128
+                spell_x = WIDTH - spell_x
+
             size = spell.radius * SCALE
             spell_surface = pygame.Surface((size * 2, size * 2), pygame.SRCALPHA)  # Creating transparent surface
             
@@ -574,6 +642,11 @@ def draw():
             screen.blit(spell_surface, (spell_x - size, spell_y - size))  # Centering the spell's circle
         else:
             spell_x, spell_y = convert_to_pygame(spell.position)
+
+            if not player:
+                spell_y += 128
+                spell_x = WIDTH - spell_x
+            
             is_gs = spell.__class__.__name__ == "EvolutionGiantSnowball"
             size = spell.radius * SCALE if spell.spawn_timer <= 0 and not is_gs else 1 * SCALE
 
@@ -592,21 +665,27 @@ def draw():
                 pygame.draw.circle(screen, PURPLE, (spell_x, spell_y), size)
             class_name = spell.__class__.__name__
             text_surface = font.render(class_name, True, (255, 255, 255))  # White color text
+            if not player:
+                text_surface = pygame.transform.rotate(text_surface, 180)
             text_rect = text_surface.get_rect(center=(spell_x, spell_y))  # 10 pixels above the troop
             screen.blit(text_surface, text_rect)
     
     card_name_font = pygame.font.Font(None, 24)  # Use a larger font for card names
 
-    for i, hand_i in enumerate(hand):
+    h = p1_hand if player else p2_hand
+
+    for i, hand_i in enumerate(h):
         card = deck[hand_i]
         card_name_text = card_name_font.render(card.name, True, BLACK)
+        if not player:
+            card_name_text = pygame.transform.rotate(card_name_text, 180)
         card_name_x = (WIDTH * (i + 1)) // 5  # Positions: WIDTH/5, WIDTH*2/5, WIDTH*3/5, WIDTH*4/5
-        card_name_y = HEIGHT - 64  # Vertical position at the bottom
+        card_name_y = HEIGHT - 64 if player else 64  # Vertical position at the bottom
         text_rect = card_name_text.get_rect(center=(card_name_x, card_name_y))
         screen.blit(card_name_text, text_rect)
 
-        elixir_cost_circle_x = card_name_x + 30  # Position at the end of the elixir bar
-        elixir_cost_circle_y = card_name_y - 30  # Align with the bar
+        elixir_cost_circle_x = card_name_x + (30 if player else -30)  # Position at the end of the elixir bar
+        elixir_cost_circle_y = card_name_y - (30 if player else -30)  # Align with the bar
         elixir_cost_circle_radius = 12  # Size of the circle
 
         if card.is_evo:
@@ -620,14 +699,14 @@ def draw():
             spacing = 2 * radius + 4  # Space between circles
             total_width = (all - 1) * spacing
             start_x = card_name_x - total_width // 2
-            y = card_name_y - 60  # 50 units above
+            y = card_name_y - (60 if player else -60)  # 50 units above
 
             # Calculate rectangle bounds
             rect_padding = 4
             rect_width = total_width + 2 * radius + rect_padding * 2
             rect_height = 2 * radius + rect_padding * 2
-            rect_x = start_x - radius - rect_padding
-            rect_y = y - radius - rect_padding
+            rect_x = start_x - (radius + rect_padding if player else -radius - rect_padding)
+            rect_y = y - (radius + rect_padding if player else -radius - rect_padding)
 
             # Draw rectangle background
             pygame.draw.rect(screen, background_color, (rect_x, rect_y, rect_width, rect_height), border_radius=4)
@@ -641,6 +720,8 @@ def draw():
 
         # Render the elixir amount text
         elixir_text = card_name_font.render(str(card.elixir_cost), True, WHITE)
+        if not player:
+            elixir_text = pygame.transform.rotate(elixir_text, 180)
         text_rect = elixir_text.get_rect(center=(elixir_cost_circle_x, elixir_cost_circle_y))
         screen.blit(elixir_text, text_rect)  # Display elixir text
 
@@ -650,27 +731,29 @@ def draw():
     elixir_bar_width = int((game_arena.p1_elixir / 10) * WIDTH)  
     elixir_bar_int_width = max((math.floor(game_arena.p1_elixir) / 10) * WIDTH, 0)
 
-    pygame.draw.rect(screen, PURPLE, (0, HEIGHT - elixir_bar_height - 10, elixir_bar_int_width, elixir_bar_height))
+    pygame.draw.rect(screen, PURPLE, (0, HEIGHT - elixir_bar_height - 10 if player else 10, elixir_bar_int_width, elixir_bar_height))
 
     # Draw the GRAY_PURPLE portion (fractional elixir)
     if elixir_bar_width > elixir_bar_int_width:
-        pygame.draw.rect(screen, GRAY_PURPLE, (elixir_bar_int_width, HEIGHT - elixir_bar_height - 10,
+        pygame.draw.rect(screen, GRAY_PURPLE, (elixir_bar_int_width, HEIGHT - elixir_bar_height - 10 if player else 10,
                                             elixir_bar_width - elixir_bar_int_width, elixir_bar_height))
         
-    e_rect = elixir_int_img.get_rect(midtop=(WIDTH // 2, HEIGHT - elixir_bar_height - 11))
+    e_rect = elixir_int_img.get_rect(midtop=(WIDTH // 2, HEIGHT - elixir_bar_height - 11 if player else 9))
     screen.blit(elixir_int_img, e_rect)
 
-    pygame.draw.rect(screen, (189, 240, 255), (0, HEIGHT - elixir_bar_height - 10, WIDTH, elixir_bar_height), 2)  
+    pygame.draw.rect(screen, (189, 240, 255), (0, HEIGHT - elixir_bar_height - 10 if player else 10, WIDTH, elixir_bar_height), 2)  
     
 
-    elixir_circle_x = elixir_bar_int_width   # Position at the end of the elixir bar
-    elixir_circle_y = HEIGHT - elixir_bar_height // 2 - 10  # Align with the bar
+    elixir_circle_x = elixir_bar_int_width if player else WIDTH - elixir_bar_int_width  # Position at the end of the elixir bar
+    elixir_circle_y = HEIGHT - elixir_bar_height // 2 - 10 if player else elixir_bar_height // 2 + 10 # Align with the bar
     elixir_circle_radius = 12  # Size of the circle
 
     pygame.draw.circle(screen, PURPLE, (elixir_circle_x, elixir_circle_y), elixir_circle_radius)  # Draw elixir circle
 
     # Render the elixir amount text
     elixir_text = card_name_font.render(str(max(math.floor(game_arena.p1_elixir), 0)), True, WHITE)
+    if not player:
+        elixir_text = pygame.transform.rotate(elixir_text, 180)
     text_rect = elixir_text.get_rect(center=(elixir_circle_x, elixir_circle_y))
     screen.blit(elixir_text, text_rect)  # Display elixir text
 
@@ -678,8 +761,11 @@ def draw():
 
 random.shuffle(deck)
 
-hand = [0, 1, 2, 3]
-cycler = [4, 5, 6, 7]
+p1_hand = [0, 1, 2, 3]
+p1_cycler = [4, 5, 6, 7]
+
+p2_hand = [0, 1, 2, 3]
+p2_cycler = [4, 5, 6, 7]
 
 # Main Loop
 running = True
@@ -751,7 +837,7 @@ while running:
             if drag_start_pos is not None:
                 mouse_x, mouse_y = pygame.mouse.get_pos()
 
-                cur_name = deck[hand[click_quarter - 1]].name
+                cur_name = deck[p1_hand[click_quarter - 1]].name
 
                 if mouse_x > 64 and mouse_x < WIDTH - 64 and mouse_y < HEIGHT - 128 and (can_anywhere(cur_name) or mouse_y > 340) or (not enemy_right and in_pocket(mouse_x, mouse_y, True)) or (not enemy_left and in_pocket(mouse_x, mouse_y, False)):
                     hovered = (((mouse_x - 64)// SCALE) * SCALE + 64, (mouse_y // SCALE) * SCALE)
@@ -768,7 +854,7 @@ while running:
 
                 # Store the ending position of the drag
                 drag_end_pos = (mouse_x, mouse_y)
-                cur_card = deck[hand[click_quarter - 1]]
+                cur_card = deck[p1_hand[click_quarter - 1]]
                 legal_place = False
                 c = can_anywhere(cur_card.name)
                 if (c or mouse_y > 340) or (not enemy_right and in_pocket(mouse_x, mouse_y, True)) or (not enemy_left and in_pocket(mouse_x, mouse_y, False)):
@@ -795,7 +881,7 @@ while running:
                     
                     succesful = game_arena.add(True, pos, name, level, cur_card.cycles_left == 0)
                     if succesful:
-                        cycle(hand, click_quarter - 1, cycler)
+                        cycle(p1_hand, click_quarter - 1, p1_cycler)
                         cur_card.cycle_evo()
 
                 # Reset drag start position after the release
@@ -815,7 +901,7 @@ while running:
     if fin is not None:
         win = fin
         break
-    draw()  # Redraw screen
+    draw(False)  # Redraw screen
 
 print("bot deck is:")
 

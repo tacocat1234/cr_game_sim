@@ -234,6 +234,7 @@ class WallBreakerAttackEntity(MeleeAttackEntity):
             position=position,
             target=target
             )
+        self.display_size = self.SPLASH_RADIUS
     
     def detect_hits(self, arena):
         hits = []
@@ -460,7 +461,7 @@ class ElectroDragonAttackEntity(AttackEntity):
                     min_dist = float("inf")
                     min = None
                     for each in arena.towers + arena.buildings + arena.troops: #find new hits
-                        if (isinstance(each, Tower) or not each.invulnerable) and each.side != self.side and vector.distance(each.position, self.chain_center) < 4: # if different side
+                        if (isinstance(each, Tower) or not each.invulnerable) and each.side != self.side and vector.distance(each.position, self.chain_center) < self.CHAIN_RADIUS: # if different side
                             new = not any(each is h for h in self.has_hit)
                             if vector.distance(each.position, self.chain_center) < min_dist and new:
                                 min = each

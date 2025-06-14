@@ -30,6 +30,7 @@ import frozen_peak_evos
 import jungle_arena_evos
 import hog_mountain_evos
 import electro_valley_evos
+import spooky_town_evos
 import copy
 import random
 
@@ -169,7 +170,7 @@ def get_clone(obj):
         elif n == "EvolutionMusketeer":
             return training_camp_cards.Musketeer(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionSkeleton":
-            return bone_pit_cards.Skeleton(obj.side, copy.deepcopy(obj.position, obj.level))
+            return bone_pit_cards.Skeleton(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionBomber":
             return bone_pit_cards.Bomber(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionValkyrie":
@@ -200,6 +201,12 @@ def get_clone(obj):
             return electro_valley_cards.InfernoDragon(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionMegaKnight":
             return electro_valley_cards.MegaKnight(obj.side, copy.deepcopy(obj.position), obj.level)
+        elif n == "EvolutionFirecracker":
+            return spooky_town_cards.Firecracker(obj.side, copy.deepcopy(obj.position), obj.level)
+        elif n == "EvolutionElectroDragon":
+            return spooky_town_cards.ElectroDragon(obj.side, copy.deepcopy(obj.position), obj.level)
+        elif n == "EvolutionWallBreaker":
+            return spooky_town_cards.WallBreaker(obj.side, copy.deepcopy(obj.position), obj.level)
         else:
             raise Exception(n + " is not actually an evo")
         
@@ -278,6 +285,15 @@ def evolution_troop_factory(side, position, name, level):
         return electro_valley_evos.EvolutionInfernoDragon(side, position, level)
     elif name == "megaknight":
         return electro_valley_evos.EvolutionMegaKnight(side, position, level)
+    elif name == "firecracker":
+        return spooky_town_evos.EvolutionFirecracker(side, position, level)
+    elif name == "electrodragon":
+        return spooky_town_evos.EvolutionElectroDragon(side, position, level)
+    elif name == "wallbreakers":
+        pos1 = vector.Vector(0.75, 0)
+        pos2 = vector.Vector(-0.75, 0)
+        return [spooky_town_evos.EvolutionWallBreaker(side, position.added(pos1), level),
+                spooky_town_evos.EvolutionWallBreaker(side, position.added(pos2), level)]
     
 def evolution_spell_factory(side, position, name, level):
     if name == "zap":
