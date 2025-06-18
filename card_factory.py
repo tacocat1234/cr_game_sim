@@ -210,6 +210,8 @@ def get_clone(obj):
             return spooky_town_cards.WallBreaker(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionLumberjack":
             return serenity_peak_cards.Lumberjack(obj.side, copy.deepcopy(obj.position), obj.level)
+        elif n == "EvolutionExecutioner":
+            return serenity_peak_cards.Executioner(obj.side, copy.deepcopy(obj.position), obj.level)
         else:
             raise Exception(n + " is not actually an evo")
         
@@ -301,6 +303,8 @@ def evolution_troop_factory(side, position, name, level):
         return serenity_peak_evos.EvolutionLumberjack(side, position, level)
     elif name == "goblindrill":
         return serenity_peak_evos.EvolutionGoblinDrillMineTroop(side, position, level)
+    elif name == "executioner":
+        return serenity_peak_evos.EvolutionExecutioner(side, position, level)
     
 def evolution_spell_factory(side, position, name, level):
     if name == "zap":

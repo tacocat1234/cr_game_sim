@@ -1,5 +1,8 @@
 import serenity_peak_cards
 from  abstract_classes import TICK_TIME
+from abstract_classes import TILES_PER_MIN
+from abstract_classes import Troop
+from abstract_classes import RangedAttackEntity
 from goblin_stadium_cards import Goblin
 import copy
 import vector
@@ -38,10 +41,40 @@ class EvolutionLumberjack(serenity_peak_cards.Lumberjack):
         arena.troops.append(EvolutionLumberjackGhost(self.side, copy.deepcopy(self.position), self.level))
         return super().die(arena)
     
+class EvolutionExecutionerAttackEntity(serenity_peak_cards.ExecutionerAttackEntity):
+    def __init__(self, side, damage, position, target, parent_pos):
+        super().__init__(side, damage, position, target)
+        self.normal_damage = damage
+        self.axe_smash = True
+        self.parent_pos = parent_pos
+
+    def tick_func(self, arena):
+        if self.duration <= 0.75 and not self.returning:
+            self.returning = True
+            self.has_hit = []
+
+        if self.duration < 0.203 or self.duration > 1.297:
+            self.axe_smash = True
+            self.damage = 1.75 * self.normal_damage
+        else:
+            self.axe_smash = False
+            self.damage = self.normal_damage
+    
+    def apply_effect(self, target):
+        if not self.returning and self.axe_smash and isinstance(target, Troop) and target.can_kb and not target.invulnerable:
+            vec = target.position.subtracted(self.parent_pos)
+            vec.normalize()
+            vec.scale(1.5)
+            target.kb(vec)
+    
 class EvolutionExecutioner(serenity_peak_cards.Executioner):
     def __init__(self, side, position, level):
         super().__init__(side, position, level)
         self.evo = True
+
+    def attack(self):
+        self.stun_timer = 1.5
+        return EvolutionExecutionerAttackEntity(self.side, self.hit_damage, self.position, copy.deepcopy(self.target.position), self.position)
     #subject to nerfs, not going to code
 
 class EvolutionGoblinDrillMineTroop(serenity_peak_cards.GoblinDrillMineTroop):

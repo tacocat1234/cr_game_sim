@@ -738,7 +738,7 @@ class InfernoDragon(Troop):
     def __init__(self, side, position, level):
         super().__init__(
             s=side,              # Side (True for one player, False for the other)
-            h_p= 991070 * pow(1.1, level - 9),         # Hit points (Example value)
+            h_p= 1070 * pow(1.1, level - 9),         # Hit points (Example value)
             h_d= 30 * pow(1.1, level - 9),          # Hit damage (Example value)
             h_s=0.4,          # Hit speed (Seconds per hit)
             l_t=1.2,            # First hit cooldown

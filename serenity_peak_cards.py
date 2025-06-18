@@ -332,7 +332,7 @@ class ElixirBlob(Troop):
 
 class ExecutionerAttackEntity(RangedAttackEntity):
     SPLASH_RADIUS = 1
-    def __init__(self, side, damage, position, target, parent_pos):
+    def __init__(self, side, damage, position, target):
         super().__init__(
             side=side, 
             damage=damage, 
@@ -348,8 +348,6 @@ class ExecutionerAttackEntity(RangedAttackEntity):
         self.display_size = 1
         self.resize = True
         self.returning = False
-
-        self.parent_pos = parent_pos
 
     def tick_func(self, arena):
         if self.duration <= 0.75 and not self.returning:
@@ -374,7 +372,7 @@ class Executioner(Troop):
     def __init__(self, side, position, level):
         super().__init__(
             s=side,              # Side (True for one player, False for the other)
-            h_p= 800 * pow(1.1, level - 6),         # Hit points (Example value)
+            h_p= 800 * pow(1.1, level -6),         # Hit points (Example value)
             h_d= 106 * pow(1.1, level - 6),          # Hit damage (Example value)
             h_s=0.9,          # Hit speed (Seconds per hit)
             l_t=0.4,            # First hit cooldown
@@ -393,7 +391,7 @@ class Executioner(Troop):
 
     def attack(self):
         self.stun_timer = 1.5
-        return ExecutionerAttackEntity(self.side, self.hit_damage, self.position, copy.deepcopy(self.target.position), self.position)
+        return ExecutionerAttackEntity(self.side, self.hit_damage, self.position, copy.deepcopy(self.target.position))
     
 class GoblinCurse(Spell):
     def __init__(self, side, target, level):
