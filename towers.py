@@ -134,6 +134,7 @@ class KingTower(Tower):
         return KingTowerAttackEntity(self.side, self.hit_damage, self.position, self.target)
 
     def tick(self, arena):
+        self.tick_func(arena)
         if self.stun_timer <= 0:
             if self.target is None or self.target.cur_hp <= 0:
                 self.update_target(arena)
@@ -153,6 +154,9 @@ class KingTower(Tower):
             arena.towers.remove(self)
             return not self.side
         
+        if self.rage_timer < 0:
+            self.rage_timer = 0
+            self.unrage()
 
         if self.stun_timer <= 0:
             if self.target is None or (vector.distance(self.target.position, self.position) > self.hit_range + self.collision_radius and (self.attack_cooldown <= self.hit_speed - self.load_time)):
@@ -250,3 +254,76 @@ class DaggerDuchess(Tower):
             if self.dagger_regen_timer <= 0:
                 self.ammo += 1
                 self.dagger_regen_timer = 0.9
+
+class RoyalChefAttackEntity(RangedAttackEntity):
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            side=side,
+            damage=damage,
+            velocity=600*TILES_PER_MIN,
+            position=position,
+            target=target,
+        )
+
+
+class RoyalChef(Tower):
+    def __init__(self, side, level, l_or_r):
+        x = 5.5 if l_or_r else -5.5 #right is true left is false
+        y = -9.5 if side else 9.5 #your side is true opp side is false
+        super().__init__(
+            s=side,
+            h_d=90 * pow(1.1, level - 9),
+            h_r=7.5,
+            h_s=1,
+            l_t=0, #.0166... extra so it stays below 0
+            h_p=2425 * pow(1.1, level - 9),
+            c_r=1,
+            p=vector.Vector(x, y)
+        )
+
+        self.level = level
+
+    def attack(self):
+        return RoyalChefAttackEntity(self.side, self.hit_damage, self.position, self.target)
+    
+class RoyalChefPancake(RangedAttackEntity):
+    def __init__(self, side, position, target):
+        super().__init__(
+            side=side,
+            damage=0,
+            velocity=800*TILES_PER_MIN,
+            position=position,
+            target=target,
+        )
+        self.display_size = 0.4
+        self.resize = True
+
+    def apply_effect(self, target):
+        target.level_up()
+
+    
+class RoyalChefKingTower(KingTower):
+    def __init__(self, side, level):
+        super().__init__(side, level)
+        self.cooking_timer = 21 #flat 21 seconds instead of whatever nonsense cr is doing
+        self.type = "rckt"
+
+    def find_target(self, arena):
+        max_hp = 0
+        t = None
+        for each in arena.troops:
+            if each.side == self.side:
+                if each.cur_hp > max_hp and each.cur_hp != float('inf'):
+                    t = each
+                    max_hp = each.cur_hp
+        return t
+                
+
+    def tick_func(self, arena):
+        if self.cooking_timer > 0:
+            self.cooking_timer -= TICK_TIME
+        else:
+            tar = self.find_target(arena)
+            if tar is not None:
+                arena.active_attacks.append(RoyalChefPancake(self.side, self.position, tar))
+                self.cooking_timer = 21

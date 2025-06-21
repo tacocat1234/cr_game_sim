@@ -757,6 +757,11 @@ class InfernoDragon(Troop):
         self.stage = 1
         self.stage_duration = 2
         self.damage_stages = [30 * pow(1.1, level - 9), 100 * pow(1.1, level - 9), 350 * pow(1.1, level - 9)]
+
+    def level_up(self):
+        super().level_up()
+        for i in range(3):
+            self.damage_stages[i] *= 1.1
     
     def tick_func(self, arena):
         if self.target is None or self.target.cur_hp <= 0 or vector.distance(self.position, self.target.position) > self.hit_range + self.collision_radius + self.target.collision_radius + 0.1 or not self.target.targetable:
@@ -830,6 +835,10 @@ class RamRider(Troop):
         self.sprite_path = f"sprites/{class_name}/{class_name}_0.png"
 
         self.rider = RamRiderRider(self.side, self.position, self.level)
+
+    def level_up(self):
+        super().level_up()
+        self.rider.level_up()
 
     def kb(self, vec, t=None):
         if vec.magnitude() > 0:

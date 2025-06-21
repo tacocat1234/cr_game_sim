@@ -15,7 +15,7 @@ class EvolutionGoblinCage(goblin_stadium_cards.GoblinCage):
         super().__init__(side, position, level)
         self.evo = True
         self.hit_range = 3
-        self.trapped = None
+        self.trapped_move_speed = 0
         self.hit_damage = 159 * pow(1.1, level - 3)
         self.hit_speed = 1.1
 
@@ -30,14 +30,13 @@ class EvolutionGoblinCage(goblin_stadium_cards.GoblinCage):
 
         if self.target is not None:
             self.target.collideable = False
-            self.target.stun_timer = TICK_TIME * 2
+            self.target.stun_timer = TICK_TIME * 3
             self.target.targetable = False
-
             self.target.kb(self.position.subtracted(self.target.position), 0.5)
 
     def tick_func(self, arena):
         if self.target is not None:
-            self.target.stun_timer = TICK_TIME * 2
+            self.target.stun_timer = TICK_TIME * 3
 
     def tick(self, arena):
         if self.preplace or self.deploy_time > 0 or self.stun_timer > 0:
@@ -45,8 +44,9 @@ class EvolutionGoblinCage(goblin_stadium_cards.GoblinCage):
         self.tick_func(arena)
         if self.target is None or self.target.cur_hp <= 0:
             self.update_target(arena)
-        if not self.target is None and self.attack_cooldown <= 0 and vector.distance(self.target.position, self.position) <= 0.2:
+        if not self.target is None and self.attack_cooldown <= 0 and vector.distance(self.target.position, self.position) <= self.collision_radius:
             self.target.position = copy.deepcopy(self.position)
+            self.target.kb_timer = 0
             atk = self.attack()
             if not atk is None:
                 arena.active_attacks.append(self.attack())

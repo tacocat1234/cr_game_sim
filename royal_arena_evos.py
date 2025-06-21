@@ -38,6 +38,10 @@ class EvolutionRoyalGiant(royal_arena_cards.RoyalGiant):
         self.cur_hp = self.cur_hp * 1.1
         self.evo = True
         self.special_damage = 32 * pow(1.1, level - 11)
+
+    def level_up(self):
+        super().level_up()
+        self.special_damage *= 1.1
     
     def attack(self):
         return [super().attack(), EvolutionRoyalGiantSpecialAttackEntity(self.side, self.special_damage, self.position)]

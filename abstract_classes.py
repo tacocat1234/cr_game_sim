@@ -294,6 +294,15 @@ class Troop:
     def heal(self, amount):
         self.cur_hp = min(self.cur_hp + amount, self.hit_points)
 
+    def level_up(self):
+        self.level += 1
+        if self.has_shield:
+            self.shield_hp *= 1.1
+            self.shield_max_hp *= 1.1
+        self.cur_hp *= 1.1
+        self.hit_points *= 1.1
+        self.hit_damage *= 1.1
+
     def on_deploy(self, arena):
         pass
 

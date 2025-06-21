@@ -330,6 +330,11 @@ class GoblinGiant(Troop):
             self.backpack_goblins[0].tick(arena)
             self.backpack_goblins[1].tick(arena)
 
+    def level_up(self):
+        super().level_up()
+        self.backpack_goblins[0].level_up()
+        self.backpack_goblins[1].level_up()
+
     def cleanup_func(self, arena):
         self.backpack_goblins[0].cleanup(arena)
         self.backpack_goblins[1].cleanup(arena)

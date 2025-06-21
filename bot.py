@@ -92,6 +92,11 @@ class Bot:
         left_count = 0
         most_dangerous = None
         m_d_c = 0
+        
+        if get_type(name) == "building":
+            if name not in ["goblinhut", "barbarianhut", "furnace", "xbow", "mortar", "goblincage", "tombstone", "elixircollector"]: #anywhere builidngs
+                return vector.Vector(random.randint(-3, 3), random.randint(2, 7))
+
         for each in enemy:
             if (isinstance(each, XBow) or isinstance(each, Mortar)) and each.position.y >= -3:
                     danger_level += 99 #immediate threat

@@ -42,7 +42,7 @@ def can_evo(n):
             n == "hunter" or n == "tesla" or
             n == "infernodragon" or n == "megaknight" or 
             n == "wallbreakers" or n == "firecracker" or n == "electrodragon" or
-            n == "goblindrill" or n == "lumberjack")
+            n == "goblindrill" or n == "lumberjack" or n == "executioner")
     
 used = []
 # Load Player Deck
@@ -60,7 +60,7 @@ with open("decks/deck.txt", "r") as file:
             if card == "allrandom":
                 player_random_deck = True
                 KING_LEVEL = PRINCESS_LEVEL = int(level)
-                TOWER_TYPE = random.choice(["princesstower", "cannoneer", "daggerduchess"])
+                TOWER_TYPE = random.choice(["princesstower", "cannoneer", "daggerduchess", "royalchef"])
                 break
             is_evo, actual = parse_input(card, used)
             used.append(actual)
@@ -88,7 +88,7 @@ with open("decks/bot_deck.txt", "r") as file:
             if card == "allrandom":
                 bot_random_deck = True
                 BOT_K_L = BOT_P_L = int(level)
-                BOT_TOWER_TYPE = random.choice(["princesstower", "cannoneer", "daggerduchess"])
+                BOT_TOWER_TYPE = random.choice(["princesstower", "cannoneer", "daggerduchess", "royalchef"])
                 break
             _, actual = parse_input(card, used)
             used.append(actual)
@@ -121,6 +121,7 @@ if bot_random_deck:
     bot_deck = [Card(False, card, BOT_K_L, can_evo(card)) for card in generate_random_deck()]
 
 # Initialize Player Towers
+p_k = towers.KingTower(True, KING_LEVEL)
 if TOWER_TYPE.lower() == "princesstower":
     player_tower_a = towers.PrincessTower(True, PRINCESS_LEVEL, True)
     player_tower_b = towers.PrincessTower(True, PRINCESS_LEVEL, False)
@@ -130,8 +131,13 @@ elif TOWER_TYPE.lower() == "cannoneer":
 elif TOWER_TYPE.lower() == "daggerduchess":
     player_tower_a = towers.DaggerDuchess(True, PRINCESS_LEVEL, True)
     player_tower_b = towers.DaggerDuchess(True, PRINCESS_LEVEL, False)
+elif TOWER_TYPE.lower() == "royalchef":
+    player_tower_a = towers.RoyalChef(True, PRINCESS_LEVEL, True)
+    player_tower_b = towers.RoyalChef(True, PRINCESS_LEVEL, False)
+    p_k = towers.RoyalChefKingTower(True, KING_LEVEL)
 
 # Initialize Bot Towers
+b_k = towers.KingTower(False, BOT_K_L)
 if BOT_TOWER_TYPE.lower() == "princesstower":
     bot_tower_a = towers.PrincessTower(False, BOT_P_L, True)
     bot_tower_b = towers.PrincessTower(False, BOT_P_L, False)
@@ -141,18 +147,20 @@ elif BOT_TOWER_TYPE.lower() == "cannoneer":
 elif BOT_TOWER_TYPE.lower() == "daggerduchess":
     bot_tower_a = towers.DaggerDuchess(False, BOT_P_L, True)
     bot_tower_b = towers.DaggerDuchess(False, BOT_P_L, False)
+elif BOT_TOWER_TYPE.lower() == "royalchef":
+    bot_tower_a = towers.RoyalChef(False, PRINCESS_LEVEL, True)
+    bot_tower_b = towers.RoyalChef(False, PRINCESS_LEVEL, False)
+    b_k = towers.RoyalChefKingTower(False, BOT_K_L)
 
 err = False
-try:
-    game_arena.towers = [towers.KingTower(True, PRINCESS_LEVEL), 
-                            player_tower_a,  # a
-                            player_tower_b,  # b
-                            towers.KingTower(False, BOT_K_L), 
-                            bot_tower_a,
-                            bot_tower_b
-                        ]
-except:
-    err = True
+
+game_arena.towers = [p_k, 
+                        player_tower_a,  # a
+                        player_tower_b,  # b
+                        b_k, 
+                        bot_tower_a,
+                        bot_tower_b
+                    ]
 
 if err:
     raise Exception("you either typed too many cards (8 only + 1 kingtower + 1 towertroop) or misspelled a tower type")
@@ -228,6 +236,7 @@ font = pygame.font.Font(None, 12)
 background_img = pygame.image.load("sprites/background.png").convert_alpha()
 select_img = pygame.image.load("sprites/tileselect.png").convert_alpha()
 dd_symbol_img = pygame.image.load("sprites/daggerduchess/duchess_symbol.png").convert_alpha()
+rc_symbol_img = pygame.image.load("sprites/royalchefkingtower/royalchef_symbol.png").convert_alpha()
 elixir_int_img = pygame.image.load("sprites/elixir_bar.png").convert_alpha()
 
 #temp
@@ -359,6 +368,13 @@ def draw():
             pygame.draw.rect(screen, BLACK, (tower_x + 9, tower_y + 5, tower_rect_width - 12, 4))  # Background
             pygame.draw.rect(screen, YELLOW, (tower_x + 9, tower_y + 5, ((tower_rect_width - 12) * ammo_ratio), 4))  # Ammo bar
             screen.blit(dd_symbol_img, (tower_x - 3, tower_y))
+        elif tower.type == "rckt":
+            cooking_ratio = 1 - (tower.cooking_timer / 21)
+            offset = 50 if tower.side else 5
+            pygame.draw.rect(screen, BLACK, (tower_x + 9, tower_y + offset, tower_rect_width - 12, 4))  # Background
+            pygame.draw.rect(screen, YELLOW, (tower_x + 9, tower_y + offset, ((tower_rect_width - 12) * cooking_ratio), 4))  # Ammo bar
+            screen.blit(rc_symbol_img, (tower_x - 3, tower_y + offset - 8))
+    
     
     for building in game_arena.buildings:
         building_x, building_y = convert_to_pygame(building.position)

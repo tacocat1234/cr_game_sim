@@ -812,7 +812,7 @@ def generate_random_deck():
     used.add(choice)
 
     if random.randint(1, 4) == 1:
-        deck[2] = random.choice(["goblinhut", "barbarianhut", "furnace", "xbow", "mortar", "goblincage", "tombstone", "elixircollector"])
+        deck[2] = random.choice(buildings)
 
     if random.randint(1, 5) == 1:
         deck[3] = random_with_param("spell", 5, 9, used)
