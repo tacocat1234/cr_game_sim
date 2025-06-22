@@ -170,10 +170,8 @@ class Balloon(Troop):
         return BalloonAttackEntity(self.side, self.hit_damage, self.position, self.target)
     
     def die(self, arena):
-        damage = 150 * pow(1.1, self.level - 6)
-        self.cur_hp = -1
         arena.troops.append(BalloonDeathBomb(self.side, copy.deepcopy(self.position), self.level))
-        arena.troops.remove(self)
+        super().die(arena)
     
 class BalloonDeathBombAttackEntity(AttackEntity):
     DAMAGE_RADIUS = 3

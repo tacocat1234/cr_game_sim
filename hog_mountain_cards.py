@@ -360,10 +360,13 @@ class Golem(Troop):
 
         self.death_damage = 140 * pow(1.1, level - 6)
 
-
+    def level_up(self):
+        self.death_damage *= 1.1
+        super().level_up()
 
     def attack(self):
         return GolemAttackEntity(self.side, self.hit_damage, self.position, self.target)
+    
     def die(self, arena):
         arena.active_attacks.append(GolemDeathAttackEntity(self.side, self.death_damage, self.position, self.target))
         arena.troops.append(Golemite(self.side, self.position.added(vector.Vector(1.5, 0)), self.level, self.cloned))
@@ -435,10 +438,13 @@ class Golemite(Troop):
 
         self.death_damage= 62 * pow(1.1, level - 6)
 
-
+    def level_up(self):
+        self.death_damage *= 1.1
+        super().level_up()
 
     def attack(self):
         return GolemAttackEntity(self.side, self.hit_damage, self.position, self.target)
+    
     def die(self, arena):
         arena.active_attacks.append(GolemiteDeathAttackEntity(self.side, self.death_damage, self.position, self.target))
         super().die(arena)

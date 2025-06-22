@@ -19,8 +19,8 @@ class Arena:
         self.timer = 0
         self.state = ""
 
-    def add(self, side, position, name, level, evo=False):
-        e = card_factory.get_elixir(name)
+    def add(self, side, position, name, cost, level, evo=False):
+        e = cost
         if (side and e <= self.p1_elixir + 0.5) or (not side and e <= self.p2_elixir + 0.5): #if enough elixir
             did_preplace = False if (side and e <= self.p1_elixir) or (not side and e <= self.p2_elixir) else True
             

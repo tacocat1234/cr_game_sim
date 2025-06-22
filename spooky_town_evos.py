@@ -239,16 +239,17 @@ class EvolutionElectroDragonInfiniteAttackEntity(AttackEntity):
         )
         self.target = None
         self.chain_center = None
-        self.has_hit = None
+        self.has_hit = []
         self.should_delete = False
         self.damage *= 0.66
 
     def find_initial(self, arena):
+        self.target = None
         minimum = None
         min_dist = float('inf')
         for each in arena.towers + arena.buildings + arena.troops: #find new hits
             if (isinstance(each, Tower) or not each.invulnerable) and each.side != self.side and vector.distance(each.position, self.position) < self.CHAIN_RADIUS: # if different side
-                if vector.distance(each.position, self.position) < min_dist:
+                if not (self.has_hit and each is self.has_hit[0]) and vector.distance(each.position, self.position) < min_dist:
                     minimum = each
                     min_dist = vector.distance(each.position, self.position)
 
@@ -271,21 +272,27 @@ class EvolutionElectroDragonInfiniteAttackEntity(AttackEntity):
         hits = self.detect_hits(arena)
         if len(hits) > 0:
                 hits[0].damage(self.damage)
+                self.has_hit.append(hits[0])
                 self.should_delete = True
                 self.chain_center = self.target.position
                 min_dist = float("inf")
                 minimum = None
                 for each in arena.towers + arena.buildings + arena.troops: #find new hits
                     if (isinstance(each, Tower) or not each.invulnerable) and each.side != self.side and vector.distance(each.position, self.chain_center) < 4: # if different side
-                        new = not each is self.has_hit
+                        new = not each in self.has_hit
                         if new and vector.distance(each.position, self.chain_center) < min_dist:
                             minimum = each
                             min_dist = vector.distance(each.position, self.chain_center)
                             
                 if not minimum is None:
                     self.target = minimum
-                    self.has_hit = minimum
                     self.should_delete = False
+                elif len(self.has_hit) > 1: #could not find, is not empty
+                    self.has_hit = [self.target] #reset
+                    self.find_initial(arena) #find new
+                    if self.target is not None:
+                        self.should_delete = False #no longer delete
+
         else:
             direction = self.target.position.subtracted(self.position)
             direction.normalize()

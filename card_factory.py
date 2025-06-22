@@ -816,6 +816,9 @@ def generate_random_deck():
 
     if random.randint(1, 5) == 1:
         deck[3] = random_with_param("spell", 5, 9, used)
+    
+    if random.randint(1, 5) == 1:
+        deck[4] = "mirror"
 
     return deck
 

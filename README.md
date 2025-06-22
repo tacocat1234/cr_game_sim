@@ -29,7 +29,7 @@ to set king and towertroop levels, and towertroop
 recommended bot_deck.txt levels is 13 comapred to your 11, becuase bot is stupid.
 
 special note:
-all evos except witch and executioner, becuase they may be nerfed very soon
+all evos except witch, because that ones hard to code
 more coming soon
 
 ## Troops
@@ -75,5 +75,8 @@ barbarianhut,
 furnace, tesla, xbow,
 goblindrill,
 elixirpump
+
+note:
+mirror exists too.
 ## Towers
-kingtower, princesstower, cannoneer, daggerduchess
+kingtower, princesstower, cannoneer, daggerduchess, royalchef

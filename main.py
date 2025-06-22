@@ -120,6 +120,9 @@ if player_random_deck:
 if bot_random_deck:
     bot_deck = [Card(False, card, BOT_K_L, can_evo(card)) for card in generate_random_deck()]
 
+p_mirror = next((each for each in deck if each.name == "mirror"), None)
+b_mirror = next((each for each in bot_deck if each.name == "mirror"), None)
+
 # Initialize Player Towers
 p_k = towers.KingTower(True, KING_LEVEL)
 if TOWER_TYPE.lower() == "princesstower":
@@ -362,6 +365,10 @@ def draw():
         # Health bar
         pygame.draw.rect(screen, BLACK, (tower_x, tower_y - 5, tower_rect_width, 3))
         pygame.draw.rect(screen, GREEN, (tower_x, tower_y - 5, (tower_rect_width * (tower.cur_hp / tower.hit_points)), 3))
+
+        hp_text = font.render(str(int(tower.cur_hp)), True, WHITE)  # Convert HP to int and render in white
+        text_rect = hp_text.get_rect(center=(tower_x + tower_rect_width / 2, tower_y - 10))
+        screen.blit(hp_text, text_rect)
 
         if tower.type == "dd":
             ammo_ratio = tower.ammo / 8
@@ -714,6 +721,8 @@ enemy_right = True
 
 game_arena.p2_elixir = 9
 #game_arena.p2_elixir = -999 #disable bot for testing
+p_prev = None
+b_prev = None
 
 while running:
     clock.tick(60)  # 60 FPS
@@ -728,15 +737,23 @@ while running:
     s = "all" if s == 0 else ("none" if s == -1 else ("right" if s == 1 else "left"))
 
     bot_card = bot.tick(game_arena.p2_elixir, game_arena.troops + game_arena.buildings)
+
     if not bot_card is None:
-        bot_pos = Bot.random_pos(bot_card.name, game_arena.troops + game_arena.buildings, s)
+        n = bot_card.name if bot_card.name != "mirror" else b_prev.name #actual card
+        bot_pos = Bot.random_pos(n, game_arena.troops + game_arena.buildings, s)
         if bot_pos:
             if bot_card.name == "royalrecruits":
                 if bot_pos.x < -1.5:
                     bot_pos.x = -1.5
                 elif bot_pos.x > 1.5:
                     bot_pos.x = 1.5
-            game_arena.add(False, bot_pos, bot_card.name, bot_card.level, bot_card.cycles_left == 0)
+
+            l = bot_card.level if bot_card.name != "mirror" else b_prev.level + 1
+
+            game_arena.add(False, bot_pos, n, bot_card.elixir_cost, l, bot_card.cycles_left == 0 if bot_card.name != "mirror" else False)
+            b_prev = bot_card
+            if b_mirror is not None:
+                b_mirror.elixir_cost = bot_card.elixir_cost + 1
             bot_card.cycle_evo()
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
@@ -807,10 +824,13 @@ while running:
                             pos.x = -1.5
                         elif pos.x > 1.5:
                             pos.x = 1.5
-                    name = cur_card.name
-                    level = cur_card.level
+                    name = cur_card.name if cur_card.name != "mirror" else p_prev.name
+                    level = cur_card.level if cur_card.name != "mirror" else p_prev.level + 1
                     
-                    succesful = game_arena.add(True, pos, name, level, cur_card.cycles_left == 0)
+                    succesful = game_arena.add(True, pos, name, cur_card.elixir_cost, level, cur_card.cycles_left == 0 if cur_card.name != "mirror" else False)
+                    p_prev = cur_card
+                    if p_mirror is not None:
+                        p_mirror.elixir_cost = cur_card.elixir_cost + 1
                     if succesful:
                         cycle(hand, click_quarter - 1, cycler)
                         cur_card.cycle_evo()

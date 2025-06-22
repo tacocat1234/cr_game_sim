@@ -45,13 +45,16 @@ class Card:
         self.cycles_left = self.cycles #if not self.is_evo else 0
 
         error = False
-        try:
-            self.elixir_cost = get_elixir(self.name)
-        except KeyError:
-            error = True
-        if error:
-            error_msg = "You spelled \"" + self.name + "\" wrong. Make sure its all lowercase with no spaces, and is as appears in README.md."
-            raise Exception(error_msg)
+        if self.name == "mirror":
+            self.elixir_cost = float('inf')
+        else:
+            try:
+                self.elixir_cost = get_elixir(self.name)
+            except KeyError:
+                error = True
+            if error:
+                error_msg = "You spelled \"" + self.name + "\" wrong. Make sure its all lowercase with no spaces, and is as appears in README.md."
+                raise Exception(error_msg)
     
     def cycle_evo(self):
         if self.is_evo:
