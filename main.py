@@ -638,8 +638,8 @@ def draw():
 
     pygame.display.flip()
 
-player_random_deck, deck, TOWER_TYPE = deck_select.run_loop(screen, True)
-bot_random_deck, bot_deck, BOT_TOWER_TYPE = deck_select.run_loop(screen, False)
+player_random_deck, KING_LEVEL, deck, TOWER_TYPE = deck_select.run_loop(screen, True)
+bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = deck_select.run_loop(screen, False)
 
 if player_random_deck:
     deck = [Card(True, card, KING_LEVEL, can_evo(card)) for card in generate_random_deck()]

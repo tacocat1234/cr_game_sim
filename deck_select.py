@@ -119,6 +119,7 @@ class SubmitBox(SelectionBox):
 def run_loop(screen, side = True):
     lev = SelectionBox(100, 100, 50, 50)
     lev.font_size = 24
+    lev.value = "11" if side else "13"
     rand = CheckBox(WIDTH - 100, 100, 50, 50)
     all = [
         SelectionBox(WIDTH/5, HEIGHT/2 - 70, 80, 80),
@@ -211,4 +212,4 @@ def run_loop(screen, side = True):
     out = []
     for i in range(8):
         out.append(Card(side, fuzzy_match(all[i].value, troops + buildings + spells), int(lev.value), bool(evo[i].value)))
-    return bool(rand.value), out, fuzzy_match(tower.value, ["princesstower", "cannoneer", "daggerduchess", "royalchef"])
+    return bool(rand.value), int(lev.value), out, fuzzy_match(tower.value, ["princesstower", "cannoneer", "daggerduchess", "royalchef"])
