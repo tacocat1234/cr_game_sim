@@ -673,7 +673,6 @@ class Tower:
         else:
             self.hit_speed /= 0.65
             self.load_time /= 0.65
-            self.move_speed /= 1.35
 
     def stun(self):
         self.stun_timer = 0.5
@@ -923,7 +922,6 @@ class Building:
         else:
             self.hit_speed /= 0.65
             self.load_time /= 0.65
-            self.move_speed /= 1.35
 
     def damage(self, amount):
         self.cur_hp -= amount

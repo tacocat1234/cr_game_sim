@@ -611,14 +611,14 @@ class GoblinDrill(Building):
 
         if abs(self.position.y - tower.position.y) >= abs(self.position.x - tower.position.x):
             if self.position.y <= tower.position.y:
-                self.position.y = round(tower.position.y - tower.collision_radius)
+                self.position.y = math.floor(tower.position.y - tower.collision_radius)
             else:
-                self.position.y = round(tower.position.y + tower.collision_radius)
+                self.position.y = math.ceil(tower.position.y + tower.collision_radius)
         else:
             if self.position.x <= tower.position.x:
-                self.position.x = round(tower.position.x - tower.collision_radius)
+                self.position.x = math.floor(tower.position.x - tower.collision_radius)
             else:
-                self.position.x = round(tower.position.x + tower.collision_radius)
+                self.position.x = math.ceil(tower.position.x + tower.collision_radius)
 
     def on_deploy(self, arena):
         for each in arena.towers:

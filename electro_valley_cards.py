@@ -18,7 +18,7 @@ class LogAttackEntity(AttackEntity):
             s=side, 
             d=damage, 
             v=200 * TILES_PER_MIN, 
-            l=3.03, 
+            l=3.12, 
             i_p=pos)
         self.has_hit = []
         self.crown_tower_damage = c_t_d
@@ -70,7 +70,7 @@ class Log(Troop):
         self.targetable = False
         self.invulnerable = True
         self.collideable = False
-        self.timer = 3.03
+        self.timer = 3.12
         self.crown_tower_damage = 48 * pow(1.1, level - 9)
 
         self.collideable = False
@@ -96,7 +96,11 @@ class Log(Troop):
         if self.timer <= 0:
             self.should_delete = True
 
-        
+    def rage(self):
+        pass
+
+    def slow(self):
+        pass
 
     def attack(self):
         return LogAttackEntity(self.side, self.hit_damage, self.crown_tower_damage, copy.deepcopy(self.position))

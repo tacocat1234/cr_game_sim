@@ -298,6 +298,9 @@ def draw():
     if not drag_start_pos is None:
         cur_name = deck[hand[click_quarter - 1]].name
 
+        if cur_name == "mirror" and p_prev is not None:
+            cur_name = p_prev.name
+
         if not can_anywhere(cur_name):
             place_surface = pygame.Surface((488, 340), pygame.SRCALPHA)
 
@@ -338,7 +341,46 @@ def draw():
 
     screen.blit(center_surface, center_rect)
 
-    
+    # Draw Towers
+    for tower in game_arena.towers:
+        tower_x, tower_y = convert_to_pygame(tower.position)
+        
+        # Adjust position so that the rectangle is centered at the tower's coordinates
+        tower_rect_width = tower.collision_radius * SCALE * 2
+        tower_rect_height = tower_rect_width
+        tower_x -= tower_rect_width / 2
+        tower_y -= tower_rect_height / 2
+
+        tower_color = GRAY
+
+        if tower.rage_timer > 0:
+            tower_color = raged_color(tower_color)
+        
+        pygame.draw.rect(screen, (90, 100, 90), (tower_x - 10, tower_y - 10, tower_rect_width + 20, tower_rect_height + 20))  # Tower base
+        pygame.draw.rect(screen, tower_color, (tower_x, tower_y, tower_rect_width, tower_rect_height))  # Tower square
+
+        if tower.activated:
+            #health text
+            hpfont = pygame.font.Font(None, 16)
+            hp_text = hpfont.render(str(int(tower.cur_hp)), True, WHITE)  # Convert HP to int and render in white
+            text_rect = hp_text.get_rect(center=(tower_x + tower_rect_width / 2, tower_y - 10))
+            screen.blit(hp_text, text_rect)
+
+            # Health bar
+            pygame.draw.rect(screen, BLACK, (tower_x - 5, tower_y - 5, tower_rect_width + 10, 3))
+            pygame.draw.rect(screen, GREEN, (tower_x - 5, tower_y - 5, ((tower_rect_width + 10) * (tower.cur_hp / tower.hit_points)), 3))
+
+        if tower.type == "dd":
+            ammo_ratio = tower.ammo / 8
+            pygame.draw.rect(screen, BLACK, (tower_x + 4, tower_y + 5, tower_rect_width - 2, 4))  # Background
+            pygame.draw.rect(screen, YELLOW, (tower_x + 4, tower_y + 5, ((tower_rect_width - 2) * ammo_ratio), 4))  # Ammo bar
+            screen.blit(dd_symbol_img, (tower_x - 7, tower_y))
+        elif tower.type == "rckt":
+            cooking_ratio = 1 - (tower.cooking_timer / 21)
+            offset = 50 if tower.side else 5
+            pygame.draw.rect(screen, BLACK, (tower_x + 9, tower_y + offset, tower_rect_width - 12, 4))  # Background
+            pygame.draw.rect(screen, YELLOW, (tower_x + 9, tower_y + offset, ((tower_rect_width - 12) * cooking_ratio), 4))  # Ammo bar
+            screen.blit(rc_symbol_img, (tower_x - 3, tower_y + offset - 8))
     
     for building in game_arena.buildings:
         building_x, building_y = convert_to_pygame(building.position)
@@ -382,47 +424,6 @@ def draw():
         level_text = font.render(str(building.level), True, WHITE)  # White text
         text_rect = level_text.get_rect(center=(level_box_x + level_box_size / 2, level_box_y + level_box_size / 2))
         screen.blit(level_text, text_rect)
-
-    # Draw Towers
-    for tower in game_arena.towers:
-        tower_x, tower_y = convert_to_pygame(tower.position)
-        
-        # Adjust position so that the rectangle is centered at the tower's coordinates
-        tower_rect_width = tower.collision_radius * SCALE * 2
-        tower_rect_height = tower_rect_width
-        tower_x -= tower_rect_width / 2
-        tower_y -= tower_rect_height / 2
-
-        tower_color = GRAY
-
-        if tower.rage_timer > 0:
-            tower_color = raged_color(tower_color)
-        
-        pygame.draw.rect(screen, (170, 190, 120), (tower_x - 10, tower_y - 10, tower_rect_width + 20, tower_rect_height + 20))  # Tower base
-        pygame.draw.rect(screen, tower_color, (tower_x, tower_y, tower_rect_width, tower_rect_height))  # Tower square
-
-        if tower.activated:
-            #health text
-            hpfont = pygame.font.Font(None, 16)
-            hp_text = hpfont.render(str(int(tower.cur_hp)), True, WHITE)  # Convert HP to int and render in white
-            text_rect = hp_text.get_rect(center=(tower_x + tower_rect_width / 2, tower_y - 10))
-            screen.blit(hp_text, text_rect)
-
-            # Health bar
-            pygame.draw.rect(screen, BLACK, (tower_x - 5, tower_y - 5, tower_rect_width + 10, 3))
-            pygame.draw.rect(screen, GREEN, (tower_x - 5, tower_y - 5, ((tower_rect_width + 10) * (tower.cur_hp / tower.hit_points)), 3))
-
-        if tower.type == "dd":
-            ammo_ratio = tower.ammo / 8
-            pygame.draw.rect(screen, BLACK, (tower_x + 4, tower_y + 5, tower_rect_width - 2, 4))  # Background
-            pygame.draw.rect(screen, YELLOW, (tower_x + 4, tower_y + 5, ((tower_rect_width - 2) * ammo_ratio), 4))  # Ammo bar
-            screen.blit(dd_symbol_img, (tower_x - 7, tower_y))
-        elif tower.type == "rckt":
-            cooking_ratio = 1 - (tower.cooking_timer / 21)
-            offset = 50 if tower.side else 5
-            pygame.draw.rect(screen, BLACK, (tower_x + 9, tower_y + offset, tower_rect_width - 12, 4))  # Background
-            pygame.draw.rect(screen, YELLOW, (tower_x + 9, tower_y + offset, ((tower_rect_width - 12) * cooking_ratio), 4))  # Ammo bar
-            screen.blit(rc_symbol_img, (tower_x - 3, tower_y + offset - 8))
 
 
     # Draw Troops
@@ -630,6 +631,11 @@ def draw():
         text_rect = card_name_text.get_rect(center=(card_name_x, card_name_y))
         screen.blit(card_name_text, text_rect)
 
+        if (card.name == "mirror") and p_prev is not None:
+            mirror_text = card_name_font.render("(" + p_prev.name + ")", True, BLACK) #nono, accessing global in local function but easiest
+            text_rect = mirror_text.get_rect(center=(card_name_x, card_name_y + 15))
+            screen.blit(mirror_text, text_rect)
+
         elixir_cost_circle_x = card_name_x + 30  # Position at the end of the elixir bar
         elixir_cost_circle_y = card_name_y - 30  # Align with the bar
         elixir_cost_circle_radius = 12  # Size of the circle
@@ -787,6 +793,8 @@ while running:
                 mouse_x, mouse_y = pygame.mouse.get_pos()
 
                 cur_name = deck[hand[click_quarter - 1]].name
+                if cur_name == "mirror" and p_prev is not None:
+                    cur_name = p_prev.name
 
                 if mouse_x > 64 and mouse_x < WIDTH - 64 and mouse_y < HEIGHT - 128 and (can_anywhere(cur_name) or mouse_y > 340) or (not enemy_right and in_pocket(mouse_x, mouse_y, True)) or (not enemy_left and in_pocket(mouse_x, mouse_y, False)):
                     hovered = (((mouse_x - 64)// SCALE) * SCALE + 64, (mouse_y // SCALE) * SCALE)
@@ -805,7 +813,7 @@ while running:
                 drag_end_pos = (mouse_x, mouse_y)
                 cur_card = deck[hand[click_quarter - 1]]
                 legal_place = False
-                c = can_anywhere(cur_card.name)
+                c = can_anywhere(cur_card.name) if cur_card.name != "mirror" or p_prev is None else can_anywhere(p_prev.name)
                 if (c or mouse_y > 340) or (not enemy_right and in_pocket(mouse_x, mouse_y, True)) or (not enemy_left and in_pocket(mouse_x, mouse_y, False)):
                     legal_place = True
                 if not c and mouse_y > 320 and mouse_y <= 340:

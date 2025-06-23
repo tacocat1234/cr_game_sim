@@ -157,6 +157,8 @@ class KingTower(Tower):
         if self.rage_timer < 0:
             self.rage_timer = 0
             self.unrage()
+        elif self.rage_timer > 0:
+            self.rage_timer -= TICK_TIME
 
         if self.stun_timer <= 0:
             if self.target is None or (vector.distance(self.target.position, self.position) > self.hit_range + self.collision_radius and (self.attack_cooldown <= self.hit_speed - self.load_time)):
