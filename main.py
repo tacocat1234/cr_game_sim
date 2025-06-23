@@ -9,6 +9,7 @@ from card_factory import get_radius
 from card_factory import can_anywhere
 from card_factory import generate_random_deck
 from card_factory import parse_input
+from card_factory import can_evo
 import arena
 import towers
 import vector
@@ -27,22 +28,6 @@ KING_LEVEL = PRINCESS_LEVEL = BOT_K_L = BOT_P_L = 0
 TOWER_TYPE = BOT_TOWER_TYPE = ""
 player_random_deck = False
 bot_random_deck = False
-
-def can_evo(n):
-    return (n == "knight" or n == "archers" or n == "musketeer" or 
-            n == "goblincage" or 
-            n == "skeletons" or n == "bomber" or n == "valkyrie" or
-            n == "barbarians" or n == "battleram" or n == "cannon" or
-            n == "wizard" or
-            n == "bats" or n == "zap" or n == "mortar" or
-            n == "pekka" or n == "goblinbarrel" or 
-            n == "royalgiant" or n == "royalrecruits" or
-            n == "icespirit" or n == "giantsnowball" or
-            n == "dartgoblin" or n == "goblingiant" or
-            n == "hunter" or n == "tesla" or
-            n == "infernodragon" or n == "megaknight" or 
-            n == "wallbreakers" or n == "firecracker" or n == "electrodragon" or
-            n == "goblindrill" or n == "lumberjack" or n == "executioner")
     
 used = []
 # Load Player Deck
@@ -125,6 +110,10 @@ b_mirror = next((each for each in bot_deck if each.name == "mirror"), None)
 
 # Initialize Player Towers
 p_k = towers.KingTower(True, KING_LEVEL)
+
+if TOWER_TYPE.lower() == "randomtower":
+    TOWER_TYPE = random.choice(["princesstower", "cannoneer", "daggerduchess", "royalchef"])
+
 if TOWER_TYPE.lower() == "princesstower":
     player_tower_a = towers.PrincessTower(True, PRINCESS_LEVEL, True)
     player_tower_b = towers.PrincessTower(True, PRINCESS_LEVEL, False)
@@ -141,6 +130,10 @@ elif TOWER_TYPE.lower() == "royalchef":
 
 # Initialize Bot Towers
 b_k = towers.KingTower(False, BOT_K_L)
+
+if BOT_TOWER_TYPE.lower() == "randomtower":
+    BOT_TOWER_TYPE = random.choice(["princesstower", "cannoneer", "daggerduchess", "royalchef"])
+
 if BOT_TOWER_TYPE.lower() == "princesstower":
     bot_tower_a = towers.PrincessTower(False, BOT_P_L, True)
     bot_tower_b = towers.PrincessTower(False, BOT_P_L, False)
@@ -345,42 +338,6 @@ def draw():
 
     screen.blit(center_surface, center_rect)
 
-    # Draw Towers
-    for tower in game_arena.towers:
-        tower_x, tower_y = convert_to_pygame(tower.position)
-        
-        # Adjust position so that the rectangle is centered at the tower's coordinates
-        tower_rect_width = 3 * SCALE
-        tower_rect_height = 3 * SCALE
-        tower_x -= tower_rect_width / 2
-        tower_y -= tower_rect_height / 2
-
-        tower_color = GRAY
-
-        if tower.rage_timer > 0:
-            tower_color = raged_color(tower_color)
-        
-        pygame.draw.rect(screen, tower_color, (tower_x, tower_y, tower_rect_width, tower_rect_height))  # Tower square
-
-        # Health bar
-        pygame.draw.rect(screen, BLACK, (tower_x, tower_y - 5, tower_rect_width, 3))
-        pygame.draw.rect(screen, GREEN, (tower_x, tower_y - 5, (tower_rect_width * (tower.cur_hp / tower.hit_points)), 3))
-
-        hp_text = font.render(str(int(tower.cur_hp)), True, WHITE)  # Convert HP to int and render in white
-        text_rect = hp_text.get_rect(center=(tower_x + tower_rect_width / 2, tower_y - 10))
-        screen.blit(hp_text, text_rect)
-
-        if tower.type == "dd":
-            ammo_ratio = tower.ammo / 8
-            pygame.draw.rect(screen, BLACK, (tower_x + 9, tower_y + 5, tower_rect_width - 12, 4))  # Background
-            pygame.draw.rect(screen, YELLOW, (tower_x + 9, tower_y + 5, ((tower_rect_width - 12) * ammo_ratio), 4))  # Ammo bar
-            screen.blit(dd_symbol_img, (tower_x - 3, tower_y))
-        elif tower.type == "rckt":
-            cooking_ratio = 1 - (tower.cooking_timer / 21)
-            offset = 50 if tower.side else 5
-            pygame.draw.rect(screen, BLACK, (tower_x + 9, tower_y + offset, tower_rect_width - 12, 4))  # Background
-            pygame.draw.rect(screen, YELLOW, (tower_x + 9, tower_y + offset, ((tower_rect_width - 12) * cooking_ratio), 4))  # Ammo bar
-            screen.blit(rc_symbol_img, (tower_x - 3, tower_y + offset - 8))
     
     
     for building in game_arena.buildings:
@@ -425,6 +382,48 @@ def draw():
         level_text = font.render(str(building.level), True, WHITE)  # White text
         text_rect = level_text.get_rect(center=(level_box_x + level_box_size / 2, level_box_y + level_box_size / 2))
         screen.blit(level_text, text_rect)
+
+    # Draw Towers
+    for tower in game_arena.towers:
+        tower_x, tower_y = convert_to_pygame(tower.position)
+        
+        # Adjust position so that the rectangle is centered at the tower's coordinates
+        tower_rect_width = tower.collision_radius * SCALE * 2
+        tower_rect_height = tower_rect_width
+        tower_x -= tower_rect_width / 2
+        tower_y -= tower_rect_height / 2
+
+        tower_color = GRAY
+
+        if tower.rage_timer > 0:
+            tower_color = raged_color(tower_color)
+        
+        pygame.draw.rect(screen, (170, 190, 120), (tower_x - 10, tower_y - 10, tower_rect_width + 20, tower_rect_height + 20))  # Tower base
+        pygame.draw.rect(screen, tower_color, (tower_x, tower_y, tower_rect_width, tower_rect_height))  # Tower square
+
+        if tower.activated:
+            #health text
+            hpfont = pygame.font.Font(None, 16)
+            hp_text = hpfont.render(str(int(tower.cur_hp)), True, WHITE)  # Convert HP to int and render in white
+            text_rect = hp_text.get_rect(center=(tower_x + tower_rect_width / 2, tower_y - 10))
+            screen.blit(hp_text, text_rect)
+
+            # Health bar
+            pygame.draw.rect(screen, BLACK, (tower_x - 5, tower_y - 5, tower_rect_width + 10, 3))
+            pygame.draw.rect(screen, GREEN, (tower_x - 5, tower_y - 5, ((tower_rect_width + 10) * (tower.cur_hp / tower.hit_points)), 3))
+
+        if tower.type == "dd":
+            ammo_ratio = tower.ammo / 8
+            pygame.draw.rect(screen, BLACK, (tower_x + 4, tower_y + 5, tower_rect_width - 2, 4))  # Background
+            pygame.draw.rect(screen, YELLOW, (tower_x + 4, tower_y + 5, ((tower_rect_width - 2) * ammo_ratio), 4))  # Ammo bar
+            screen.blit(dd_symbol_img, (tower_x - 7, tower_y))
+        elif tower.type == "rckt":
+            cooking_ratio = 1 - (tower.cooking_timer / 21)
+            offset = 50 if tower.side else 5
+            pygame.draw.rect(screen, BLACK, (tower_x + 9, tower_y + offset, tower_rect_width - 12, 4))  # Background
+            pygame.draw.rect(screen, YELLOW, (tower_x + 9, tower_y + offset, ((tower_rect_width - 12) * cooking_ratio), 4))  # Ammo bar
+            screen.blit(rc_symbol_img, (tower_x - 3, tower_y + offset - 8))
+
 
     # Draw Troops
     flying = []
@@ -570,6 +569,8 @@ def draw():
         level_text = font.render(str(troop.level), True, WHITE)  # White text
         text_rect = level_text.get_rect(center=(level_box_x + level_box_size / 2, level_box_y + level_box_size / 2))
         screen.blit(level_text, text_rect)
+
+    
 
     for attack in game_arena.active_attacks:
         attack_x, attack_y= convert_to_pygame(attack.position)
@@ -828,10 +829,10 @@ while running:
                     level = cur_card.level if cur_card.name != "mirror" else p_prev.level + 1
                     
                     succesful = game_arena.add(True, pos, name, cur_card.elixir_cost, level, cur_card.cycles_left == 0 if cur_card.name != "mirror" else False)
-                    p_prev = cur_card
-                    if p_mirror is not None:
-                        p_mirror.elixir_cost = cur_card.elixir_cost + 1
                     if succesful:
+                        p_prev = cur_card
+                        if p_mirror is not None:
+                            p_mirror.elixir_cost = cur_card.elixir_cost + 1
                         cycle(hand, click_quarter - 1, cycler)
                         cur_card.cycle_evo()
 

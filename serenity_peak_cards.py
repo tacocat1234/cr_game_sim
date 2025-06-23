@@ -123,7 +123,7 @@ class Lumberjack(Troop):
         super().die(arena)
 
 class NightWitchAttackEntity(MeleeAttackEntity):
-    HIT_RANGE = 0.7
+    HIT_RANGE = 1.6
     COLLISION_RADIUS = 0.5
     def __init__(self, side, damage, position, target):
         super().__init__(

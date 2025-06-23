@@ -153,7 +153,7 @@ class EvolutionGiantSnowball(frozen_peak_cards.GiantSnowball):
                 else:
                     each.damage(self.damage); #end damage, start kb
                 each.slow(4, "giantsnowball")
-                if isinstance(each, Troop) and each.ground and not each.invulnerable:
+                if isinstance(each, Troop) and not each.invulnerable:
                     self.picked_up.append(each)
                     each.targetable = False
                     arena.troops.remove(each)

@@ -10,6 +10,7 @@ random format is
 random {level} for a entirely random deck with level = level
 random.{type}.{min elixir}-{max elixir} {level}
 type = spell, troop, building
+randomtower {level} for random tower
 to indicate evolution, type "evolution" before
 bot automatically uses all evolutions possible, and there is no evolution limit (but its very op (but also fun) if you have more than 2)
 

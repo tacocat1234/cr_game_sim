@@ -35,6 +35,22 @@ import serenity_peak_evos
 import copy
 import random
 
+def can_evo(n):
+    return (n == "knight" or n == "archers" or n == "musketeer" or 
+            n == "goblincage" or 
+            n == "skeletons" or n == "bomber" or n == "valkyrie" or
+            n == "barbarians" or n == "battleram" or n == "cannon" or
+            n == "wizard" or
+            n == "bats" or n == "zap" or n == "mortar" or
+            n == "pekka" or n == "goblinbarrel" or 
+            n == "royalgiant" or n == "royalrecruits" or
+            n == "icespirit" or n == "giantsnowball" or
+            n == "dartgoblin" or n == "goblingiant" or
+            n == "hunter" or n == "tesla" or
+            n == "infernodragon" or n == "megaknight" or 
+            n == "wallbreakers" or n == "firecracker" or n == "electrodragon" or
+            n == "goblindrill" or n == "lumberjack" or n == "executioner")
+
 troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer", 
           "speargoblins", "goblins", 
           "skeletons", "bomber", "valkyrie",
@@ -831,7 +847,8 @@ def parse_input(string, current_used):
         return False, components[0]
     else:
         lower, upper = components[2].split("-")
-        return False, random_with_param(components[1], int(lower), int(upper), current_used)
+        n = random_with_param(components[1], int(lower), int(upper), current_used)
+        return can_evo(n), n
 
 def random_with_param(t, lower, upper, used):
     if t == "troop":

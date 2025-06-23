@@ -209,6 +209,11 @@ class Arena:
                     if vec.magnitude() > 0:
                         vec.scale(((building.collision_radius + troop.collision_radius) / vec.magnitude()) - 1)
                     
+                    if vec.x < 0.01 and vec.x >= 0:
+                        vec.x = 0.01
+                    elif vec.x > -0.01 and vec.x < 0:
+                        vec.x == -0.01 
+
                     applyVelocity[troop] = applyVelocity.get(troop, vector.Vector(0, 0)).added(vec)
 
         # Apply velocity adjustments

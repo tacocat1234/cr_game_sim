@@ -644,6 +644,7 @@ class Tower:
         self.type = None
         self.collideable = True
         self.can_kb = False
+        self.activated = True
 
     def damage(self, amount):
         if not self.invulnerable:
