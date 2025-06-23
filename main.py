@@ -11,6 +11,7 @@ from card_factory import generate_random_deck
 from card_factory import parse_input
 from card_factory import can_evo
 import arena
+import deck_select
 import towers
 import vector
 import math
@@ -24,12 +25,14 @@ game_arena = arena.Arena()
 deck = []
 bot_deck = []
 
+
 KING_LEVEL = PRINCESS_LEVEL = BOT_K_L = BOT_P_L = 0
 TOWER_TYPE = BOT_TOWER_TYPE = ""
 player_random_deck = False
 bot_random_deck = False
     
 used = []
+'''
 # Load Player Deck
 with open("decks/deck.txt", "r") as file:
     for _ in range(8):
@@ -90,80 +93,8 @@ with open("decks/bot_deck.txt", "r") as file:
             BOT_TOWER_TYPE, BOT_P_L = line.rsplit(" ", 1)
             BOT_P_L = int(BOT_P_L)
 
-# Generate Random Player Deck
-if player_random_deck:
-    deck = [Card(True, card, KING_LEVEL, can_evo(card)) for card in generate_random_deck()]
-    print("your deck is:")
+'''
 
-    for i in range(len(deck)):
-        if i == 7:
-            print(deck[i].name)
-        else:
-            print(deck[i].name, end=", ")
-
-# Generate Random Bot Deck
-if bot_random_deck:
-    bot_deck = [Card(False, card, BOT_K_L, can_evo(card)) for card in generate_random_deck()]
-
-p_mirror = next((each for each in deck if each.name == "mirror"), None)
-b_mirror = next((each for each in bot_deck if each.name == "mirror"), None)
-
-# Initialize Player Towers
-p_k = towers.KingTower(True, KING_LEVEL)
-
-if TOWER_TYPE.lower() == "randomtower":
-    TOWER_TYPE = random.choice(["princesstower", "cannoneer", "daggerduchess", "royalchef"])
-
-if TOWER_TYPE.lower() == "princesstower":
-    player_tower_a = towers.PrincessTower(True, PRINCESS_LEVEL, True)
-    player_tower_b = towers.PrincessTower(True, PRINCESS_LEVEL, False)
-elif TOWER_TYPE.lower() == "cannoneer":
-    player_tower_a = towers.Cannoneer(True, PRINCESS_LEVEL, True)
-    player_tower_b = towers.Cannoneer(True, PRINCESS_LEVEL, False)
-elif TOWER_TYPE.lower() == "daggerduchess":
-    player_tower_a = towers.DaggerDuchess(True, PRINCESS_LEVEL, True)
-    player_tower_b = towers.DaggerDuchess(True, PRINCESS_LEVEL, False)
-elif TOWER_TYPE.lower() == "royalchef":
-    player_tower_a = towers.RoyalChef(True, PRINCESS_LEVEL, True)
-    player_tower_b = towers.RoyalChef(True, PRINCESS_LEVEL, False)
-    p_k = towers.RoyalChefKingTower(True, KING_LEVEL)
-
-# Initialize Bot Towers
-b_k = towers.KingTower(False, BOT_K_L)
-
-if BOT_TOWER_TYPE.lower() == "randomtower":
-    BOT_TOWER_TYPE = random.choice(["princesstower", "cannoneer", "daggerduchess", "royalchef"])
-
-if BOT_TOWER_TYPE.lower() == "princesstower":
-    bot_tower_a = towers.PrincessTower(False, BOT_P_L, True)
-    bot_tower_b = towers.PrincessTower(False, BOT_P_L, False)
-elif BOT_TOWER_TYPE.lower() == "cannoneer":
-    bot_tower_a = towers.Cannoneer(False, BOT_P_L, True)
-    bot_tower_b = towers.Cannoneer(False, BOT_P_L, False)
-elif BOT_TOWER_TYPE.lower() == "daggerduchess":
-    bot_tower_a = towers.DaggerDuchess(False, BOT_P_L, True)
-    bot_tower_b = towers.DaggerDuchess(False, BOT_P_L, False)
-elif BOT_TOWER_TYPE.lower() == "royalchef":
-    bot_tower_a = towers.RoyalChef(False, PRINCESS_LEVEL, True)
-    bot_tower_b = towers.RoyalChef(False, PRINCESS_LEVEL, False)
-    b_k = towers.RoyalChefKingTower(False, BOT_K_L)
-
-err = False
-
-game_arena.towers = [p_k, 
-                        player_tower_a,  # a
-                        player_tower_b,  # b
-                        b_k, 
-                        bot_tower_a,
-                        bot_tower_b
-                    ]
-
-if err:
-    raise Exception("you either typed too many cards (8 only + 1 kingtower + 1 towertroop) or misspelled a tower type")
-
-#player deck 
-
-bot = Bot(bot_deck)
 #height comp screen ~ 800
 #20x20 per tile
 # 18 x 32
@@ -248,15 +179,15 @@ def cycle(hand, index, queue):
 
 def display_evo_cannon(pos, side):
     all = [
-        vector.Vector(2.5, pos.y + 1.5 if side else -1.5),
-        vector.Vector(-2.5, pos.y + 1.5 if side else -1.5), 
-        vector.Vector(7.5, pos.y + 1.5 if side else -1.5),
-        vector.Vector(-7.5, pos.y + 1.5 if side else -1.5),
-        vector.Vector(0, pos.y + 8.5 if side else -8.5), 
-        vector.Vector(4.5, pos.y + 8.5 if side else -8.5),
-        vector.Vector(-4.5, pos.y + 8.5 if side else -8.5),
-        vector.Vector(8.5, pos.y + 8.5 if side else -8.5),
-        vector.Vector(-8.5, pos.y + 8.5 if side else -8.5)
+        vector.Vector(2.5, pos.y + (1.5 if side else -1.5)),
+        vector.Vector(-2.5, pos.y + (1.5 if side else -1.5)), 
+        vector.Vector(7.5, pos.y + (1.5 if side else -1.5)),
+        vector.Vector(-7.5, pos.y + (1.5 if side else -1.5)),
+        vector.Vector(0, pos.y + (8.5 if side else -8.5)), 
+        vector.Vector(4.5, pos.y + (8.5 if side else -8.5)),
+        vector.Vector(-4.5, pos.y + (8.5 if side else -8.5)),
+        vector.Vector(8.5, pos.y + (8.5 if side else -8.5)),
+        vector.Vector(-8.5, pos.y + (8.5 if side else -8.5))
     ]
 
     for each in all:
@@ -707,6 +638,84 @@ def draw():
 
     pygame.display.flip()
 
+player_random_deck, deck, TOWER_TYPE = deck_select.run_loop(screen, True)
+bot_random_deck, bot_deck, BOT_TOWER_TYPE = deck_select.run_loop(screen, False)
+
+if player_random_deck:
+    deck = [Card(True, card, KING_LEVEL, can_evo(card)) for card in generate_random_deck()]
+    print("your deck is:")
+
+    for i in range(len(deck)):
+        if i == 7:
+            print(deck[i].name)
+        else:
+            print(deck[i].name, end=", ")
+
+# Generate Random Bot Deck
+if bot_random_deck:
+    bot_deck = [Card(False, card, BOT_K_L, can_evo(card)) for card in generate_random_deck()]
+
+p_mirror = next((each for each in deck if each.name == "mirror"), None)
+b_mirror = next((each for each in bot_deck if each.name == "mirror"), None)
+
+# Initialize Player Towers
+p_k = towers.KingTower(True, KING_LEVEL)
+
+if TOWER_TYPE.lower() == "randomtower":
+    TOWER_TYPE = random.choice(["princesstower", "cannoneer", "daggerduchess", "royalchef"])
+
+if TOWER_TYPE.lower() == "princesstower":
+    player_tower_a = towers.PrincessTower(True, PRINCESS_LEVEL, True)
+    player_tower_b = towers.PrincessTower(True, PRINCESS_LEVEL, False)
+elif TOWER_TYPE.lower() == "cannoneer":
+    player_tower_a = towers.Cannoneer(True, PRINCESS_LEVEL, True)
+    player_tower_b = towers.Cannoneer(True, PRINCESS_LEVEL, False)
+elif TOWER_TYPE.lower() == "daggerduchess":
+    player_tower_a = towers.DaggerDuchess(True, PRINCESS_LEVEL, True)
+    player_tower_b = towers.DaggerDuchess(True, PRINCESS_LEVEL, False)
+elif TOWER_TYPE.lower() == "royalchef":
+    player_tower_a = towers.RoyalChef(True, PRINCESS_LEVEL, True)
+    player_tower_b = towers.RoyalChef(True, PRINCESS_LEVEL, False)
+    p_k = towers.RoyalChefKingTower(True, KING_LEVEL)
+
+# Initialize Bot Towers
+b_k = towers.KingTower(False, BOT_K_L)
+
+if BOT_TOWER_TYPE.lower() == "randomtower":
+    BOT_TOWER_TYPE = random.choice(["princesstower", "cannoneer", "daggerduchess", "royalchef"])
+
+if BOT_TOWER_TYPE.lower() == "princesstower":
+    bot_tower_a = towers.PrincessTower(False, BOT_P_L, True)
+    bot_tower_b = towers.PrincessTower(False, BOT_P_L, False)
+elif BOT_TOWER_TYPE.lower() == "cannoneer":
+    bot_tower_a = towers.Cannoneer(False, BOT_P_L, True)
+    bot_tower_b = towers.Cannoneer(False, BOT_P_L, False)
+elif BOT_TOWER_TYPE.lower() == "daggerduchess":
+    bot_tower_a = towers.DaggerDuchess(False, BOT_P_L, True)
+    bot_tower_b = towers.DaggerDuchess(False, BOT_P_L, False)
+elif BOT_TOWER_TYPE.lower() == "royalchef":
+    bot_tower_a = towers.RoyalChef(False, PRINCESS_LEVEL, True)
+    bot_tower_b = towers.RoyalChef(False, PRINCESS_LEVEL, False)
+    b_k = towers.RoyalChefKingTower(False, BOT_K_L)
+
+err = False
+
+game_arena.towers = [p_k, 
+                        player_tower_a,  # a
+                        player_tower_b,  # b
+                        b_k, 
+                        bot_tower_a,
+                        bot_tower_b
+                    ]
+
+if err:
+    raise Exception("you either typed too many cards (8 only + 1 kingtower + 1 towertroop) or misspelled a tower type")
+
+#player deck 
+
+bot = Bot(bot_deck)
+
+
 random.shuffle(deck)
 
 hand = [0, 1, 2, 3]
@@ -833,8 +842,8 @@ while running:
                             pos.x = -1.5
                         elif pos.x > 1.5:
                             pos.x = 1.5
-                    name = cur_card.name if cur_card.name != "mirror" else p_prev.name
-                    level = cur_card.level if cur_card.name != "mirror" else p_prev.level + 1
+                    name = cur_card.name if cur_card.name != "mirror" or p_prev is None else p_prev.name
+                    level = cur_card.level if cur_card.name != "mirror" or p_prev is None else p_prev.level + 1
                     
                     succesful = game_arena.add(True, pos, name, cur_card.elixir_cost, level, cur_card.cycles_left == 0 if cur_card.name != "mirror" else False)
                     if succesful:

@@ -2,30 +2,8 @@
 download python package from software center
 run run_me.bat
 if on school computer, move or diable the taskbar or the elxiir bar wont fit on screen
-modify deck.txt to set deck. type in lowercase.
-modify bot_deck.txt to set bot_deck
-format is 
-{cardname} {level}
-random format is
-random {level} for a entirely random deck with level = level
-random.{type}.{min elixir}-{max elixir} {level}
-type = spell, troop, building
-randomtower {level} for random tower
-to indicate evolution, type "evolution" before
-bot automatically uses all evolutions possible, and there is no evolution limit (but its very op (but also fun) if you have more than 2)
 
-examples:
-"firecracker 11" is a level 11 firecracker
-"evolution skeletons 11" is a level 11 skeletons, which can evolve
-"random.building.3-7 11" is a random building from 3-7 elixir, at level 11
-"random.spell.4-4 200" is a random spell with 4 elxir, at level 200
-"random 13" randomizes the entire deck according to an algorithim, where every card is level 13
-
-after you select your 8 cards, type
-kingtower {level}
-{towertroop} {level}
-to set king and towertroop levels, and towertroop
-
+spell all things without spaces
 
 recommended bot_deck.txt levels is 13 comapred to your 11, becuase bot is stupid.
 

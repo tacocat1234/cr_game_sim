@@ -260,7 +260,6 @@ class Fisherman(Troop):
                 self.casted = False
                 self.reeling = False
                 self.casting = False
-                self.ground = True
                 self.stun_timer = 0
                 self.move_speed = self.normal_move_speed
                 self.collideable = True
@@ -293,7 +292,6 @@ class Fisherman(Troop):
             if self.reeling: #reel connected
                 if self.target is None:
                     self.reeling = False
-                    self.ground = True
                     self.move_speed = self.normal_move_speed
                 elif isinstance(self.target, Troop): #if troop
                     if self.target is None or vector.distance(self.target.position, self.position) <= self.target.collision_radius + self.collision_radius + 0.1:
@@ -307,11 +305,9 @@ class Fisherman(Troop):
                 else:
                     if self.target is None or vector.distance(self.target.position, self.position) <= self.target.collision_radius + self.collision_radius + 0.1:
                         self.reeling = False #end reeling
-                        self.ground = True
                         self.move_speed = self.normal_move_speed #return to normal movement
                     else:
                         self.move_speed = 450 * TILES_PER_MIN
-                        self.ground = False
                     
     def attack(self):
         if self.dash_timer == 0: #if not dashings

@@ -18,7 +18,7 @@ class EvolutionLumberjackGhost(serenity_peak_cards.Lumberjack):
         self.timer = 6
 
     def tick_func(self, arena):
-        if self.in_rage and vector.distance(self.position, self.initial) > 3:
+        if self.in_rage and vector.distance(self.position, self.initial) > 3 + self.collision_radius:
             self.timer = min(2, self.timer)
             self.in_rage = False
 
