@@ -39,6 +39,7 @@ class SelectionBox:
 
 def run_loop(screen):
     normal = SelectionBox(100, HEIGHT/2, 100, 50, "Normal")
+    draft = SelectionBox(WIDTH/2, HEIGHT/2, 100, 50, "Draft")
     triple = SelectionBox(WIDTH - 100, HEIGHT/2, 100, 50, "Triple Draft")
     quit = SelectionBox(WIDTH/2, HEIGHT - 50, 70, 50, "Quit")
     
@@ -48,8 +49,14 @@ def run_loop(screen):
         screen.fill((100, 100, 100))
 
         normal.draw(screen)
+        draft.draw(screen)
         triple.draw(screen)
         quit.draw(screen)
+
+        font = pygame.font.Font(None, 24) 
+        text = font.render("When playing, right click to return to lobby.", True, BLACK)  # White text
+        text_rect = text.get_rect(center=(WIDTH/2, 200))
+        screen.blit(text, text_rect)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -57,6 +64,9 @@ def run_loop(screen):
 
             if normal.handle_event(event) is not None:
                 out = "normal"
+                running = False
+            if draft.handle_event(event) is not None:
+                out = "draft"
                 running = False
             if triple.handle_event(event) is not None:
                 out = "triple_draft"

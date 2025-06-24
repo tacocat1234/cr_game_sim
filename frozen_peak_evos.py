@@ -156,6 +156,8 @@ class EvolutionGiantSnowball(frozen_peak_cards.GiantSnowball):
                 if isinstance(each, Troop) and not each.invulnerable:
                     self.picked_up.append(each)
                     each.targetable = False
+                    each.stun()
+                    each.stun_timer = 0
                     arena.troops.remove(each)
 
             if self.roll_timer > 0:

@@ -13,6 +13,7 @@ from card_factory import can_evo
 import arena
 import deck_select
 import triple_draft
+import draft
 import lobby
 import towers
 import vector
@@ -651,6 +652,13 @@ while True:
         BOT_K_L = 13
         evo_enabled = False
         deck, TOWER_TYPE = triple_draft.run_loop(screen)
+    elif game_type == "draft":
+        player_random_deck = False
+        bot_random_deck = False
+        KING_LEVEL = 11
+        BOT_K_L = 13
+        evo_enabled = False
+        deck, TOWER_TYPE, bot_deck, BOT_TOWER_TYPE = draft.run_loop(screen)
     elif game_type == "normal":
         player_random_deck, KING_LEVEL, deck, TOWER_TYPE = deck_select.run_loop(screen, True)
         bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = deck_select.run_loop(screen, False)
@@ -794,7 +802,7 @@ while True:
                     b_mirror.elixir_cost = bot_card.elixir_cost + 1
                 bot_card.cycle_evo()
         for event in pygame.event.get():
-            if event.type == pygame.QUIT:
+            if event.type == pygame.QUIT or event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
                 running = False
             # Detect mouse click in the bottom 128 pixels
             if event.type == pygame.MOUSEBUTTONDOWN:
