@@ -335,7 +335,7 @@ class BattleHealer(Troop):
         self.sprite_path = f"sprites/{class_name}/{class_name}_0.png"
 
     def level_up(self):
-        self.heal *= 1.1
+        self.self_heal *= 1.1
         self.active_heal *= 1.1
         super().level_up()
 

@@ -851,10 +851,20 @@ def parse_input(string, current_used):
         return can_evo(n), n
 
 def random_with_param(t, lower, upper, used):
+    out = None
     if t == "troop":
         options = filter_cards(troops, lower, upper, used)
-    if t == "spell":
+        out = random.choice(options)
+        while out == "log" or out == "barbarianbarrel":
+            out = random.choice(options)
+    elif t == "spell":
         options = filter_cards(spells + ["log", "barbarianbarrel"], lower, upper, used)
-    if t == "building":
+        out = random.choice(options)
+    elif t == "building":
         options = filter_cards(buildings, lower, upper, used)
-    return random.choice(options)
+        out = random.choice(options)
+    elif t == "any":
+        options = filter_cards(spells + buildings + troops, lower, upper, used)
+        out = random.choice(options)
+    
+    return out

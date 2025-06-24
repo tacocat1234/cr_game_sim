@@ -79,7 +79,7 @@ class SelectionBox:
             
     def draw(self, screen):
         rect = pygame.Rect(self.x - self.width/2, self.y - self.height/2, self.width, self.height)
-        pygame.draw.rect(screen, LIGHT_GRAY if self.value == "" else GRAY, rect)
+        pygame.draw.rect(screen, LIGHT_GRAY if not self.active else GRAY, rect)
         pygame.draw.rect(screen, BLACK, rect, 2)  # Border
 
         font = pygame.font.Font(None, self.font_size) 
@@ -178,6 +178,10 @@ def run_loop(screen, side = True):
 
         text = font.render("Player Deck" if side else "Bot Deck", True, BLACK)  # White text
         text_rect = text.get_rect(center=(WIDTH/2, 15))
+        screen.blit(text, text_rect)
+
+        text = font.render("Type in boxes", True, BLACK)  # White text
+        text_rect = text.get_rect(center=(WIDTH/2, 210))
         screen.blit(text, text_rect)
 
         text = font.render("Randomize All", True, BLACK)  # White text

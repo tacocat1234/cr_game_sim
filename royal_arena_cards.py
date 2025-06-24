@@ -273,17 +273,15 @@ class Prince(Troop):
         self.charging = False
         self.cross_river = True
         self.jump_speed = 160 * TILES_PER_MIN
-        self.can_kb = False
 
         class_name = self.__class__.__name__.lower()
         self.sprite_path = f"sprites/{class_name}/{class_name}_0.png"
 
     def kb(self, vec, t=None):
-        if vec.magnitude() > 0:
-            self.charging = False
-            self.charge_charge_distance = 0
-            self.move_speed = 60 * TILES_PER_MIN
-            super().kb(vec, t)
+        self.charging = False
+        self.charge_charge_distance = 0
+        self.move_speed = 60 * TILES_PER_MIN
+        super().kb(vec, t)
     
     def freeze(self, duration):
         self.stun_timer = duration
@@ -364,7 +362,6 @@ class DarkPrince(Troop):
         self.charging = False
         self.cross_river = True
         self.jump_speed = 160 * TILES_PER_MIN
-        self.can_kb = False
 
         self.has_shield = True
         self.shield_max_hp = 150 * pow(1.1, level - 6)

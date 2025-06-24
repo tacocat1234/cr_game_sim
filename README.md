@@ -1,6 +1,6 @@
 # cr_game_sim
-download python package from software center
-run run_me.bat
+dependencies: python, pygame
+run _CRASH_ROYALE.bat
 if on school computer, move or diable the taskbar or the elxiir bar wont fit on screen
 
 spell all things without spaces

@@ -12,6 +12,8 @@ from card_factory import parse_input
 from card_factory import can_evo
 import arena
 import deck_select
+import triple_draft
+import lobby
 import towers
 import vector
 import math
@@ -638,278 +640,307 @@ def draw():
 
     pygame.display.flip()
 
-player_random_deck, KING_LEVEL, deck, TOWER_TYPE = deck_select.run_loop(screen, True)
-bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = deck_select.run_loop(screen, False)
-PRINCESS_LEVEL = KING_LEVEL
-BOT_P_L = BOT_K_L
+while True:
+    game_type = lobby.run_loop(screen)
+    evo_enabled = True
 
-if player_random_deck:
-    deck = [Card(True, card, KING_LEVEL, can_evo(card)) for card in generate_random_deck()]
-    print("your deck is:")
-
-    for i in range(len(deck)):
-        if i == 7:
-            print(deck[i].name)
-        else:
-            print(deck[i].name, end=", ")
-
-# Generate Random Bot Deck
-if bot_random_deck:
-    bot_deck = [Card(False, card, BOT_K_L, can_evo(card)) for card in generate_random_deck()]
-
-p_mirror = next((each for each in deck if each.name == "mirror"), None)
-b_mirror = next((each for each in bot_deck if each.name == "mirror"), None)
-
-# Initialize Player Towers
-p_k = towers.KingTower(True, KING_LEVEL)
-
-if TOWER_TYPE.lower() == "randomtower":
-    TOWER_TYPE = random.choice(["princesstower", "cannoneer", "daggerduchess", "royalchef"])
-
-if TOWER_TYPE.lower() == "princesstower":
-    player_tower_a = towers.PrincessTower(True, PRINCESS_LEVEL, True)
-    player_tower_b = towers.PrincessTower(True, PRINCESS_LEVEL, False)
-elif TOWER_TYPE.lower() == "cannoneer":
-    player_tower_a = towers.Cannoneer(True, PRINCESS_LEVEL, True)
-    player_tower_b = towers.Cannoneer(True, PRINCESS_LEVEL, False)
-elif TOWER_TYPE.lower() == "daggerduchess":
-    player_tower_a = towers.DaggerDuchess(True, PRINCESS_LEVEL, True)
-    player_tower_b = towers.DaggerDuchess(True, PRINCESS_LEVEL, False)
-elif TOWER_TYPE.lower() == "royalchef":
-    player_tower_a = towers.RoyalChef(True, PRINCESS_LEVEL, True)
-    player_tower_b = towers.RoyalChef(True, PRINCESS_LEVEL, False)
-    p_k = towers.RoyalChefKingTower(True, KING_LEVEL)
-
-# Initialize Bot Towers
-b_k = towers.KingTower(False, BOT_K_L)
-
-if BOT_TOWER_TYPE.lower() == "randomtower":
-    BOT_TOWER_TYPE = random.choice(["princesstower", "cannoneer", "daggerduchess", "royalchef"])
-
-if BOT_TOWER_TYPE.lower() == "princesstower":
-    bot_tower_a = towers.PrincessTower(False, BOT_P_L, True)
-    bot_tower_b = towers.PrincessTower(False, BOT_P_L, False)
-elif BOT_TOWER_TYPE.lower() == "cannoneer":
-    bot_tower_a = towers.Cannoneer(False, BOT_P_L, True)
-    bot_tower_b = towers.Cannoneer(False, BOT_P_L, False)
-elif BOT_TOWER_TYPE.lower() == "daggerduchess":
-    bot_tower_a = towers.DaggerDuchess(False, BOT_P_L, True)
-    bot_tower_b = towers.DaggerDuchess(False, BOT_P_L, False)
-elif BOT_TOWER_TYPE.lower() == "royalchef":
-    bot_tower_a = towers.RoyalChef(False, PRINCESS_LEVEL, True)
-    bot_tower_b = towers.RoyalChef(False, PRINCESS_LEVEL, False)
-    b_k = towers.RoyalChefKingTower(False, BOT_K_L)
-
-err = False
-
-game_arena.towers = [p_k, 
-                        player_tower_a,  # a
-                        player_tower_b,  # b
-                        b_k, 
-                        bot_tower_a,
-                        bot_tower_b
-                    ]
-
-if err:
-    raise Exception("you either typed too many cards (8 only + 1 kingtower + 1 towertroop) or misspelled a tower type")
-
-#player deck 
-
-bot = Bot(bot_deck)
-
-
-random.shuffle(deck)
-
-hand = [0, 1, 2, 3]
-cycler = [4, 5, 6, 7]
-
-# Main Loop
-running = True
-clock = pygame.time.Clock()
-
-# Variables to store click and drag information
-click_quarter = None  # Will store which quarter of the screen the player clicked in
-drag_start_pos = None  # Starting position of the drag
-drag_end_pos = None  # Ending position of the drag
-hovered = None
-select_radius = None
-win = None
-enemy_left = True
-enemy_right = True
-
-game_arena.p2_elixir = 9
-#game_arena.p2_elixir = -999 #disable bot for testing
-p_prev = None
-b_prev = None
-
-while running:
-    clock.tick(60)  # 60 FPS
-    s = 0
-    for each in game_arena.towers:
-        if each.side:
-            if each.position.x > 0: #exists right
-                s -= 2
-            elif each.position.x < 0: #exists left
-                s += 1
-
-    s = "all" if s == 0 else ("none" if s == -1 else ("right" if s == 1 else "left"))
-
-    bot_card = bot.tick(game_arena.p2_elixir, game_arena.troops + game_arena.buildings)
-
-    if not bot_card is None:
-        n = bot_card.name if bot_card.name != "mirror" else b_prev.name #actual card
-        bot_pos = Bot.random_pos(n, game_arena.troops + game_arena.buildings, s)
-        if bot_pos:
-            if bot_card.name == "royalrecruits":
-                if bot_pos.x < -1.5:
-                    bot_pos.x = -1.5
-                elif bot_pos.x > 1.5:
-                    bot_pos.x = 1.5
-
-            l = bot_card.level if bot_card.name != "mirror" else b_prev.level + 1
-
-            game_arena.add(False, bot_pos, n, bot_card.elixir_cost, l, bot_card.cycles_left == 0 if bot_card.name != "mirror" else False)
-            b_prev = bot_card
-            if b_mirror is not None:
-                b_mirror.elixir_cost = bot_card.elixir_cost + 1
-            bot_card.cycle_evo()
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            running = False
-        # Detect mouse click in the bottom 128 pixels
-        if event.type == pygame.MOUSEBUTTONDOWN:
-            hovered = None
-            mouse_x, mouse_y = pygame.mouse.get_pos()
-
-            # Check if the click is in the bottom 128 pixels
-            if mouse_y > HEIGHT - 128:
-                # Determine the quarter (split the width of the screen)
-                quarter_width = (WIDTH) // 5  # Total width including bottom bar
-                if mouse_x < WIDTH/10 + quarter_width:
-                    click_quarter = 1  # First quarter
-                elif mouse_x < WIDTH/10 + 2 * quarter_width:
-                    click_quarter = 2  # Second quarter
-                elif mouse_x < WIDTH/10 + 3 * quarter_width:
-                    click_quarter = 3  # Third quarter
-                else:
-                    click_quarter = 4  # Fourth quarter
-                #print(f"Clicked in quarter {click_quarter}")
-
-                # Store the starting position of the drag
-                drag_start_pos = (mouse_x, mouse_y)
-
-        # Detect mouse drag movement
-        elif event.type == pygame.MOUSEMOTION:
-            if drag_start_pos is not None:
-                mouse_x, mouse_y = pygame.mouse.get_pos()
-
-                cur_name = deck[hand[click_quarter - 1]].name
-                if cur_name == "mirror" and p_prev is not None:
-                    cur_name = p_prev.name
-
-                if mouse_x > 64 and mouse_x < WIDTH - 64 and mouse_y < HEIGHT - 128 and (can_anywhere(cur_name) or mouse_y > 340) or (not enemy_right and in_pocket(mouse_x, mouse_y, True)) or (not enemy_left and in_pocket(mouse_x, mouse_y, False)):
-                    hovered = (((mouse_x - 64)// SCALE) * SCALE + 64, (mouse_y // SCALE) * SCALE)
-                    select_radius = get_radius(cur_name)
-
-                else:
-                    hovered = None
-
-        # Detect when the player releases the mouse button
-        elif event.type == pygame.MOUSEBUTTONUP:
-            hovered = None
-            if drag_start_pos is not None:
-                mouse_x, mouse_y = pygame.mouse.get_pos()
-
-                # Store the ending position of the drag
-                drag_end_pos = (mouse_x, mouse_y)
-                cur_card = deck[hand[click_quarter - 1]]
-                legal_place = False
-                c = can_anywhere(cur_card.name) if cur_card.name != "mirror" or p_prev is None else can_anywhere(p_prev.name)
-                if (c or mouse_y > 340) or (not enemy_right and in_pocket(mouse_x, mouse_y, True)) or (not enemy_left and in_pocket(mouse_x, mouse_y, False)):
-                    legal_place = True
-                if not c and mouse_y > 320 and mouse_y <= 340:
-                    legal_place = True
-                    mouse_y = 341
-                elif mouse_y > 10 * SCALE and mouse_y <= 11 * SCALE and not enemy_right and in_pocket(mouse_x, mouse_y - 20, True):
-                    legal_place = True
-                    mouse_y = 11 * SCALE + 1
-                elif mouse_y > 10 * SCALE and mouse_y <= 11 * SCALE and not enemy_left and in_pocket(mouse_x, mouse_y, False):
-                    legal_place = True
-                    mouse_y = 11 * SCALE + 1
-                
-                if mouse_x > 64 and mouse_x < WIDTH - 64 and mouse_y < HEIGHT - 128 and legal_place:
-                    pos = convert_from_pygame(mouse_x, mouse_y)
-                    if cur_card.name == "royalrecruits":
-                        if pos.x < -1.5:
-                            pos.x = -1.5
-                        elif pos.x > 1.5:
-                            pos.x = 1.5
-                    name = cur_card.name if cur_card.name != "mirror" or p_prev is None else p_prev.name
-                    level = cur_card.level if cur_card.name != "mirror" or p_prev is None else p_prev.level + 1
-                    
-                    succesful = game_arena.add(True, pos, name, cur_card.elixir_cost, level, cur_card.cycles_left == 0 if cur_card.name != "mirror" else False)
-                    if succesful:
-                        p_prev = cur_card
-                        if p_mirror is not None:
-                            p_mirror.elixir_cost = cur_card.elixir_cost + 1
-                        cycle(hand, click_quarter - 1, cycler)
-                        cur_card.cycle_evo()
-
-                # Reset drag start position after the release
-                drag_start_pos = None
-
-    enemy_left = False
-    enemy_right = False
-    for each in game_arena.towers:
-        if not each.side:
-            if each.position.x > 0: #is positive
-                enemy_right = True
-            elif each.position.x < 0: #is negative
-                enemy_left = True
-
-    game_arena.tick()  # Update game logic
-    fin = game_arena.cleanup()
-    if fin is not None:
-        win = fin
-        break
-    draw()  # Redraw screen
-
-print("bot deck is:")
-
-for i in range(len(bot_deck)):
-    if i == 7:
-        print(bot_deck[i].name)
+    if game_type == "triple_draft":
+        player_random_deck = False
+        bot_random_deck = True
+        KING_LEVEL = 11
+        BOT_K_L = 13
+        evo_enabled = False
+        deck, TOWER_TYPE = triple_draft.run_loop(screen)
+    elif game_type == "normal":
+        player_random_deck, KING_LEVEL, deck, TOWER_TYPE = deck_select.run_loop(screen, True)
+        bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = deck_select.run_loop(screen, False)
     else:
-        print(bot_deck[i].name, end=", ")
+        TOWER_TYPE = "randomtower"
+        BOT_TOWER_TYPE = "randomtower"
 
-winfont = pygame.font.Font(None, 100)  # Adjust font size as needed
-text = None
-if win is None:
-    text = winfont.render("quit_screen_text", True, WHITE)
-elif win:
-    text = winfont.render("YOU WIN", True, WHITE)
-else:
-    text = winfont.render("YOU LOSE", True, WHITE)
+    PRINCESS_LEVEL = KING_LEVEL
+    BOT_P_L = BOT_K_L
+
+    if player_random_deck:
+        deck = [Card(True, card, KING_LEVEL, evo_enabled and can_evo(card)) for card in generate_random_deck()]
+        TOWER_TYPE = "randomtower"
+        print("your deck is:")
+
+        for i in range(len(deck)):
+            if i == 7:
+                print(deck[i].name)
+            else:
+                print(deck[i].name, end=", ")
+
+    # Generate Random Bot Deck
+    if bot_random_deck:
+        BOT_TOWER_TYPE = "randomtower"
+        bot_deck = [Card(False, card, BOT_K_L, evo_enabled and can_evo(card)) for card in generate_random_deck()]
+
+    p_mirror = next((each for each in deck if each.name == "mirror"), None)
+    b_mirror = next((each for each in bot_deck if each.name == "mirror"), None)
+
+    # Initialize Player Towers
+    p_k = towers.KingTower(True, KING_LEVEL)
+
+    if TOWER_TYPE.lower() == "randomtower":
+        TOWER_TYPE = random.choice(["princesstower", "cannoneer", "daggerduchess", "royalchef"])
+
+    if TOWER_TYPE.lower() == "princesstower":
+        player_tower_a = towers.PrincessTower(True, PRINCESS_LEVEL, True)
+        player_tower_b = towers.PrincessTower(True, PRINCESS_LEVEL, False)
+    elif TOWER_TYPE.lower() == "cannoneer":
+        player_tower_a = towers.Cannoneer(True, PRINCESS_LEVEL, True)
+        player_tower_b = towers.Cannoneer(True, PRINCESS_LEVEL, False)
+    elif TOWER_TYPE.lower() == "daggerduchess":
+        player_tower_a = towers.DaggerDuchess(True, PRINCESS_LEVEL, True)
+        player_tower_b = towers.DaggerDuchess(True, PRINCESS_LEVEL, False)
+    elif TOWER_TYPE.lower() == "royalchef":
+        player_tower_a = towers.RoyalChef(True, PRINCESS_LEVEL, True)
+        player_tower_b = towers.RoyalChef(True, PRINCESS_LEVEL, False)
+        p_k = towers.RoyalChefKingTower(True, KING_LEVEL)
+
+    # Initialize Bot Towers
+    b_k = towers.KingTower(False, BOT_K_L)
+
+    if BOT_TOWER_TYPE.lower() == "randomtower":
+        BOT_TOWER_TYPE = random.choice(["princesstower", "cannoneer", "daggerduchess", "royalchef"])
+
+    if BOT_TOWER_TYPE.lower() == "princesstower":
+        bot_tower_a = towers.PrincessTower(False, BOT_P_L, True)
+        bot_tower_b = towers.PrincessTower(False, BOT_P_L, False)
+    elif BOT_TOWER_TYPE.lower() == "cannoneer":
+        bot_tower_a = towers.Cannoneer(False, BOT_P_L, True)
+        bot_tower_b = towers.Cannoneer(False, BOT_P_L, False)
+    elif BOT_TOWER_TYPE.lower() == "daggerduchess":
+        bot_tower_a = towers.DaggerDuchess(False, BOT_P_L, True)
+        bot_tower_b = towers.DaggerDuchess(False, BOT_P_L, False)
+    elif BOT_TOWER_TYPE.lower() == "royalchef":
+        bot_tower_a = towers.RoyalChef(False, PRINCESS_LEVEL, True)
+        bot_tower_b = towers.RoyalChef(False, PRINCESS_LEVEL, False)
+        b_k = towers.RoyalChefKingTower(False, BOT_K_L)
+
+    err = False
+
+    game_arena.towers = [p_k, 
+                            player_tower_a,  # a
+                            player_tower_b,  # b
+                            b_k, 
+                            bot_tower_a,
+                            bot_tower_b
+                        ]
+
+    if err:
+        raise Exception("you either typed too many cards (8 only + 1 kingtower + 1 towertroop) or misspelled a tower type")
+
+    #player deck 
+
+    bot = Bot(bot_deck)
+
+
+    random.shuffle(deck)
+
+    hand = [0, 1, 2, 3]
+    cycler = [4, 5, 6, 7]
+
+    # Main Loop
+    running = game_type != "quit"
+    clock = pygame.time.Clock()
+
+    # Variables to store click and drag information
+    click_quarter = None  # Will store which quarter of the screen the player clicked in
+    drag_start_pos = None  # Starting position of the drag
+    drag_end_pos = None  # Ending position of the drag
+    hovered = None
+    select_radius = None
+    win = None
+    enemy_left = True
+    enemy_right = True
+
+    game_arena.p2_elixir = 9
+    #game_arena.p2_elixir = -999 #disable bot for testing
+    p_prev = None
+    b_prev = None
+
+    while running:
+        clock.tick(60)  # 60 FPS
+        s = 0
+        for each in game_arena.towers:
+            if each.side:
+                if each.position.x > 0: #exists right
+                    s -= 2
+                elif each.position.x < 0: #exists left
+                    s += 1
+
+        s = "all" if s == 0 else ("none" if s == -1 else ("right" if s == 1 else "left"))
+
+        bot_card = bot.tick(game_arena.p2_elixir, game_arena.troops + game_arena.buildings)
+
+        if not bot_card is None:
+            n = bot_card.name if bot_card.name != "mirror" else b_prev.name #actual card
+            bot_pos = Bot.random_pos(n, game_arena.troops + game_arena.buildings, s)
+            if bot_pos:
+                if bot_card.name == "royalrecruits":
+                    if bot_pos.x < -1.5:
+                        bot_pos.x = -1.5
+                    elif bot_pos.x > 1.5:
+                        bot_pos.x = 1.5
+
+                l = bot_card.level if bot_card.name != "mirror" else b_prev.level + 1
+
+                game_arena.add(False, bot_pos, n, bot_card.elixir_cost, l, bot_card.cycles_left == 0 if bot_card.name != "mirror" else False)
+                b_prev = bot_card
+                if b_mirror is not None:
+                    b_mirror.elixir_cost = bot_card.elixir_cost + 1
+                bot_card.cycle_evo()
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            # Detect mouse click in the bottom 128 pixels
+            if event.type == pygame.MOUSEBUTTONDOWN:
+                hovered = None
+                mouse_x, mouse_y = pygame.mouse.get_pos()
+
+                # Check if the click is in the bottom 128 pixels
+                if mouse_y > HEIGHT - 128:
+                    # Determine the quarter (split the width of the screen)
+                    quarter_width = (WIDTH) // 5  # Total width including bottom bar
+                    if mouse_x < WIDTH/10 + quarter_width:
+                        click_quarter = 1  # First quarter
+                    elif mouse_x < WIDTH/10 + 2 * quarter_width:
+                        click_quarter = 2  # Second quarter
+                    elif mouse_x < WIDTH/10 + 3 * quarter_width:
+                        click_quarter = 3  # Third quarter
+                    else:
+                        click_quarter = 4  # Fourth quarter
+                    #print(f"Clicked in quarter {click_quarter}")
+
+                    # Store the starting position of the drag
+                    drag_start_pos = (mouse_x, mouse_y)
+
+            # Detect mouse drag movement
+            elif event.type == pygame.MOUSEMOTION:
+                if drag_start_pos is not None:
+                    mouse_x, mouse_y = pygame.mouse.get_pos()
+
+                    cur_name = deck[hand[click_quarter - 1]].name
+                    if cur_name == "mirror" and p_prev is not None:
+                        cur_name = p_prev.name
+
+                    if mouse_x > 64 and mouse_x < WIDTH - 64 and mouse_y < HEIGHT - 128 and (can_anywhere(cur_name) or mouse_y > 340) or (not enemy_right and in_pocket(mouse_x, mouse_y, True)) or (not enemy_left and in_pocket(mouse_x, mouse_y, False)):
+                        hovered = (((mouse_x - 64)// SCALE) * SCALE + 64, (mouse_y // SCALE) * SCALE)
+                        select_radius = get_radius(cur_name)
+
+                    else:
+                        hovered = None
+
+            # Detect when the player releases the mouse button
+            elif event.type == pygame.MOUSEBUTTONUP:
+                hovered = None
+                if drag_start_pos is not None:
+                    mouse_x, mouse_y = pygame.mouse.get_pos()
+
+                    # Store the ending position of the drag
+                    drag_end_pos = (mouse_x, mouse_y)
+                    cur_card = deck[hand[click_quarter - 1]]
+                    legal_place = False
+                    c = can_anywhere(cur_card.name) if cur_card.name != "mirror" or p_prev is None else can_anywhere(p_prev.name)
+                    if (c or mouse_y > 340) or (not enemy_right and in_pocket(mouse_x, mouse_y, True)) or (not enemy_left and in_pocket(mouse_x, mouse_y, False)):
+                        legal_place = True
+                    if not c and mouse_y > 320 and mouse_y <= 340:
+                        legal_place = True
+                        mouse_y = 341
+                    elif mouse_y > 10 * SCALE and mouse_y <= 11 * SCALE and not enemy_right and in_pocket(mouse_x, mouse_y - 20, True):
+                        legal_place = True
+                        mouse_y = 11 * SCALE + 1
+                    elif mouse_y > 10 * SCALE and mouse_y <= 11 * SCALE and not enemy_left and in_pocket(mouse_x, mouse_y, False):
+                        legal_place = True
+                        mouse_y = 11 * SCALE + 1
+                    
+                    if mouse_x > 64 and mouse_x < WIDTH - 64 and mouse_y < HEIGHT - 128 and legal_place:
+                        pos = convert_from_pygame(mouse_x, mouse_y)
+                        if cur_card.name == "royalrecruits":
+                            if pos.x < -1.5:
+                                pos.x = -1.5
+                            elif pos.x > 1.5:
+                                pos.x = 1.5
+                        name = cur_card.name if cur_card.name != "mirror" or p_prev is None else p_prev.name
+                        level = cur_card.level if cur_card.name != "mirror" or p_prev is None else p_prev.level + 1
+                        
+                        succesful = game_arena.add(True, pos, name, cur_card.elixir_cost, level, cur_card.cycles_left == 0 if cur_card.name != "mirror" else False)
+                        if succesful:
+                            p_prev = cur_card
+                            if p_mirror is not None:
+                                p_mirror.elixir_cost = cur_card.elixir_cost + 1
+                            cycle(hand, click_quarter - 1, cycler)
+                            cur_card.cycle_evo()
+
+                    # Reset drag start position after the release
+                    drag_start_pos = None
+
+        enemy_left = False
+        enemy_right = False
+        for each in game_arena.towers:
+            if not each.side:
+                if each.position.x > 0: #is positive
+                    enemy_right = True
+                elif each.position.x < 0: #is negative
+                    enemy_left = True
+
+        game_arena.tick()  # Update game logic
+        fin = game_arena.cleanup()
+        if fin is not None:
+            win = fin
+            break
+        draw()  # Redraw screen
+
+    print("bot deck is:")
+
+    for i in range(len(bot_deck)):
+        if i == 7:
+            print(bot_deck[i].name)
+        else:
+            print(bot_deck[i].name, end=", ")
+
+    winfont = pygame.font.Font(None, 100)  # Adjust font size as needed
+    text = None
+    if win is None:
+        text = winfont.render("quit_screen_text", True, WHITE)
+    elif win:
+        text = winfont.render("YOU WIN", True, WHITE)
+    else:
+        text = winfont.render("YOU LOSE", True, WHITE)
 
 
 
-# Get text rectangle and center it
-text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
-tip = font.render("RIGHT CLICK TO RETURN TO LOBBY", True, WHITE)
-tip_rect = tip.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 60))
+    # Get text rectangle and center it
+    text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+    tip = font.render("RIGHT CLICK TO RETURN TO LOBBY", True, WHITE)
+    tip_rect = tip.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 60))
 
-while running:
-    screen.fill(BLACK)  # Fill background
-    screen.blit(text, text_rect)  # Draw text
-    screen.blit(tip, tip_rect)
+    while running:
+        screen.fill(BLACK)  # Fill background
+        screen.blit(text, text_rect)  # Draw text
+        screen.blit(tip, tip_rect)
 
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT or event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
-            running = False
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT or event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
+                running = False
 
-    pygame.display.flip()  # Update display
+        pygame.display.flip()  # Update display
 
 
-    #count += 1
-print("\n---------------------------------------\n")
+        #count += 1
+    print("\n---------------------------------------\n")
+
+    if game_type == "quit":
+        break
+
+    game_arena.troops = []
+    game_arena.buildings = []
+    game_arena.towers = []
+    game_arena.active_attacks = []
+    game_arena.spells = []
+    game_arena.timer = 0
+
 pygame.quit()
