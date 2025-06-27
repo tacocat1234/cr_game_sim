@@ -662,6 +662,18 @@ while True:
     elif game_type == "normal":
         player_random_deck, KING_LEVEL, deck, TOWER_TYPE = deck_select.run_loop(screen, True)
         bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = deck_select.run_loop(screen, False)
+    elif game_type == "double":
+        player_random_deck, KING_LEVEL, deck, TOWER_TYPE = deck_select.run_loop(screen, True)
+        bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = deck_select.run_loop(screen, False)
+        game_arena.elixir_rate = 2
+    elif game_type == "triple":
+        player_random_deck, KING_LEVEL, deck, TOWER_TYPE = deck_select.run_loop(screen, True)
+        bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = deck_select.run_loop(screen, False)
+        game_arena.elixir_rate = 3
+    elif game_type == "septuple":
+        player_random_deck, KING_LEVEL, deck, TOWER_TYPE = deck_select.run_loop(screen, True)
+        bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = deck_select.run_loop(screen, False)
+        game_arena.elixir_rate = 7
     else:
         TOWER_TYPE = "randomtower"
         BOT_TOWER_TYPE = "randomtower"
@@ -802,8 +814,12 @@ while True:
                     b_mirror.elixir_cost = bot_card.elixir_cost + 1
                 bot_card.cycle_evo()
         for event in pygame.event.get():
-            if event.type == pygame.QUIT or event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
+            if event.type == pygame.QUIT:
+                game_type = "quit"
                 running = False
+            if event.type == pygame.KEYDOWN:
+                if event.unicode == "b":
+                    running = False
             # Detect mouse click in the bottom 128 pixels
             if event.type == pygame.MOUSEBUTTONDOWN:
                 hovered = None
@@ -944,11 +960,6 @@ while True:
     if game_type == "quit":
         break
 
-    game_arena.troops = []
-    game_arena.buildings = []
-    game_arena.towers = []
-    game_arena.active_attacks = []
-    game_arena.spells = []
-    game_arena.timer = 0
+    game_arena = arena.Arena()
 
 pygame.quit()

@@ -691,6 +691,7 @@ class MegaKnight(Troop):
                         self.should_jump = False
                         self.collideable = False
                         self.move_speed = 250*TILES_PER_MIN
+                        self.dash_river = True
                         self.jump_timer = 0.8
                     elif self.target is not None:
                         d = vector.distance(self.position, self.target.position)
@@ -707,6 +708,7 @@ class MegaKnight(Troop):
         
         if self.jump_timer < 0: #done jumping
             self.jump_timer = 0
+            self.dash_river = False
             self.stun_timer = 0.3
             self.jump_cooldown = 0.9
             self.move_speed = 60*TILES_PER_MIN

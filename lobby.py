@@ -42,6 +42,9 @@ def run_loop(screen):
     draft = SelectionBox(WIDTH/2, HEIGHT/2, 100, 50, "Draft")
     triple = SelectionBox(WIDTH - 100, HEIGHT/2, 100, 50, "Triple Draft")
     quit = SelectionBox(WIDTH/2, HEIGHT - 50, 70, 50, "Quit")
+    double = SelectionBox(100, HEIGHT/2 + 60, 100, 50, "2x Elxiir")
+    triple_e = SelectionBox(WIDTH/2, HEIGHT/2 + 60, 100, 50, "3x Elxiir")
+    septuple = SelectionBox(WIDTH - 100, HEIGHT/2 + 60, 100, 50, "7x Elxiir")
     
     out = None
     running = True
@@ -52,9 +55,12 @@ def run_loop(screen):
         draft.draw(screen)
         triple.draw(screen)
         quit.draw(screen)
+        double.draw(screen)
+        triple_e.draw(screen)
+        septuple.draw(screen)
 
         font = pygame.font.Font(None, 24) 
-        text = font.render("When playing, right click to return to lobby.", True, BLACK)  # White text
+        text = font.render("When playing, press b to return to lobby.", True, BLACK)  # White text
         text_rect = text.get_rect(center=(WIDTH/2, 200))
         screen.blit(text, text_rect)
 
@@ -70,6 +76,15 @@ def run_loop(screen):
                 running = False
             if triple.handle_event(event) is not None:
                 out = "triple_draft"
+                running = False
+            if double.handle_event(event) is not None:
+                out = "double"
+                running = False
+            if triple_e.handle_event(event) is not None:
+                out = "triple"
+                running = False
+            if septuple.handle_event(event) is not None:
+                out = "septuple"
                 running = False
             if quit.handle_event(event) is not None:
                 out = "quit"

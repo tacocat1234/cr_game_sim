@@ -211,6 +211,7 @@ class Troop:
         self.invulnerable = False
         self.moveable = True
         self.cross_river = False
+        self.dash_river = False
         self.has_shield = False
         self.should_delete = False #only for kamikaze troops
         self.can_kb = True
@@ -380,7 +381,7 @@ class Troop:
                         tower_target = tower
                         min_dist = vector.distance(tower.position, self.position)
 
-            if not tower_target is None and (self.ground and not self.cross_river) and (not same_sign(tower_target.position.y, self.position.y) and (self.position.y < -1 or self.position.y > 1)): # if behind bridge and cant cross river
+            if not tower_target is None and ((self.ground and not self.dash_river) and not self.cross_river) and (not same_sign(tower_target.position.y, self.position.y) and (self.position.y < -1 or self.position.y > 1)): # if behind bridge and cant cross river
 
                 tar_bridge = None
                 
@@ -447,7 +448,7 @@ class Troop:
             self.move_vector = vector.Vector(direction_x * m_s, direction_y * m_s)
             return False
         #and (not same side) while also (not at bridge) 
-        if (self.ground and not self.cross_river) and (not same_sign(self.target.position.y, self.position.y) and (self.position.y < -1 or self.position.y > 1)):
+        if ((self.ground and not self.dash_river) and not self.cross_river) and (not same_sign(self.target.position.y, self.position.y) and (self.position.y < -1 or self.position.y > 1)):
 
             tar_bridge = None
             

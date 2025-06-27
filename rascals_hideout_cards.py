@@ -147,6 +147,7 @@ class Bandit(Troop):
                     self.moveable = False
                     self.move_speed = 500*TILES_PER_MIN
                     self.dash_timer = 0.72
+                    self.dash_river = True
                 elif self.target is not None:
                     d = vector.distance(self.position, self.target.position)
                     if d > 3.5 + self.target.collision_radius and d < 6 + self.target.collision_radius and self.dash_timer == 0:
@@ -161,6 +162,7 @@ class Bandit(Troop):
         
         if self.dash_timer < 0: #done dashing
             self.dash_timer = 0
+            self.dash_river = False
             self.ground = True
             self.collideable = True
             self.move_speed = 60*TILES_PER_MIN

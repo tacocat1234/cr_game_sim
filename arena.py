@@ -19,6 +19,8 @@ class Arena:
         self.timer = 0
         self.state = ""
 
+        self.elixir_rate = 1
+
     def add(self, side, position, name, cost, level, evo=False):
         e = cost
         if (side and e <= self.p1_elixir + 0.5) or (not side and e <= self.p2_elixir + 0.5): #if enough elixir
@@ -95,13 +97,13 @@ class Arena:
             return
 
 
-        e_rate = 1/2.8
+        e_rate = self.elixir_rate/2.8
         if self.timer >= 240:
             self.state = "Overtime: 3x Elixir"
-            e_rate = 3/2.8
+            e_rate = 3 * self.elixir_rate/2.8
         elif self.timer >= 120:
             self.state = "2x Elixir"
-            e_rate = 2/2.8
+            e_rate = 2 * self.elixir_rate/2.8
         self.p1_elixir = min(10, self.p1_elixir + e_rate * TICK_TIME)
         self.p2_elixir = min(10, self.p2_elixir + e_rate * TICK_TIME)
 
