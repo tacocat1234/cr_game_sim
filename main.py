@@ -642,37 +642,34 @@ def draw():
     pygame.display.flip()
 
 while True:
-    game_type = lobby.run_loop(screen)
-    evo_enabled = True
+    game_type, evo_enabled = lobby.run_loop(screen)
 
     if game_type == "triple_draft":
         player_random_deck = False
         bot_random_deck = True
         KING_LEVEL = 11
         BOT_K_L = 13
-        evo_enabled = False
-        deck, TOWER_TYPE = triple_draft.run_loop(screen)
+        deck, TOWER_TYPE = triple_draft.run_loop(screen, evo_enabled)
     elif game_type == "draft":
         player_random_deck = False
         bot_random_deck = False
         KING_LEVEL = 11
         BOT_K_L = 13
-        evo_enabled = False
-        deck, TOWER_TYPE, bot_deck, BOT_TOWER_TYPE = draft.run_loop(screen)
+        deck, TOWER_TYPE, bot_deck, BOT_TOWER_TYPE = draft.run_loop(screen, evo_enabled)
     elif game_type == "normal":
-        player_random_deck, KING_LEVEL, deck, TOWER_TYPE = deck_select.run_loop(screen, True)
-        bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = deck_select.run_loop(screen, False)
+        player_random_deck, KING_LEVEL, deck, TOWER_TYPE = deck_select.run_loop(screen, evo_enabled, True)
+        bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = deck_select.run_loop(screen, evo_enabled, False)
     elif game_type == "double":
-        player_random_deck, KING_LEVEL, deck, TOWER_TYPE = deck_select.run_loop(screen, True)
-        bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = deck_select.run_loop(screen, False)
+        player_random_deck, KING_LEVEL, deck, TOWER_TYPE = deck_select.run_loop(screen, evo_enabled, True)
+        bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = deck_select.run_loop(screen, evo_enabled, False)
         game_arena.elixir_rate = 2
     elif game_type == "triple":
-        player_random_deck, KING_LEVEL, deck, TOWER_TYPE = deck_select.run_loop(screen, True)
-        bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = deck_select.run_loop(screen, False)
+        player_random_deck, KING_LEVEL, deck, TOWER_TYPE = deck_select.run_loop(screen, evo_enabled, True)
+        bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = deck_select.run_loop(screen, evo_enabled, False)
         game_arena.elixir_rate = 3
     elif game_type == "septuple":
-        player_random_deck, KING_LEVEL, deck, TOWER_TYPE = deck_select.run_loop(screen, True)
-        bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = deck_select.run_loop(screen, False)
+        player_random_deck, KING_LEVEL, deck, TOWER_TYPE = deck_select.run_loop(screen, evo_enabled, True)
+        bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = deck_select.run_loop(screen, evo_enabled, False)
         game_arena.elixir_rate = 7
     else:
         TOWER_TYPE = "randomtower"
@@ -682,15 +679,8 @@ while True:
     BOT_P_L = BOT_K_L
 
     if player_random_deck:
-        deck = [Card(True, card, KING_LEVEL, evo_enabled and can_evo(card)) for card in generate_random_deck()]
+        deck = [Card(True, card, KING_LEVEL, evo_enabled and evo_enabled and can_evo(card)) for card in generate_random_deck()]
         TOWER_TYPE = "randomtower"
-        print("your deck is:")
-
-        for i in range(len(deck)):
-            if i == 7:
-                print(deck[i].name)
-            else:
-                print(deck[i].name, end=", ")
 
     # Generate Random Bot Deck
     if bot_random_deck:
@@ -918,14 +908,6 @@ while True:
             break
         draw()  # Redraw screen
 
-    print("bot deck is:")
-
-    for i in range(len(bot_deck)):
-        if i == 7:
-            print(bot_deck[i].name)
-        else:
-            print(bot_deck[i].name, end=", ")
-
     winfont = pygame.font.Font(None, 100)  # Adjust font size as needed
     text = None
     if win is None:
@@ -955,7 +937,6 @@ while True:
 
 
         #count += 1
-    print("\n---------------------------------------\n")
 
     if game_type == "quit":
         break

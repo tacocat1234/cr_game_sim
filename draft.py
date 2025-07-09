@@ -1,5 +1,6 @@
 from card_factory import troops, spells, buildings
 from card_factory import random_with_param
+from card_factory import can_evo
 from cards import Card
 import pygame
 
@@ -144,7 +145,7 @@ class Label:
         screen.blit(text, text_rect)
 
 
-def run_loop(screen, side = True):
+def run_loop(screen, evo_enabled = False, side = True):
     all = [
         Label(WIDTH/9, HEIGHT - 40, 50, 50),
         Label(2*WIDTH/9, HEIGHT - 40, 50, 50),
@@ -211,8 +212,8 @@ def run_loop(screen, side = True):
 
                 i += 1
 
-                out.append(Card(side, choose, 11))
-                out2.append(Card(side, not_choose, 13))
+                out.append(Card(side, choose, 11, evo_enabled and can_evo(choose)))
+                out2.append(Card(side, not_choose, 13, evo_enabled and can_evo(not_choose))) #temp
 
                 if i < 4:
                     n1 = random_with_param(*option_types[i], used)
@@ -229,12 +230,12 @@ def run_loop(screen, side = True):
     
     for each in other_types:
         n = random_with_param(*each, used)
-        out.append(Card(side, n, 11))
+        out.append(Card(side, n, 11, evo_enabled and can_evo(n)))
         used.append(n)
 
     for each in other_types:
         n = random_with_param(*each, used)
-        out2.append(Card(side, n, 13))
+        out2.append(Card(side, n, 13, evo_enabled and can_evo(n)))
         used.append(n)
         
     return out, "princesstower", out2, "princesstower"

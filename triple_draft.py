@@ -1,5 +1,6 @@
 from card_factory import troops, spells, buildings
 from card_factory import random_with_param
+from card_factory import can_evo
 from cards import Card
 import pygame
 
@@ -145,7 +146,7 @@ class Label:
         screen.blit(text, text_rect)
 
 
-def run_loop(screen, side = True):
+def run_loop(screen, evo_enabled =  False, side = True):
     all = [
         Label(WIDTH/9, HEIGHT - 40, 50, 50),
         Label(2*WIDTH/9, HEIGHT - 40, 50, 50),
@@ -198,7 +199,7 @@ def run_loop(screen, side = True):
 
                 i += 1
 
-                out.append(Card(side, choose, 11))
+                out.append(Card(side, choose, 11, evo_enabled and can_evo(choose)))
 
                 if i < 8:
                     n1 = random_with_param(*option_types[i], used)
