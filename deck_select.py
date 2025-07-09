@@ -116,7 +116,7 @@ class SubmitBox(SelectionBox):
             if self.is_in(*event.pos):
                 self.value = True
 
-def run_loop(screen, side = True):
+def run_loop(screen, evo_enabled = True, side = True):
     lev = SelectionBox(100, 100, 50, 50)
     lev.font_size = 24
     lev.value = "11" if side else "13"
@@ -167,7 +167,7 @@ def run_loop(screen, side = True):
             all[i].draw(screen)
 
         for i in range(8):
-            if display_evo[i]:
+            if display_evo[i] and evo_enabled:
                 evo[i].draw(screen)
         lev.draw(screen)
         tower.draw(screen)
@@ -203,7 +203,7 @@ def run_loop(screen, side = True):
             for each in all:
                 each.handle_event(event)
             for i in range(8):
-                if display_evo[i]:
+                if display_evo[i] and evo_enabled:
                     evo[i].handle_event(event)
             lev.handle_event(event)
             tower.handle_event(event)

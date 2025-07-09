@@ -37,6 +37,25 @@ class SelectionBox:
         text_rect = text.get_rect(center=(self.x, self.y))
         screen.blit(text, text_rect)
 
+class CheckBox(SelectionBox):
+    def __init__(self, x, y, width, height):
+        super().__init__(x, y, width, height, True)
+        self.value = True
+
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if self.is_in(*event.pos):
+                self.value = not self.value
+
+    def draw(self, screen):
+        rect = pygame.Rect(self.x - self.width / 2, self.y - self.height / 2, self.width, self.height)
+        pygame.draw.rect(screen, (120, 0, 160) if self.value else GRAY, rect)
+        pygame.draw.rect(screen, BLACK, rect, 2)  # Border
+
+        if self.value:
+            pygame.draw.line(screen, BLACK, rect.topleft, rect.bottomright, 3)
+            pygame.draw.line(screen, BLACK, rect.topright, rect.bottomleft, 3)
+
 def run_loop(screen):
     normal = SelectionBox(100, HEIGHT/2, 100, 50, "Normal")
     draft = SelectionBox(WIDTH/2, HEIGHT/2, 100, 50, "Draft")
@@ -45,6 +64,8 @@ def run_loop(screen):
     double = SelectionBox(100, HEIGHT/2 + 60, 100, 50, "2x Elxiir")
     triple_e = SelectionBox(WIDTH/2, HEIGHT/2 + 60, 100, 50, "3x Elxiir")
     septuple = SelectionBox(WIDTH - 100, HEIGHT/2 + 60, 100, 50, "7x Elxiir")
+
+    evo_allowed = CheckBox(WIDTH - 30, 30, 40, 40)
     
     out = None
     running = True
@@ -59,13 +80,20 @@ def run_loop(screen):
         triple_e.draw(screen)
         septuple.draw(screen)
 
+        evo_allowed.draw(screen)
+
         font = pygame.font.Font(None, 24) 
         text = font.render("When playing, press b to return to lobby.", True, BLACK)  # White text
         text_rect = text.get_rect(center=(WIDTH/2, 200))
         screen.blit(text, text_rect)
 
+        text = font.render("Enable Evolutions?", True, BLACK)  # White text
+        text_rect = text.get_rect(center=(WIDTH - 150, 30))
+        screen.blit(text, text_rect)
+
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
+                out = "quit"
                 running = False
 
             if normal.handle_event(event) is not None:
@@ -90,7 +118,9 @@ def run_loop(screen):
                 out = "quit"
                 running = False
 
+            evo_allowed.handle_event(event)
+
         if running:
             pygame.display.flip()
 
-    return out
+    return out, bool(evo_allowed.value)
