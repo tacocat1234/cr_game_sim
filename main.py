@@ -939,17 +939,22 @@ while True:
 
     # Get text rectangle and center it
     text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
-    tip = font.render("RIGHT CLICK TO RETURN TO LOBBY", True, WHITE)
+    tip = font.render("CLICK TO RETURN TO LOBBY", True, WHITE)
     tip_rect = tip.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 60))
 
+    pause = 60
+
     while running:
+        clock.tick(60)  # 60 FPS
+        pause -= 1
         screen.fill(BLACK)  # Fill background
         screen.blit(text, text_rect)  # Draw text
         screen.blit(tip, tip_rect)
 
-        for event in pygame.event.get():
-            if event.type == pygame.QUIT or event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
-                running = False
+        if pause <= 0:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT or event.type == pygame.MOUSEBUTTONDOWN:
+                    running = False
 
         pygame.display.flip()  # Update display
 

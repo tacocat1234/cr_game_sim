@@ -45,7 +45,7 @@ def can_evo(n):
             n == "pekka" or n == "goblinbarrel" or 
             n == "royalgiant" or n == "royalrecruits" or
             n == "icespirit" or n == "giantsnowball" or
-            n == "dartgoblin" or n == "goblingiant" or
+            n == "dartgoblin" or n == "goblingiant" or n == "skeletonbarrel" or
             n == "hunter" or n == "tesla" or
             n == "infernodragon" or n == "megaknight" or 
             n == "wallbreakers" or n == "firecracker" or n == "electrodragon" or
@@ -228,6 +228,8 @@ def get_clone(obj):
             return serenity_peak_cards.Lumberjack(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionExecutioner":
             return serenity_peak_cards.Executioner(obj.side, copy.deepcopy(obj.position), obj.level)
+        elif n == "EvolutionSkeletonBarrel":
+            return jungle_arena_cards.SkeletonBarrel(obj.side, copy.deepcopy(obj.position), obj.level)
         else:
             raise Exception(n + " is not actually an evo")
         
@@ -298,6 +300,8 @@ def evolution_troop_factory(side, position, name, level):
         return frozen_peak_evos.EvolutionIceSpirit(side, position, level)
     elif name == "dartgoblin":
         return jungle_arena_evos.EvolutionDartGoblin(side, position, level)
+    elif name == "skeletonbarrel":
+        return jungle_arena_evos.EvolutionSkeletonBarrel(side, position, level)
     elif name == "goblingiant":
         return jungle_arena_evos.EvolutionGoblinGiant(side, position, level)
     elif name == "hunter":

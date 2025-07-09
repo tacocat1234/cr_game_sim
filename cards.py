@@ -32,7 +32,8 @@ evo_cycles = {
     "wallbreakers" : 2,
     "lumberjack" : 2,
     "goblindrill" : 2,
-    "executioner" : 1
+    "executioner" : 1,
+    "skeletonbarrel" : 2
 }
 
 class Card:

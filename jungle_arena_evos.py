@@ -1,10 +1,13 @@
 import jungle_arena_cards
+from abstract_classes import Troop
 from abstract_classes import TICK_TIME
 from abstract_classes import AttackEntity
 from abstract_classes import RangedAttackEntity
 from abstract_classes import TILES_PER_MIN
 from goblin_stadium_cards import Goblin
 import vector
+import math
+import copy
 
 class EvolutionGoblinGiant(jungle_arena_cards.GoblinGiant):
     def __init__(self, side, position, level):
@@ -124,3 +127,80 @@ class EvolutionDartGoblin(jungle_arena_cards.DartGoblin):
     def attack(self):
         return EvolutionDartGoblinAttackEntity(self.side, self.hit_damage, self.position, self.target, self)
     
+class EvolutionSkeletonBarrel(jungle_arena_cards.SkeletonBarrel):
+    def __init__(self, side, position, level):
+        super().__init__(side, position, level)
+        self.evo = True
+        self.cur_hp *= 1.25
+        self.hit_points *= 1.25
+        self.dropped_1 = False
+
+    def tick_func(self, arena):
+        if not self.dropped_1 and self.cur_hp <= 0.75 * self.hit_points:
+            self.dropped_1 = True
+            arena.troops.append(EvolutionSkeletonBarrelDeathBarrel(self.side, copy.deepcopy(self.position), self.level, self.cloned))
+
+    def die(self, arena):
+        delay = 0
+        if not self.dropped_1:
+            arena.troops.append(EvolutionSkeletonBarrelDeathBarrel(self.side, self.position, self.level, self.cloned))
+            delay = 0.2
+
+        second = EvolutionSkeletonBarrelDeathBarrel(self.side, self.position, self.level, self.cloned)
+        second.deploy_time += delay
+        arena.troops.append(second)
+        self.cur_hp = -1
+        arena.troops.remove(self)
+
+    
+class EvolutionSkeletonBarrelDeathBarrel(Troop):
+    def __init__(self, side, position, level, cloned=False):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p=  float('inf'),         # Hit points (Example value)
+            h_d= 256 * pow(1.1, level - 11),          # Hit damage (Example value)
+            h_s=0,          # Hit speed (Seconds per hit)
+            l_t=0,            # First hit cooldown
+            h_r=0,            # Hit range
+            s_r=0,            # Sight Range
+            g=True,           # Ground troop
+            t_g_o=False,       # Targets ground-only
+            t_o=False,        # Not tower-only
+            m_s=0,          # Movement speed 
+            d_t=1.1,            # Deploy time
+            m=float('inf'),            #mass
+            c_r=0.5,        #collision radius
+            p=position,               # Position (vector.Vector object)
+            cloned=cloned
+        ) 
+        self.level = level
+        self.invulnerable=True
+        self.targetable=False
+        self.target=None
+        self.collidable = False
+        self.evo = True
+
+    def on_deploy(self, arena):
+        self.invulnerable=True
+        self.targetable=False
+        self.target=None
+        self.collidable = False
+
+    def die(self, arena):
+        flip = 1 if self.side else -1
+        radius = 1.48
+        angles = [(2 * math.pi * k / 7) + (math.pi / 2) for k in range(7)]
+        positions = [vector.Vector(radius * math.cos(a), radius * math.sin(a) * flip) for a in angles]
+        for each in positions:
+            arena.troops.append(jungle_arena_cards.Skeleton(self.side, self.position.added(each), self.level, self.cloned))
+
+        self.cur_hp = -1
+        arena.troops.remove(self)
+
+    def tick(self, arena):
+        if self.deploy_time <= 0:
+            arena.active_attacks.append(self.attack())
+            self.should_delete = True
+    
+    def attack(self):
+        return jungle_arena_cards.SkeletonBarrelDeathBarrelAttackEntity(self.side, self.hit_damage, self.position)

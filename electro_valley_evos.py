@@ -52,7 +52,8 @@ class EvolutionMegaKnightAttackEntity(MeleeAttackEntity):
     
     def apply_effect(self, target):
         if isinstance(target, Troop):
-            target.kb(vector.Vector(0, 4 if self.side else -4), 0.5)
+            mag = 4 if target.mass <= 4 else -1/7 * (target.mass - 4) + 4
+            target.kb(vector.Vector(0, mag if self.side else -mag), 0.5)
 
 class EvolutionMegaKnight(electro_valley_cards.MegaKnight):
     def __init__(self, side, position, level):

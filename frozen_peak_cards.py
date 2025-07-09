@@ -58,6 +58,7 @@ class IceSpiritAttackEntity(AttackEntity):
                 new = not any(each is h for h in self.has_hit)
                 if (new):
                     each.damage(self.damage)
+                    each.target = None
                     each.freeze(self.FREEZE_DURATION)
                     self.has_hit.append(each)
         else:
