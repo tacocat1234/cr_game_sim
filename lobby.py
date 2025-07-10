@@ -64,6 +64,7 @@ def run_loop(screen):
     double = SelectionBox(100, HEIGHT/2 + 60, 100, 50, "2x Elxiir")
     triple_e = SelectionBox(WIDTH/2, HEIGHT/2 + 60, 100, 50, "3x Elxiir")
     septuple = SelectionBox(WIDTH - 100, HEIGHT/2 + 60, 100, 50, "7x Elxiir")
+    mega = SelectionBox(WIDTH/2, HEIGHT/2 + 120, 100, 50, "Mega-Draft")
 
     evo_allowed = CheckBox(WIDTH - 30, 30, 40, 40)
     
@@ -79,6 +80,7 @@ def run_loop(screen):
         double.draw(screen)
         triple_e.draw(screen)
         septuple.draw(screen)
+        mega.draw(screen)
 
         evo_allowed.draw(screen)
 
@@ -113,6 +115,9 @@ def run_loop(screen):
                 running = False
             if septuple.handle_event(event) is not None:
                 out = "septuple"
+                running = False
+            if mega.handle_event(event) is not None:
+                out = "megadraft"
                 running = False
             if quit.handle_event(event) is not None:
                 out = "quit"

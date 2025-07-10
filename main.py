@@ -14,6 +14,7 @@ import arena
 import deck_select
 import triple_draft
 import draft
+import megadraft
 import lobby
 import towers
 import vector
@@ -671,6 +672,12 @@ while True:
         player_random_deck, KING_LEVEL, deck, TOWER_TYPE = deck_select.run_loop(screen, evo_enabled, True)
         bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = deck_select.run_loop(screen, evo_enabled, False)
         game_arena.elixir_rate = 7
+    elif game_type == "megadraft":
+        player_random_deck = False
+        bot_random_deck = False
+        KING_LEVEL = 11
+        BOT_K_L = 13
+        deck, TOWER_TYPE, bot_deck, BOT_TOWER_TYPE = megadraft.run_loop(screen, evo_enabled)
     else:
         TOWER_TYPE = "randomtower"
         BOT_TOWER_TYPE = "randomtower"
@@ -861,13 +868,13 @@ while True:
                     c = can_anywhere(cur_card.name) if cur_card.name != "mirror" or p_prev is None else can_anywhere(p_prev.name)
                     if (c or mouse_y > 340) or (not enemy_right and in_pocket(mouse_x, mouse_y, True)) or (not enemy_left and in_pocket(mouse_x, mouse_y, False)):
                         legal_place = True
-                    if not c and mouse_y > 320 and mouse_y <= 340:
+                    elif not c and mouse_y > 280 and mouse_y <= 340:
                         legal_place = True
                         mouse_y = 341
-                    elif mouse_y > 10 * SCALE and mouse_y <= 11 * SCALE and not enemy_right and in_pocket(mouse_x, mouse_y - 20, True):
+                    elif mouse_y > 8 * SCALE and mouse_y <= 11 * SCALE and not enemy_right and in_pocket(mouse_x, mouse_y - 20, True):
                         legal_place = True
                         mouse_y = 11 * SCALE + 1
-                    elif mouse_y > 10 * SCALE and mouse_y <= 11 * SCALE and not enemy_left and in_pocket(mouse_x, mouse_y, False):
+                    elif mouse_y > 8 * SCALE and mouse_y <= 11 * SCALE and not enemy_left and in_pocket(mouse_x, mouse_y, False):
                         legal_place = True
                         mouse_y = 11 * SCALE + 1
                     

@@ -780,6 +780,12 @@ class InfernoDragon(Troop):
         self.stage_duration = 2
         self.attack_cooldown = self.load_time - self.hit_speed
         return super().freeze(duration)
+    
+    def kb(self, vector, kb_time=None):
+        self.stage = 1
+        self.stage_duration = 2
+        self.attack_cooldown = self.load_time - self.hit_speed
+        return super().kb(vector, kb_time)
 
     def stun(self):
         self.stage = 1

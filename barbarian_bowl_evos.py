@@ -81,8 +81,8 @@ class EvolutionBattleRam(barbarian_bowl_cards.BattleRam):
         dy = math.sin(radians) * 0.3
 
         # Spawn two troops offset in opposite directions perpendicular to the facing direction
-        offset1 = vector.Vector(-dy, dx)
-        offset2 = vector.Vector(dy, -dx)
+        offset1 = vector.Vector(dx, dy)
+        offset2 = vector.Vector(-dx, -dy)
 
         if self.charging:
             arena.active_attacks.remove(self.special_attack)

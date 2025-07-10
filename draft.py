@@ -208,6 +208,9 @@ def run_loop(screen, evo_enabled = False, side = True):
             if choose is not None: #if chose
                 all[i].value = choose
                 bot_all[7 - i].value = not_choose
+
+                all[7 - i].value = "?"
+                bot_all[i].value = "?"
                 
 
                 i += 1

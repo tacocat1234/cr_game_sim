@@ -190,8 +190,8 @@ class BattleRam(Troop):
         dy = math.sin(radians) * 0.3
 
         # Spawn two troops offset in opposite directions perpendicular to the facing direction
-        offset1 = vector.Vector(-dy, dx)
-        offset2 = vector.Vector(dy, -dx)
+        offset1 = vector.Vector(dx, dy)
+        offset2 = vector.Vector(-dx, -dy)
         
         arena.troops.append(Barbarian(self.side, self.position.added(offset1), self.level, self.cloned))
         arena.troops.append(Barbarian(self.side, self.position.added(offset2), self.level, self.cloned))

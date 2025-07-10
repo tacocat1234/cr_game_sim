@@ -317,7 +317,11 @@ class Troop:
         else:
             self.kb_timer = kb_time
             self.kb_max = kb_time
-        self.kb_vector = vector
+
+        if self.kb_vector is None:
+            self.kb_vector = vector
+        else:
+            self.kb_vector.add(vector)
 
     def kb_tick(self):
         self.position.add(self.kb_vector.scaled(TICK_TIME/self.kb_max))
