@@ -874,7 +874,7 @@ def random_with_param(t, lower, upper, used):
     return out
 
 
-def generate_random_remaining(filled):
+def generate_random_remaining(filled, evo_enabled = True):
     used = []
     out = [None, None, None, None,
            None, None, None, None]
@@ -890,46 +890,46 @@ def generate_random_remaining(filled):
         if each[0] == "troop":
             e = each[1]
             if e >= 1 and e <= 2 and missing[0] is not None:
-                out[0] = each[2]
+                out[0] = [each[2], each[3]]
                 priority.remove(0)
                 missing[0] = None
                 has_spot = True
             elif e >= 2 and e <= 3 and missing[1] is not None:
-                out[1] = each[2]
+                out[1] = [each[2], each[3]]
                 priority.remove(1)
                 missing[1] = None
                 has_spot = True
             elif e >= 3 and e <= 5:
                 if missing[4] is not None:
-                    out[4] = each[2]
+                    out[4] = [each[2], each[3]]
                     priority.remove(4)
                     missing[4] = None
                     has_spot = True
                 elif missing[3] is not None:
-                    out[3] = each[2]
+                    out[3] = [each[2], each[3]]
                     priority.remove(3)
                     missing[3] = None
                     has_spot = True
                 elif missing[2] is not None:
-                    out[2] = each[2]
+                    out[2] = [each[2], each[3]]
                     priority.remove(2)
                     missing[2] = None
                     has_spot = True
 
             if not has_spot and e >= 5 and missing[5] is not None:
-                out[5] = each[2]
+                out[5] = [each[2], each[3]]
                 priority.remove(5)
                 missing[5] = None
                 has_spot = True
         elif each[0] == "spell":
             e = each[1]
             if e >= 1 and e <= 3:
-                out[6] = each[2]
+                out[6] = [each[2], each[3]]
                 priority.remove(6)
                 missing[6] = None
                 has_spot = True
             elif e == 4:
-                out[7] = each[2]
+                out[7] = [each[2], each[3]]
                 priority.remove(7)
                 missing[7] = None
                 has_spot = True
@@ -941,7 +941,7 @@ def generate_random_remaining(filled):
     
     for each in fill:
         i = priority.pop(0)
-        out[i] = each[2]
+        out[i] = [each[2], each[3]]
         missing[i] = None
 
     i = 0
@@ -956,7 +956,7 @@ def generate_random_remaining(filled):
                 n = "mirror"
             else:
                 n = random_with_param(each[0], each[1][0], each[1][1], used)
-            out[i] = n
+            out[i] = [n, evo_enabled and can_evo(n)]
             used.append(n)
         i += 1
 

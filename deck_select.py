@@ -225,16 +225,16 @@ def run_loop(screen, evo_enabled = True, side = True):
     for i in range(8):
         if all[i].value != "":
             n = fuzzy_match(all[i].value, troops + buildings + spells)
-            rand_input.append([get_type(n), elixir_map[n], n])
+            rand_input.append([get_type(n), elixir_map[n], n, bool(evo[i].value)])
 
     temp = []
 
     if len(rand_input) != 8:
-        temp = generate_random_remaining(rand_input)
+        temp = generate_random_remaining(rand_input, evo_enabled)
     else:
-        temp = [each[2] for each in rand_input]
+        temp = [[each[2], each[3]] for each in rand_input]
 
     for each in temp:
-        out.append(Card(side, each, int(lev.value), bool(evo[i].value)))
+        out.append(Card(side, each[0], int(lev.value), each[1]))
 
     return len(rand_input) == 0, int(lev.value), out, fuzzy_match(tower.value, ["princesstower", "cannoneer", "daggerduchess", "royalchef"])
