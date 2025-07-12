@@ -872,3 +872,92 @@ def random_with_param(t, lower, upper, used):
         out = random.choice(options)
     
     return out
+
+
+def generate_random_remaining(filled):
+    used = []
+    out = [None, None, None, None,
+           None, None, None, None]
+    missing = [["troop", [1, 2]], ["troop", [2, 3]], ["troop", [3, 5]], ["troop", [3, 5]],
+               ["troop", [3, 5]], ["troop", [5, 9]], ["spell", [1, 3]], ["spell", [4, 4]]]
+    
+    priority = [4, 3, 2, 5, 1, 0, 6, 7]
+
+    fill = []
+
+    for each in filled:
+        has_spot = False
+        if each[0] == "troop":
+            e = each[1]
+            if e >= 1 and e <= 2 and missing[0] is not None:
+                out[0] = each[2]
+                priority.remove(0)
+                missing[0] = None
+                has_spot = True
+            elif e >= 2 and e <= 3 and missing[1] is not None:
+                out[1] = each[2]
+                priority.remove(1)
+                missing[1] = None
+                has_spot = True
+            elif e >= 3 and e <= 5:
+                if missing[4] is not None:
+                    out[4] = each[2]
+                    priority.remove(4)
+                    missing[4] = None
+                    has_spot = True
+                elif missing[3] is not None:
+                    out[3] = each[2]
+                    priority.remove(3)
+                    missing[3] = None
+                    has_spot = True
+                elif missing[2] is not None:
+                    out[2] = each[2]
+                    priority.remove(2)
+                    missing[2] = None
+                    has_spot = True
+
+            if not has_spot and e >= 5 and missing[5] is not None:
+                out[5] = each[2]
+                priority.remove(5)
+                missing[5] = None
+                has_spot = True
+        elif each[0] == "spell":
+            e = each[1]
+            if e >= 1 and e <= 3:
+                out[6] = each[2]
+                priority.remove(6)
+                missing[6] = None
+                has_spot = True
+            elif e == 4:
+                out[7] = each[2]
+                priority.remove(7)
+                missing[7] = None
+                has_spot = True
+        
+        if not has_spot:
+            fill.append(each)
+        else:
+            used.append(each[2])
+    
+    for each in fill:
+        i = priority.pop(0)
+        out[i] = each[2]
+        missing[i] = None
+
+    i = 0
+    for each in missing:
+        if each is not None:
+            n = None
+            if i == 2 and random.randint(1, 4) == 1:
+                n = random.choice(buildings)
+            elif i == 3 and random.randint(1, 5) == 1:
+                n = random_with_param("spell", 5, 9, used)
+            elif i == 4 and random.randint(1, 5) == 1:
+                n = "mirror"
+            else:
+                n = random_with_param(each[0], each[1][0], each[1][1], used)
+            out[i] = n
+            used.append(n)
+        i += 1
+
+    return out

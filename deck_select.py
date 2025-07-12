@@ -1,5 +1,8 @@
 from card_factory import troops, buildings, spells
 from card_factory import can_evo
+from card_factory import generate_random_remaining
+from card_factory import get_type
+from card_factory import elixir_map
 from cards import Card
 import pygame
 
@@ -184,7 +187,7 @@ def run_loop(screen, evo_enabled = True, side = True):
         text_rect = text.get_rect(center=(WIDTH/2, 210))
         screen.blit(text, text_rect)
 
-        text = font.render("Randomize All", True, BLACK)  # White text
+        text = font.render("Randomize All Empty", True, BLACK)  # White text
         text_rect = text.get_rect(center=(WIDTH - 100, 50))
         screen.blit(text, text_rect)
 
@@ -213,7 +216,25 @@ def run_loop(screen, evo_enabled = True, side = True):
                 running = False
         pygame.display.flip()
 
+    
+
+
     out = []
+
+    rand_input = []
     for i in range(8):
-        out.append(Card(side, fuzzy_match(all[i].value, troops + buildings + spells), int(lev.value), bool(evo[i].value)))
-    return bool(rand.value), int(lev.value), out, fuzzy_match(tower.value, ["princesstower", "cannoneer", "daggerduchess", "royalchef"])
+        if all[i].value != "":
+            n = fuzzy_match(all[i].value, troops + buildings + spells)
+            rand_input.append([get_type(n), elixir_map[n], n])
+
+    temp = []
+
+    if len(rand_input) != 8:
+        temp = generate_random_remaining(rand_input)
+    else:
+        temp = [each[2] for each in rand_input]
+
+    for each in temp:
+        out.append(Card(side, each, int(lev.value), bool(evo[i].value)))
+
+    return len(rand_input) == 0, int(lev.value), out, fuzzy_match(tower.value, ["princesstower", "cannoneer", "daggerduchess", "royalchef"])
