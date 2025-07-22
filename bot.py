@@ -201,7 +201,13 @@ class Bot:
             if offensive_count > len(enemy) - offensive_count: # if more offensive opps than defensive
                 if danger_level >= 2:
                     min = most_dangerous
-                    return min.position.added(vector.Vector(random.randint(-2, 2), random.randint(1, 3)))
+                    m = min.position.added(vector.Vector(random.randint(-2, 2), random.randint(1, 3)))
+                    in_p = (pocket == "all" or (m.x < 0 and pocket == "left") or (m.x >= 0 and pocket == "right"))
+                    if in_p and m.y < -5:
+                        m.y = -5
+                    elif not in_p and m.y < 1:
+                        m.y = 1
+                    return m
                 if random.randint(0, 2) >= 1 and len(friendly) > 0:
                     friend_pos = random.choice(friendly).position
                     friend_pos = friend_pos.added(vector.Vector(random.randint(-2, 2), random.randint(1, 3)))
@@ -223,7 +229,13 @@ class Bot:
             else: # if more defensive opps than offensive, or equal
                 if danger_level >= 4:
                     min = most_dangerous
-                    return min.position.added(vector.Vector(random.randint(-2, 2), random.randint(1, 3)))
+                    m = min.position.added(vector.Vector(random.randint(-2, 2), random.randint(1, 3)))
+                    in_p = (pocket == "all" or (m.x < 0 and pocket == "left") or (m.x >= 0 and pocket == "right"))
+                    if in_p and m.y < -5:
+                        m.y = -5
+                    elif not in_p and m.y < 1:
+                        m.y = 1
+                    return m
                 if len(friendly) > 0 and random.random() < 0.8:
                     friend_pos = random.choice(friendly).position
                     friend_pos = friend_pos.added(vector.Vector(random.randint(-1, 1), random.randint(0, 4)))
