@@ -10,6 +10,7 @@ from card_factory import can_anywhere
 from card_factory import generate_random_deck
 from card_factory import parse_input
 from card_factory import can_evo
+from card_factory import champions
 import arena
 import deck_select
 import triple_draft
@@ -24,7 +25,13 @@ from electro_valley_cards import Log
 from jungle_arena_cards import BarbarianBarrel
 
 game_arena = arena.Arena()
+image_cache = {}
 
+def load_image(path):
+    if not path in image_cache:
+        image = pygame.image.load(path).convert_alpha()
+        image_cache[path] = image
+    return image_cache[path]
 
 deck = []
 bot_deck = []
@@ -177,8 +184,15 @@ elixir_int_img = pygame.image.load("sprites/elixir_bar.png").convert_alpha()
 #game_arena.troops.append(training_camp_cards.MiniPekka(True, vector.Vector(-3, -4)
 #temp
 
+p1_c_index = None
+
 def cycle(hand, index, queue):
-    queue.append(hand[index])
+    if deck[hand[index]] is p_champion:
+        global p1_c_index
+        p1_c_index = hand[index]
+    else:
+        queue.append(hand[index])
+
     hand[index] = queue.pop(0)
 
 def display_evo_cannon(pos, side):
@@ -275,6 +289,11 @@ def draw():
     center_rect = center_surface.get_rect(center=(WIDTH/2, HEIGHT/2 - 64))
 
     screen.blit(center_surface, center_rect)
+
+    if game_arena.p1_champion is not None:
+        ab_img = load_image(game_arena.p1_champion.ability_sprite_path)
+        ab_rect = ab_img.get_rect(center=(WIDTH - 35, HEIGHT - 128 - 35))
+        screen.blit(ab_img, ab_rect)
 
     # Draw Towers
     for tower in game_arena.towers:
@@ -383,16 +402,37 @@ def draw():
                 display_y = rect_y
             else:
                 true_color = ((255, 0, 255) if troop.rage_timer > 0 else (120, 0, 160)) if troop.evo else troop_color
-                pygame.draw.circle(screen, true_color, (troop_x, troop_y), troop.collision_radius * SCALE)
-                display_y = troop_y - troop.collision_radius * SCALE  # Use circle's top for text position
+                circle_pos = (troop_x, troop_y)
+                circle_radius = int(troop.collision_radius * SCALE)
+
+                if not troop.targetable and not troop.invulnerable:
+                    # Make semi-transparent circle
+                    temp_surface = pygame.Surface((circle_radius * 2, circle_radius * 2), pygame.SRCALPHA)
+                    
+                    # Draw circle on temp surface with 25% opacity
+                    rgba_color = (*true_color, 64)  # 64/255 ≈ 25% opacity
+                    
+                    pygame.draw.circle(temp_surface, rgba_color, (circle_radius, circle_radius), circle_radius)
+                    
+                    # Blit temp surface to screen, adjust for offset
+                    screen.blit(temp_surface, (troop_x - circle_radius, troop_y - circle_radius))
+                else:
+                    # Draw normal opaque circle
+                    pygame.draw.circle(screen, true_color, circle_pos, circle_radius)
+
+                # Text display position remains the same
+                display_y = troop_y - circle_radius
             class_name = troop.__class__.__name__
             text_surface = font.render(class_name, True, (255, 255, 255))  # White color text
-            text_rect = text_surface.get_rect(center=(troop_x, display_y + 10))  # 10 pixels above the troop
+            text_rect = text_surface.get_rect(center=(troop_x, troop_y))  # 10 pixels above the troop
             screen.blit(text_surface, text_rect)
 
             # Health bar
             hp_bar_x = troop_x - 10
-            hp_bar_y = troop_y - 12
+            if isinstance(troop, Log) or isinstance(troop, BarbarianBarrel):
+                hp_bar_y = troop_y - 12
+            else:
+                hp_bar_y = troop_y - troop.collision_radius * SCALE - 2
             hp_bar_width = 20
             hp_bar_height = 3
 
@@ -437,6 +477,15 @@ def draw():
             level_text = font.render(str(troop.level), True, WHITE)  # White text
             text_rect = level_text.get_rect(center=(level_box_x + level_box_size / 2, level_box_y + level_box_size / 2))
             screen.blit(level_text, text_rect)
+
+            if troop.__class__.__name__ == "SkeletonKing" and troop.amount > 6:
+                hp_bar_y -= 10
+                hp_bar_width = 20
+                hp_bar_height = 3
+
+                pygame.draw.rect(screen, BLACK, (hp_bar_x, hp_bar_y, hp_bar_width, hp_bar_height))
+                pygame.draw.rect(screen, (60, 200, 220), (hp_bar_x, hp_bar_y, int(hp_bar_width * (troop.amount / troop.amount_max)), hp_bar_height))
+
         else:
             flying.append(troop)
     # Draw Attack Entities (Projectiles)
@@ -696,7 +745,10 @@ while True:
 
     p_mirror = next((each for each in deck if each.name == "mirror"), None)
     b_mirror = next((each for each in bot_deck if each.name == "mirror"), None)
-
+    
+    p_champion = next((each for each in deck if each.name in champions), None)
+    b_champion = next((each for each in bot_deck if each.name in champions), None)
+    
     # Initialize Player Towers
     p_k = towers.KingTower(True, KING_LEVEL)
 
@@ -822,6 +874,9 @@ while True:
                 hovered = None
                 mouse_x, mouse_y = pygame.mouse.get_pos()
 
+                if mouse_x < WIDTH - 10 and mouse_x > WIDTH - 60 and mouse_y > HEIGHT - 128 - 60 and mouse_y < HEIGHT - 128 - 10:
+                    game_arena.p1_champion.activate_ability(game_arena)
+
                 # Check if the click is in the bottom 128 pixels
                 if mouse_y > HEIGHT - 128:
                     # Determine the quarter (split the width of the screen)
@@ -910,9 +965,15 @@ while True:
 
         game_arena.tick()  # Update game logic
         fin = game_arena.cleanup()
+
+        if p1_c_index is not None and game_arena.p1_champion is None:
+            cycler.append(p1_c_index)
+            p1_c_index = None
+
         if fin is not None:
             win = fin
             break
+
         draw()  # Redraw screen
 
     winfont = pygame.font.Font(None, 100)  # Adjust font size as needed

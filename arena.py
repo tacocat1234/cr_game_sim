@@ -12,12 +12,16 @@ class Arena:
         self.spells = []
         self.buildings = []
         self.towers = []
+        self.died = []
         self.p1_elixir = 7
         self.p2_elixir = 7
         self.preplace = None
         self.preplace_side = None
         self.timer = 0
         self.state = ""
+
+        self.p1_champion = None
+        self.p2_champion = None
 
         self.elixir_rate = 1
 
@@ -221,3 +225,7 @@ class Arena:
         # Apply velocity adjustments
         for troop, vel in applyVelocity.items():
             troop.position.add(vel)
+
+        for troop in self.troops:
+            troop.handle_deaths(self.died)
+        self.died = []

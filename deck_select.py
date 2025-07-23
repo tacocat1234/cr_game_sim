@@ -1,9 +1,10 @@
-from card_factory import troops, buildings, spells
+from card_factory import troops, buildings, spells, champions
 from card_factory import can_evo
 from card_factory import generate_random_remaining
 from card_factory import get_type
 from card_factory import elixir_map
 from cards import Card
+import random
 import pygame
 
 LIGHT_GRAY = (150, 150, 150)
@@ -224,7 +225,7 @@ def run_loop(screen, evo_enabled = True, side = True):
     rand_input = []
     for i in range(8):
         if all[i].value != "":
-            n = fuzzy_match(all[i].value, troops + buildings + spells)
+            n = fuzzy_match(all[i].value, troops + buildings + spells + champions)
             rand_input.append([get_type(n), elixir_map[n], n, bool(evo[i].value)])
 
     temp = []
@@ -237,4 +238,6 @@ def run_loop(screen, evo_enabled = True, side = True):
     for each in temp:
         out.append(Card(side, each[0], int(lev.value), each[1]))
 
-    return len(rand_input) == 0, int(lev.value), out, fuzzy_match(tower.value, ["princesstower", "cannoneer", "daggerduchess", "royalchef"])
+    t = random.choice(["princesstower", "cannoneer", "daggerduchess", "royalchef"]) if tower.value == "" else fuzzy_match(tower.value, ["princesstower", "cannoneer", "daggerduchess", "royalchef"])
+
+    return len(rand_input) == 0, int(lev.value), out, t

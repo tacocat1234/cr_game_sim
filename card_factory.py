@@ -32,6 +32,7 @@ import hog_mountain_evos
 import electro_valley_evos
 import spooky_town_evos
 import serenity_peak_evos
+import champion_cards
 import copy
 import random
 
@@ -85,6 +86,9 @@ buildings = ["goblinhut", "goblincage",
              "barbarianhut",
              "furnace", "tesla", "xbow",
              "elixircollector"]
+
+champions = ["archerqueen", "skeletonking"]
+
 #total 127
 #print(len(troops) + len(spells) + len(buildings))
 
@@ -142,6 +146,8 @@ def get_type(name):
         return "spell"
     elif name in buildings:
         return "building"
+    elif name in champions:
+        return "troop"
 
 def card_factory(side, position, name, level):
     if name in troops:
@@ -150,6 +156,8 @@ def card_factory(side, position, name, level):
         return "spell", spell_factory(side, position, name, level)
     elif name in buildings:
         return "building", building_factory(side, position, name, level)
+    elif name in champions:
+        return "troop", champion_factory(side, position, name, level)
     
 def tower_factory(side, name, level):
     if name == "princesstower":
@@ -174,6 +182,8 @@ def tower_factory(side, name, level):
         raise Exception("Invalid tower type.")
 
 def get_clone(obj):
+    if obj.__class__.__name__.lower() in champions:
+        return None
     if obj.__class__.__name__ == "Miner":
         return electro_valley_cards.Miner(obj.side, copy.deepcopy(obj.position), obj.level, True)
     if not obj.evo:
@@ -343,6 +353,14 @@ def evolution_building_factory(side, position, name, level):
         return builders_workshop_evos.EvolutionMortar(side, position, level)
     elif name == "tesla":
         return hog_mountain_evos.EvolutionTesla(side, position, level)
+    
+def champion_factory(side, position, name, level):
+    if name == "archerqueen":
+        return champion_cards.ArcherQueen(side, position, level)
+    elif name == "skeletonking":
+        return champion_cards.SkeletonKing(side, position, level)
+    else:
+        raise Exception("Invalid champion name")
 
 def troop_factory(side, position, name, level):
     if name == "knight":
@@ -784,7 +802,9 @@ elixir_map = {
     "fisherman" : 3,
     "motherwitch" : 4,
     "cannoncart" : 5,
-    "elixircollector" : 6
+    "elixircollector" : 6,
+    "skeletonking" : 4,
+    "archerqueen" : 5
 }
 
 def filter_cards(card_list, min_elixir, max_elixir, used_cards):

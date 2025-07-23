@@ -335,6 +335,10 @@ class Troop:
             arena.troops.append(CursedHog(not self.side, copy.deepcopy(self.position), self.hog_cursed_level, self.cloned))
         self.cur_hp = -1
         arena.troops.remove(self)
+        arena.died.append(self)
+
+    def handle_deaths(self, list):
+        pass
 
     def tick_func(self, arena):
         pass

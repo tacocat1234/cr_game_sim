@@ -80,21 +80,23 @@ class Clone(Spell):
         hits = self.detect_hits(arena)
         for each in hits:
             if (isinstance(each, Troop)) and not each.cloned and not each.invulnerable:
-                each.stun_timer = 0.5
-                each.kb(vector.Vector(0, 0.25 if self.side else -0.25))
-
+                
                 c = card_factory.get_clone(each)
+                
+                if c is not None:
+                    each.stun_timer = 0.5
+                    each.kb(vector.Vector(0, 0.25 if self.side else -0.25))
 
-                c.cur_hp = 1
-                c.hit_points = 1
-                if c.has_shield:
-                    c.shield_hp = 1
-                    c.shield_max_hp = 1
-                c.cloned = True
-                c.deploy_time = 0.5
+                    c.cur_hp = 1
+                    c.hit_points = 1
+                    if c.has_shield:
+                        c.shield_hp = 1
+                        c.shield_max_hp = 1
+                    c.cloned = True
+                    c.deploy_time = 0.5
 
-                arena.troops.append(c)
-                c.kb(vector.Vector(0, -0.25 if self.side else 0.25))
+                    arena.troops.append(c)
+                    c.kb(vector.Vector(0, -0.25 if self.side else 0.25))
         self.should_delete = True
         
 class MotherWitchAttackEntity(RangedAttackEntity):
