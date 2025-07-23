@@ -1,4 +1,4 @@
-from card_factory import get_elixir
+from card_factory import get_elixir, get_type
 
 evo_cycles = {
     "knight" : 2,
@@ -44,6 +44,7 @@ class Card:
         self.is_evo = evo
         self.cycles = int(evo_cycles.get(self.name, -1))
         self.cycles_left = self.cycles #if not self.is_evo else 0
+        self.type = get_type(name)
 
         error = False
         if self.name == "mirror":

@@ -187,9 +187,10 @@ elixir_int_img = pygame.image.load("sprites/elixir_bar.png").convert_alpha()
 p1_c_index = None
 
 def cycle(hand, index, queue):
-    if deck[hand[index]] is p_champion:
+    i = hand[index]
+    if deck[i] is p_champion:
         global p1_c_index
-        p1_c_index = hand[index]
+        p1_c_index = i
     else:
         queue.append(hand[index])
 

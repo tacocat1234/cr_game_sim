@@ -235,6 +235,7 @@ class SkeletonKing(Champion):
         self.level = level
         self.amount = 6
         self.amount_max = 16
+        self.can_kb = False
 
     def attack(self):
         return SkeletonKingAttackEntity(self.side, self.hit_damage, self.position, self.target.position)
@@ -248,3 +249,139 @@ class SkeletonKing(Champion):
             if self.amount < self.amount_max and not each.cloned:
                 self.amount += 1
         
+class GoldenKnightAttackEntity(MeleeAttackEntity):
+    HIT_RANGE = 1.2
+    COLLISION_RADIUS = 0.8
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            side=side,
+            damage=damage,
+            position=position,
+            target=target
+            )
+
+class GoldenKnight(Champion):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 1800 * pow(1.1, level - 11),         # Hit points (Example value)
+            h_d= 160 * pow(1.1, level - 11),          # Hit damage (Example valufae)
+            h_s=0.9,          # Hit speed (Seconds per hit)
+            l_t=0.7,            # First hit cooldown
+            h_r=1.2,            # Hit range
+            s_r=5.5,            # Sight Range
+            g=True,           # Ground troop
+            t_g_o=True,       # Targets ground-only
+            t_o=False,        # Not tower-only
+            m_s=60*TILES_PER_MIN,          # Movement speed 
+            d_t=1,            # Deploy time
+            m=10,            #mass
+            c_r=0.8,        #collision radius
+            p=position,               # Position (vector.Vector object)
+            ability_cost = 1,
+            ability_cast_time=0.766,
+            ability_duration=float('inf'),
+            ability_cooldown=11
+        ) 
+        self.level = level
+        self.dash_damage = 310 * pow(1.1, level - 11)
+        self.dashing = False
+        self.dashed = []
+        self.dash_center = None
+        self.dash_count = 0
+        self.max_dash_count = 10
+
+    def update_target(self, arena):
+        self.target = None 
+        
+        min_dist = float('inf')
+        if not self.tower_only: #if not tower targeting
+            for each in arena.troops: #for each troop
+                if each.targetable and not each.invulnerable and each.side != self.side and (not self.ground_only or (self.ground_only and each.ground)) and each not in self.dashed: #targets air or is ground only and each is ground troup
+                    dist = vector.distance(each.position, self.position)
+                    if  dist < min_dist and dist < self.sight_range + self.collision_radius + each.collision_radius:
+                        self.target = each
+                        min_dist = vector.distance(each.position, self.position)
+        for each in arena.buildings: #for each building, so if any building is closer then non tower targeting switches, or if tower targeting then finds closest building
+            if each.side != self.side and each.targetable:
+                dist = vector.distance(each.position, self.position)
+                if  dist < min_dist and dist < self.sight_range + self.collision_radius + each.collision_radius and each not in self.dashed:
+                    self.target = each
+                    min_dist = vector.distance(each.position, self.position)
+        
+        for tower in arena.towers: #check for towers that it can currently hit
+            if tower.side != self.side:
+                dist = vector.distance(tower.position, self.position)
+                if dist < min_dist:
+                    self.target = None #ensures that it doesnt lock on to troops farther away than tower
+                if dist < self.hit_range + self.collision_radius + tower.collision_radius and dist < min_dist and tower not in self.dashed: #iff can hit tower, then it locks on.
+                    self.target = tower #ensures only locks when activel attacking tower, so giant at bridge doesnt immediatly lock onto tower and ruin everyones day
+                    min_dist = dist
+
+                if self.ability_active and dist < 5.5 + self.collision_radius + tower.collision_radius and tower not in self.dashed:
+                    self.target = tower
+                    min_dist = dist
+
+    def level_up(self):
+        self.dash_damage *= 1.1
+        super().level_up()
+
+    def attack(self):
+        if not self.dashing:
+            return GoldenKnightAttackEntity(self.side, self.hit_damage, self.position, self.target)
+    
+    def ability(self, arena):
+        self.move_speed *= 2
+        self.normal_move_speed *= 2
+        self.dashed = []
+
+    def ability_tick(self, arena):
+        if self.target is not None and self.stun_timer <= 0:
+            d = vector.distance(self.position, self.target.position)
+            if d < 5.5 + self.target.collision_radius + self.collision_radius:
+                self.update_target(arena)
+                self.dash_center = copy.deepcopy(self.position)
+                self.dashing = True
+                self.invulnerable = True
+                self.collideable = False
+                self.move_speed = 400 * TILES_PER_MIN * (1.35 if self.rage_timer > 0 else 1)
+                self.dash_river = True
+                self.hit_range = 0.2
+
+            if self.dashing:
+                if d < self.collision_radius + self.hit_range + self.target.collision_radius: #if hit
+                    self.dashed.append(self.target) #register
+                    arena.active_attacks.append(GoldenKnightAttackEntity(self.side, self.dash_damage, copy.deepcopy(self.position), self.target)) #attack
+                    self.dash_count += 1
+                    self.dash_center = copy.deepcopy(self.position)
+                    self.update_target(arena) #find new
+
+                    self.stun_timer = 0.2
+
+                    if self.target is None or self.dash_count >= 10 or vector.distance(self.position, self.target.position) > 5.5 + self.target.collision_radius:
+                        self.ability_duration_timer = 0 #done
+                        self.dashing = False
+                        self.collideable = True
+                        self.invulnerable = False
+                        self.dash_river = False
+                elif vector.distance(self.position, self.dash_center) > 5.6:
+                    self.ability_duration_timer = 0 #done
+                    self.dashing = False
+                    self.collideable = True
+                    self.invulnerable = False
+                    self.dash_river = False
+            
+        if self.dashing and (self.target is None or self.target.cur_hp <= 0):
+            self.ability_duration_timer = 0 #done
+            self.dashing = False
+            self.invulnerable = False
+            self.collideable = True
+            self.dash_river = False
+
+    def ability_end(self, arena):
+        self.normal_move_speed /= 2
+        self.move_speed = self.normal_move_speed
+        self.dash_count = 0
+        self.hit_range = 1.2
+        self.dashed = []
+        self.update_target(arena)
