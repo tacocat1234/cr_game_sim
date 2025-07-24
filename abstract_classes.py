@@ -157,7 +157,7 @@ class MeleeAttackEntity(AttackEntity):
         self.duration -= TICK_TIME
         if self.duration <= 0:
             arena.active_attacks.remove(self)
-        if self.should_delete:
+        if self.should_delete and self in arena.active_attacks:
             arena.active_attacks.remove(self)
 
 
@@ -487,7 +487,7 @@ class Troop:
             direction_y = 1 if (self.side if self.target is None else self.target.position.y - self.position.y) > 0 else -1 #forwards 
             distance_to_target = 1
             m_s = self.jump_speed
-        else: #if in river
+        elif self.ground and not self.dash_river: #if need bridge
             if (self.position.y < 1 and self.position.y > -1) and not (self.target.position.y <= 1 and self.target.position.y >= -1 and on_bridge(self.target.position.x)):
                 bridge_side = 1 if self.position.y < self.target.position.y else -1 #move to other side of bridge while on bridge code
                 bridge_min = -6.5 if self.position.x < 0 else 4.5
@@ -520,23 +520,29 @@ class Troop:
                 direction_x = self.target.position.x - self.position.x
                 direction_y = self.target.position.y - self.position.y
                 distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
-        
-        if vector.distance(self.target.position, self.position) < self.hit_range + self.collision_radius + self.target.collision_radius: #within hit range, then dont move just attack
+        else:
+            direction_x = self.target.position.x - self.position.x
+            direction_y = self.target.position.y - self.position.y
+            distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
+
+
+        if vector.distance(self.target.position, self.position) >= self.hit_range + self.collision_radius + self.target.collision_radius - 0.1: #within hit range, then dont move just attack
+            direction_x /= distance_to_target
+            direction_y /= distance_to_target
+            # Move in the direction of the target
+
+            self.position.x += direction_x  * m_s
+            self.position.y += direction_y * m_s
+            angle = math.degrees(math.atan2(direction_y, direction_x))  # Get angle in degrees
+            self.facing_dir = angle
+            self.move_vector = vector.Vector(direction_x * m_s, direction_y * m_s)
+
+        if vector.distance(self.target.position, self.position) < self.hit_range + self.collision_radius + self.target.collision_radius:
             self.move_vector = vector.Vector(0, 0)
             direction_x = self.target.position.x - self.position.x #set to directly move to tower
             direction_y = self.target.position.y - self.position.y
             self.facing_dir = math.degrees(math.atan2(direction_y, direction_x))  # Get angle in degrees
             return True
-        
-        direction_x /= distance_to_target
-        direction_y /= distance_to_target
-        # Move in the direction of the target
-
-        self.position.x += direction_x  * m_s
-        self.position.y += direction_y * m_s
-        angle = math.degrees(math.atan2(direction_y, direction_x))  # Get angle in degrees
-        self.facing_dir = angle
-        self.move_vector = vector.Vector(direction_x * m_s, direction_y * m_s)
         return False
             
         

@@ -118,7 +118,9 @@ effect_radius = {
     "royaldelivery" : 3,
     "clone" : 3,
     "void" : 2.5,
-    "tornado" : 5.5
+    "tornado" : 5.5,
+    "log" : 10.1,
+    "barbarianbarrel": 4.6
 }
 
 def get_radius(name):
@@ -137,10 +139,14 @@ def can_defend(name):
                         "golem"]
 
 def can_anywhere(name):
-    return name != "royaldelivery" and (get_type(name) == "spell" or name == "miner" or name == "goblindrill")
+    return name != "royaldelivery" and name != "log" and name != "barbarianbarrel" and (get_type(name) == "spell" or name == "miner" or name == "goblindrill")
 
 def get_type(name):
     if name in troops:
+        if name == "log" or name == "barbarianbarrel":
+            return "spell"
+        if name == "goblindrill":
+            return "building"
         return "troop"
     elif name in spells:
         return "spell"
@@ -862,6 +868,8 @@ def generate_random_deck():
     
     if random.randint(1, 5) == 1:
         deck[4] = "mirror"
+    elif random.randint(1, 5) == 1:
+        deck[4] = random_with_param("champion", 1, 10, used)
 
     return deck
 
@@ -882,18 +890,20 @@ def random_with_param(t, lower, upper, used):
     if t == "troop":
         options = filter_cards(troops, lower, upper, used)
         out = random.choice(options)
-        while out == "log" or out == "barbarianbarrel":
+        while out == "log" or out == "barbarianbarrel" or out == "goblindrill":
             out = random.choice(options)
     elif t == "spell":
         options = filter_cards(spells + ["log", "barbarianbarrel"], lower, upper, used)
         out = random.choice(options)
     elif t == "building":
-        options = filter_cards(buildings, lower, upper, used)
+        options = filter_cards(buildings + ["goblindrill"], lower, upper, used)
         out = random.choice(options)
     elif t == "any":
         options = filter_cards(spells + buildings + troops, lower, upper, used)
         out = random.choice(options)
-    
+    elif t == "champion":
+        options = filter_cards(champions, lower, upper, used)
+        out = random.choice(options)
     return out
 
 
@@ -946,12 +956,12 @@ def generate_random_remaining(filled, evo_enabled = True):
                 has_spot = True
         elif each[0] == "spell":
             e = each[1]
-            if e >= 1 and e <= 3:
+            if e >= 1 and e <= 3 and missing[6] is not None:
                 out[6] = [each[2], each[3]]
                 priority.remove(6)
                 missing[6] = None
                 has_spot = True
-            elif e == 4:
+            elif e == 4 and missing[7] is not None:
                 out[7] = [each[2], each[3]]
                 priority.remove(7)
                 missing[7] = None

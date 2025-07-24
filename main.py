@@ -2,8 +2,7 @@ import pygame
 import random
 from cards import Card
 from abstract_classes import TICK_TIME
-from bot import Bot
-from bot import place
+from bot2 import Bot
 from card_factory import get_type
 from card_factory import get_radius
 from card_factory import can_anywhere
@@ -237,7 +236,26 @@ def draw():
     if not hovered is None:
         screen.blit(select_img, (hovered[0], hovered[1]))
         if not select_radius is None:
-            if isinstance(select_radius, list):
+            if select_radius == 10.1:
+                #1.95 * 2 * SCALE wide, 10.1 * SCALE long, bottom center is hovered[0] + 10, hovered[1] + 10
+                width = 1.95 * 2 * SCALE
+                height = 10.1 * SCALE
+                bottom_center_x = hovered[0] + 10
+                bottom_center_y = hovered[1] + 10
+                top_left_x = bottom_center_x - width / 2
+                top_left_y = bottom_center_y - height
+                pygame.draw.rect(screen, (224, 255, 232), (top_left_x, top_left_y, width, height), width=1)
+            elif select_radius == 4.6:
+                #1.3 * 2 * SCALE wide, 10.1 * SCALE long, bottom center is hovered[0] + 10, hovered[1] + 10
+                width = 1.3 * 2 * SCALE
+                height = 4.5 * SCALE
+                bottom_center_x = hovered[0] + 10
+                bottom_center_y = hovered[1] + 10
+                top_left_x = bottom_center_x - width / 2
+                top_left_y = bottom_center_y - height
+                pygame.draw.rect(screen, (224, 255, 232), (top_left_x, top_left_y, width, height), width=1)
+                        
+            elif isinstance(select_radius, list):
                 for each in select_radius:
                     pygame.draw.circle(screen, (224, 255, 232), (hovered[0] + 10, hovered[1] + 10), each * SCALE, width=1)
             else:
@@ -827,7 +845,7 @@ while True:
     enemy_left = True
     enemy_right = True
 
-    game_arena.p2_elixir = 9
+    game_arena.p2_elixir = 7
     #game_arena.p2_elixir = -999 #disable bot for testing
     p_prev = None
     b_prev = None
@@ -844,11 +862,16 @@ while True:
 
         s = "all" if s == 0 else ("none" if s == -1 else ("right" if s == 1 else "left"))
 
-        bot_card = bot.tick(game_arena.p2_elixir, game_arena.troops + game_arena.buildings)
+        tup = bot.tick(game_arena.p2_elixir, game_arena.troops + game_arena.buildings, s)
+        bot.process_champion(game_arena.p2_champion, game_arena)
 
+        bot_card = bot_pos = None
+        
+        if tup is not None:
+            bot_card, bot_pos = tup
+        
         if not bot_card is None:
             n = bot_card.name if bot_card.name != "mirror" else b_prev.name #actual card
-            bot_pos = Bot.random_pos(n, game_arena.troops + game_arena.buildings, s)
             if bot_pos:
                 if bot_card.name == "royalrecruits":
                     if bot_pos.x < -1.5:
@@ -970,6 +993,9 @@ while True:
         if p1_c_index is not None and game_arena.p1_champion is None:
             cycler.append(p1_c_index)
             p1_c_index = None
+
+        if len(bot.queue) < 4 and game_arena.p2_champion is None:
+            bot.queue.append(bot.champion_index)
 
         if fin is not None:
             win = fin

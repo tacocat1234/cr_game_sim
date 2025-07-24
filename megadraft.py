@@ -146,7 +146,7 @@ def run_loop(screen, evo_enabled = False, side = True):
 
     all = []
     used = []
-    for row in range(4):
+    for row in range(3):
         for i in range(6):
             r = random_with_param("troop", bounds[row][0], bounds[row][1], used)
             all.append(CheckBox(WIDTH/7 * (i + 1), 130 + row * 80, 55, 55, r))
@@ -154,10 +154,25 @@ def run_loop(screen, evo_enabled = False, side = True):
 
     for i in range(6):
         r = random_with_param("spell", 1 if i < 3 else 3, 4 if i < 3 else 10, used)
+        all.append(CheckBox(WIDTH/7 * (i + 1), 130 + 3 * 80, 55, 55, r))
+        used.append(r)
+
+    for i in range(5):
+        r = random_with_param("troop", bounds[3][0], bounds[3][1], used)
         all.append(CheckBox(WIDTH/7 * (i + 1), 130 + 4 * 80, 55, 55, r))
         used.append(r)
 
-    for i in range(6):
+    i = 5
+    r = random_with_param("building", 1, 10, used)
+    all.append(CheckBox(WIDTH/7 * (i + 1), 130 + 4 * 80, 55, 55, r))
+    used.append(r)
+
+    for i in range(3):
+        r = random_with_param("champion", 1, 10, used)
+        all.append(CheckBox(WIDTH/7 * (i + 1), 130 + 5 * 80, 55, 55, r))
+        used.append(r)
+
+    for i in range(3, 6):
         r = random_with_param("building", 1, 10, used)
         all.append(CheckBox(WIDTH/7 * (i + 1), 130 + 5 * 80, 55, 55, r))
         used.append(r)
@@ -201,7 +216,7 @@ def run_loop(screen, evo_enabled = False, side = True):
 
     chosen = []
 
-    bot_select = [[0, 5], [0, 5], [6, 11], [6, 17], [17, 23], [24, 26], [25, 29], [30, 35]]
+    bot_select = [[0, 5], [0, 5], [6, 11], [6, 17], [17, 23], [24, 26], [25, 32], [33, 35]]
     random.shuffle(bot_select)
 
     background_img = pygame.image.load("sprites/background.png").convert_alpha()
