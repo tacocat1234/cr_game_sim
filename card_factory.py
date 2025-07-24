@@ -43,7 +43,7 @@ def can_evo(n):
             n == "barbarians" or n == "battleram" or n == "cannon" or
             n == "wizard" or
             n == "bats" or n == "zap" or n == "mortar" or
-            n == "pekka" or n == "goblinbarrel" or 
+            n == "pekka" or n == "goblinbarrel" or n == "witch" or
             n == "royalgiant" or n == "royalrecruits" or
             n == "icespirit" or n == "giantsnowball" or
             n == "dartgoblin" or n == "goblingiant" or n == "skeletonbarrel" or
@@ -218,6 +218,8 @@ def get_clone(obj):
             return builders_workshop_cards.Bat(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionPekka":
             return pekkas_playhouse_cards.Pekka(obj.side, copy.deepcopy(obj.position), obj.level)
+        elif n == "EvolutionWitch":
+            return pekkas_playhouse_cards.Witch(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionRoyalGiant":
             return royal_arena_cards.RoyalGiant(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionRoyalRecruit":
@@ -305,6 +307,8 @@ def evolution_troop_factory(side, position, name, level):
         return out
     elif name == "pekka":
         return pekkas_playhouse_evos.EvolutionPekka(side, position, level)
+    elif name == "witch":
+        return pekkas_playhouse_evos.EvolutionWitch(side, position, level)
     elif name == "royalgiant":
         return royal_arena_evos.EvolutionRoyalGiant(side, position, level)
     elif name == "royalrecruits":

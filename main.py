@@ -461,7 +461,9 @@ def draw():
                     pygame.draw.rect(screen, (250, 250, 250), (hp_bar_x, hp_bar_y, int(hp_bar_width * (troop.shield_hp / troop.shield_max_hp)), hp_bar_height))
                 else:
                     pygame.draw.rect(screen, GREEN, (hp_bar_x, hp_bar_y, int(hp_bar_width * (troop.cur_hp / troop.hit_points)), hp_bar_height))
-                
+                    if troop.cur_hp > troop.hit_points:
+                        pygame.draw.rect(screen, (0, 200, 255), (hp_bar_x + hp_bar_width, hp_bar_y, int(hp_bar_width * (troop.cur_hp / troop.hit_points - 1)), hp_bar_height))
+
                 
 
             # Draw Level Indicator
@@ -538,7 +540,9 @@ def draw():
                 pygame.draw.rect(screen, (250, 250, 250), (hp_bar_x, hp_bar_y, int(hp_bar_width * (troop.shield_hp / troop.shield_max_hp)), hp_bar_height))
             else:
                 pygame.draw.rect(screen, GREEN, (hp_bar_x, hp_bar_y, int(hp_bar_width * (troop.cur_hp / troop.hit_points)), hp_bar_height))
-            
+                if troop.cur_hp > troop.hit_points:
+                    pygame.draw.rect(screen, (0, 90, 255), (hp_bar_x + hp_bar_width, hp_bar_y, int(hp_bar_width * (troop.cur_hp / troop.hit_points - 1)), hp_bar_height))
+
             
 
         # Draw Level Indicator

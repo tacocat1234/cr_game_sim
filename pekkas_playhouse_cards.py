@@ -180,6 +180,7 @@ class Witch(Troop):
     def tick(self, arena):
         if self.preplace:
             return
+        self.tick_func(arena)
 
         if self.kb_timer > 0:
             self.kb_timer -= TICK_TIME #akward but better to keep it contained

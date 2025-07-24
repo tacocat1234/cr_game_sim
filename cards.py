@@ -16,6 +16,7 @@ evo_cycles = {
     "zap" : 2,
     "mortar" : 2,
     "pekka" : 1,
+    "witch" : 1,
     "goblinbarrel" : 2,
     "royalgiant" : 1,
     "royalrecruits" : 1,

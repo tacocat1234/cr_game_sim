@@ -1,6 +1,7 @@
 import pekkas_playhouse_cards
 from abstract_classes import MeleeAttackEntity
 from abstract_classes import Troop
+from abstract_classes import TICK_TIME
 import vector
 
 
@@ -62,4 +63,32 @@ class EvolutionPekka(pekkas_playhouse_cards.Pekka):
     def attack(self):
         return EvolutionPekkaAttackEntity(self.side, self.hit_damage, self.position, self.target, self)
 
-        
+class EvolutionWitch(pekkas_playhouse_cards.Witch):
+    def __init__(self, side, position, level):
+        super().__init__(side, position, level)
+        self.evo = True
+        self.heal_amount = 46 * pow(1.1, level - 6)
+
+        self.heal_timers = []
+
+    def level_up(self):
+        self.heal_amount *= 1.1
+        return super().level_up()
+    
+    def tick_func(self, arena):
+        for i in reversed(range(len(self.heal_timers))):
+            self.heal_timers[i] -= TICK_TIME
+            if self.heal_timers[i] <= 0:
+                self.overheal(self.heal_amount)
+                self.heal_timers.pop(i)
+    
+    def overheal(self, amount):
+        self.cur_hp += amount
+        if self.cur_hp > self.hit_points * 1.24:
+            self.cur_hp = self.hit_points * 1.24
+
+    def handle_deaths(self, list):
+        for each in list:
+            n = each.__class__.__name__.lower()
+            if not each.cloned and (each.side == self.side) and (n == "guard" or n == "skeleton" or n == "evolutionskeleton"):
+                self.heal_timers.append(1)
