@@ -193,7 +193,7 @@ class Witch(Troop):
         #update arena before
         if self.stun_timer <= 0:
             if self.deploy_time <= 0:
-                if self.target is None or self.target.cur_hp <= 0:
+                if self.target is None or self.target.targetable == False or self.target.cur_hp <= 0:
                     self.update_target(arena)
                 if self.move(arena) and self.attack_cooldown <= 0: #move, then if within range, attack
                     atk = self.attack()

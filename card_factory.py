@@ -87,7 +87,7 @@ buildings = ["goblinhut", "goblincage",
              "furnace", "tesla", "xbow",
              "elixircollector"]
 
-champions = ["archerqueen", "skeletonking", "goldenknight"]
+champions = ["archerqueen", "skeletonking", "goldenknight", "mightyminer"]
 
 #total 127
 #print(len(troops) + len(spells) + len(buildings))
@@ -371,6 +371,8 @@ def champion_factory(side, position, name, level):
         return champion_cards.SkeletonKing(side, position, level)
     elif name == "goldenknight":
         return champion_cards.GoldenKnight(side, position, level)
+    elif name == "mightyminer":
+        return champion_cards.MightyMiner(side, position, level)
     else:
         raise Exception("Invalid champion name")
 
@@ -817,6 +819,7 @@ elixir_map = {
     "elixircollector" : 6,
     "skeletonking" : 4,
     "goldenknight" : 4,
+    "mightyminer" : 4,
     "archerqueen" : 5
 }
 
@@ -858,22 +861,22 @@ def generate_random_deck():
     deck.append(choice)
     used.add(choice)
 
-    # 8th: spell with elixir = 4
+      # 8th: spell with elixir = 4
     options = filter_cards(spells, 4, 4, used)
     choice = random.choice(options)
     deck.append(choice)
     used.add(choice)
 
-    if random.randint(1, 4) == 1:
+    if random.randint(1, 2) == 1:
         deck[2] = random.choice(buildings)
 
     if random.randint(1, 5) == 1:
         deck[3] = random_with_param("spell", 5, 9, used)
     
-    if random.randint(1, 5) == 1:
-        deck[4] = "mirror"
-    elif random.randint(1, 5) == 1:
+    if random.randint(1, 3) == 1:
         deck[4] = random_with_param("champion", 1, 10, used)
+    elif random.randint(1, 5) == 1:
+        deck[4] = "mirror"
 
     return deck
 
@@ -985,7 +988,7 @@ def generate_random_remaining(filled, evo_enabled = True):
     for each in missing:
         if each is not None:
             n = None
-            if i == 2 and random.randint(1, 4) == 1:
+            if i == 2 and random.randint(1, 3) == 1:
                 n = random.choice(buildings)
             elif i == 3 and random.randint(1, 5) == 1:
                 n = random_with_param("spell", 5, 9, used)

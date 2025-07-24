@@ -16,7 +16,7 @@ single_elixir_map = {
     "goblin" : 1/2,
     "rascalboy" : 3,
     "rascalgirl" : 1,
-    "skeleton" : 1/3,
+    "skeleton" : 2/5,
     "golemite" : 3,
     "elixirgolemite" : 3,
     "elixirblob" : 1,
@@ -34,7 +34,8 @@ single_elixir_map = {
     "wallbreaker" : 1,
     "rebornphoenix" : 3,
     "bushgoblin" : 1,
-    "lavapup" : 5/6
+    "lavapup" : 5/6,
+    "cartcannon" : 3
 }
 
 def get_elixir(name):
@@ -102,6 +103,8 @@ class Bot:
                 champion.activate_ability(arena)
             elif n == "goldenknight" and champion.cur_hp > 1/4 * champion.hit_points:
                 champion.activate_ability(arena)
+            elif n == "mightyminer" and champion.target is not None and champion.target.hit_points <= champion.hit_damage * 5 and vector.distance(champion.target.position, champion.position) <= champion.hit_range:
+                champion.activate_ability(arena)    
 
 
     def tick(self, elixir, things = None, pocket = "none"):
@@ -195,8 +198,9 @@ class Bot:
             for each in things:
                 e = get_elixir(each.__class__.__name__.lower())
                 if not each.side: #bot's
-                    if each.position.y < 2 and isinstance(each, XBow) or isinstance(each, Mortar):
-                        main_threat_level = 10
+                    if each.position.y < 3 and isinstance(each, XBow) or isinstance(each, Mortar):
+                        main_threat_level = 99
+                        attack_investment += 99
                         main = each
                     if each.position.y > 0: #defending
                         defense_investment += e
@@ -206,11 +210,14 @@ class Bot:
                             main_threat_level = e
                             main = each
                 else:
-                    if each.position.y > -2 and isinstance(each, XBow) or isinstance(each, Mortar):
-                        threat_level = 10
+                    if each.position.y > -3 and isinstance(each, XBow) or isinstance(each, Mortar):
+                        threat_level = 99
+                        defense_investment -= 99
                         threat = each
                     if each.position.y > 0: #attacking
                         defense_investment -= e
+                        if each.position.y > 9.5 - each.hit_range:
+                            defense_investment -= e/2 #slightly more importnat if in ranges
                         if e > threat_level:
                             threat_level = e
                             threat = each
@@ -223,6 +230,20 @@ class Bot:
                 goal = "attack"
 
         if goal == "wait":
+            if random.random() < 1/300: #about once every 5 seconds
+                for index in self.hand:
+                    if self.cards[index].name == "goblinbarrel" or self.cards[index].name == "goblindrill":
+                        pos = None
+                        if pocket == "none":
+                            pos = vector.Vector((-5.5 if random.random() > 0.5 else 5.5) + random.random() - 0.5, -9.5 + random.random() - 0.5)
+                        elif pocket == "left":
+                            pos = vector.Vector(5.5 + random.random() - 0.5, -9.5 + random.random() - 0.5)
+                        elif pocket == "right":
+                            pos = vector.Vector(-5.5 + random.random() - 0.5, -9.5 + random.random() - 0.5)
+                        elif pocket == "all":
+                            pos = vector.Vector(random.random() - 0.5, -13 + random.random() - 0.5)
+                        return card, pos
+
             if random.random() < 1/1600:
                 pos = vector.Vector(random.randint(-9, 8) + 0.5, random.randint(1, 15) + 0.5)
                 l = [0, 1, 2, 3]
@@ -267,7 +288,7 @@ class Bot:
                 if card.name == "mortar" or card.name == "xbow":
                     pos = vector.Vector(5.5 if random.random() < 0.5 else -5.5, 2)
                     return card, pos
-                elif card.type == "builidng":
+                elif card.type == "building":
                     pos = vector.Vector(random.randint(-3, 3), random.randint(2, 7))
                     return card, pos
 
@@ -309,7 +330,7 @@ class Bot:
             cycle(self.hand, i, self.queue, self.champion_index)
 
             pos = None
-            if card.type == "building" and threat.position.y < 5:
+            if card.type == "building" and threat.position.y < 6:
                 pos = vector.Vector(0.5 + random.randint(0, 2) if threat.position.x > 0 else -0.5 - random.randint(0, 2), round(threat.position.y + 2) + 0.5)
             else:
                 pos = threat.position.added(vector.Vector(random.randint(-2, 2), random.randint(1, 4)))

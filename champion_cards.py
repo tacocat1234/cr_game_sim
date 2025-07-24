@@ -1,6 +1,6 @@
 from abstract_classes import Troop, Tower, Spell
 from abstract_classes import RangedAttackEntity
-from abstract_classes import MeleeAttackEntity
+from abstract_classes import MeleeAttackEntity, AttackEntity
 from abstract_classes import TILES_PER_MIN
 from abstract_classes import TICK_TIME
 from bone_pit_cards import Skeleton
@@ -385,3 +385,176 @@ class GoldenKnight(Champion):
         self.hit_range = 1.2
         self.dashed = []
         self.update_target(arena)
+
+class MightyMinerAttackEntity(MeleeAttackEntity):
+    HIT_RANGE = 1.6
+    COLLISION_RADIUS = 0.5
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            side,
+            damage,
+            position,
+            target
+        )
+
+class MightyMinerAbilityBombAttackEntity(AttackEntity):
+    DAMAGE_RADIUS = 3
+    def __init__(self, side, damage, position, target_pos):
+        super().__init__(
+            s=side,
+            d=damage,
+            v=0,
+            l=0.25,
+            i_p=copy.deepcopy(position)
+        )
+        self.display_size = MightyMinerAbilityBombAttackEntity.DAMAGE_RADIUS
+        self.has_hit = []
+
+    def detect_hits(self, arena):
+        hits = []
+        for each in arena.towers + arena.buildings + arena.troops:
+            if each.side != self.side and (isinstance(each, Tower) or not each.invulnerable): # if different side
+                if vector.distance(self.position, each.position) < MightyMinerAbilityBombAttackEntity.DAMAGE_RADIUS + each.collision_radius:
+                    hits.append(each)
+        return hits
+            
+    def tick(self, arena):
+        hits = self.detect_hits(arena)
+        for each in hits:
+            new = not any(each is h for h in self.has_hit)
+            if (new):
+                each.damage(self.damage)
+                if isinstance(each, Troop) and each.can_kb and not each.invulnerable:
+                    vec = each.position.subtracted(self.position)
+                    vec.normalize()
+                    vec.scale(1.8)
+                    each.kb(vec)
+                    self.has_hit.append(each)
+
+
+class MightyMinerAbilityBomb(Troop):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p=  float('inf'),         # Hit points (Example value)
+            h_d= 334 * pow(1.1, level - 11),          # Hit damage (Example value)
+            h_s=0,          # Hit speed (Seconds per hit)
+            l_t=0,            # First hit cooldown
+            h_r=0,            # Hit range
+            s_r=0,            # Sight Range
+            g=True,           # Ground troop
+            t_g_o=False,       # Targets ground-only
+            t_o=False,        # Not tower-only
+            m_s=0,          # Movement speed 
+            d_t=1,            # Deploy time
+            m=float('inf'),            #mass
+            c_r=0.45,        #collision radius
+            p=position               # Position (vector.Vector object)
+        ) 
+        self.level = level
+        self.invulnerable=True
+        self.moveable=False
+        self.targetable=False
+        self.target=None
+
+    def tick(self, arena):
+        if self.deploy_time <= 0:
+            arena.active_attacks.append(self.attack())
+            self.cur_hp = -1
+    
+    def attack(self):
+        return MightyMinerAbilityBombAttackEntity(self.side, self.hit_damage, self.position, self.target)
+
+class MightyMiner(Champion):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 2250 * pow(1.1, level - 11),         # Hit points (Example value)
+            h_d= 40 * pow(1.1, level - 11),          # Hit damage (Example value)
+            h_s=0.4,          # Hit speed (Seconds per hit)
+            l_t=0.7,            # First hit cooldown
+            h_r=1.6,            # Hit range
+            s_r=5.5,            # Sight Range
+            g=True,           # Ground troop
+            t_g_o=True,       # Targets ground-only
+            t_o=False,        # Not tower-only
+            m_s=60*TILES_PER_MIN,          # Movement speed 
+            d_t=1,            # Deploy time
+            m=6,            #mass
+            c_r=0.5,        #collision radius
+            p=position,               # Position (vector.Vector object)
+            ability_cost = 1,
+            ability_cast_time=0.933,
+            ability_duration=float('inf'),
+            ability_cooldown=13
+        ) 
+        self.level = level
+        self.stage = 1
+        self.stage_duration = 2
+        self.damage_stages = [40 * pow(1.1, level - 9), 200 * pow(1.1, level - 9), 400 * pow(1.1, level - 9)]
+        self.target_x = None
+
+    def level_up(self):
+        super().level_up()
+        for i in range(3):
+            self.damage_stages[i] *= 1.1
+    
+    def tick_func(self, arena):
+        if self.target is None or self.target.cur_hp <= 0 or vector.distance(self.position, self.target.position) > self.hit_range + self.collision_radius + self.target.collision_radius + 0.1 or not self.target.targetable:
+            self.stage = 1
+            self.stage_duration = 2
+            self.attack_cooldown = self.load_time - self.hit_speed
+
+    def freeze(self, duration):
+        self.stage = 1
+        self.stage_duration = 2
+        self.attack_cooldown = self.load_time - self.hit_speed
+        return super().freeze(duration)
+    
+    def kb(self, vector, kb_time=None):
+        self.stage = 1
+        self.stage_duration = 2
+        self.attack_cooldown = self.load_time - self.hit_speed
+        return super().kb(vector, kb_time) 
+
+    def stun(self):
+        self.stage = 1
+        self.stage_duration = 2
+        self.attack_cooldown = self.load_time - self.hit_speed
+        super().stun()
+
+    def cleanup_func(self, arena):
+        if self.stun_timer <= 0:
+            if self.stage_duration <= 0:
+                self.stage = self.stage + 1 if self.stage < 3 else self.stage
+                self.stage_duration = 2
+            elif not (self.target is None or self.target.cur_hp <= 0 or vector.distance(self.position, self.target.position) > self.hit_range  + self.target.collision_radius + self.collision_radius or not self.target.targetable):
+                self.stage_duration -= TICK_TIME
+
+    def attack(self):
+        return MightyMinerAttackEntity(self.side, self.damage_stages[self.stage - 1], self.position, self.target)
+    
+    def ability(self, arena):
+        self.targetable = False
+        self.invulnerable = True
+        self.collideable = False
+        self.target_x = -self.position.x
+        self.stun_timer = float('inf') #completely disable
+        arena.troops.append(MightyMinerAbilityBomb(self.side, copy.deepcopy(self.position), self.level))
+    
+    def ability_tick(self, arena):
+        if self.target_x > 0 and self.position.x < self.target_x:
+            self.position.x += 650 * TILES_PER_MIN
+        elif self.target_x <= 0 and self.position.x > self.target_x:
+            self.position.x -= 650 * TILES_PER_MIN
+        else:
+            self.stun_timer = 0
+            self.ability_duration_timer = 0
+
+    
+    def ability_end(self, arena):
+        self.move_speed = self.normal_move_speed
+        self.targetable = True
+        self.invulnerable = False
+        self.collideable = True
+        self.target_x = None

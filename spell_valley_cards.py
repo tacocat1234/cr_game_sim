@@ -384,8 +384,12 @@ class InfernoTower(Building):
         if self.preplace or self.stun_timer > 0:
             return
         #print(self.target) #temp
-        if self.target is None or self.target.cur_hp <= 0:
+        if self.target is None or self.target.cur_hp <= 0 or self.target.targetable == False:
             self.update_target(arena)
+            self.stage = 1
+            self.stage_duration = 2
+            self.attack_cooldown = self.load_time - self.hit_speed
+        if self.target.invulnerable:
             self.stage = 1
             self.stage_duration = 2
             self.attack_cooldown = self.load_time - self.hit_speed

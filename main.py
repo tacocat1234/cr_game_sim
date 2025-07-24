@@ -239,18 +239,18 @@ def draw():
             if select_radius == 10.1:
                 #1.95 * 2 * SCALE wide, 10.1 * SCALE long, bottom center is hovered[0] + 10, hovered[1] + 10
                 width = 1.95 * 2 * SCALE
-                height = 10.1 * SCALE
+                height = 10.6 * SCALE
                 bottom_center_x = hovered[0] + 10
-                bottom_center_y = hovered[1] + 10
+                bottom_center_y = hovered[1] + 20
                 top_left_x = bottom_center_x - width / 2
                 top_left_y = bottom_center_y - height
                 pygame.draw.rect(screen, (224, 255, 232), (top_left_x, top_left_y, width, height), width=1)
             elif select_radius == 4.6:
                 #1.3 * 2 * SCALE wide, 10.1 * SCALE long, bottom center is hovered[0] + 10, hovered[1] + 10
                 width = 1.3 * 2 * SCALE
-                height = 4.5 * SCALE
+                height = 5 * SCALE
                 bottom_center_x = hovered[0] + 10
-                bottom_center_y = hovered[1] + 10
+                bottom_center_y = hovered[1] + 20
                 top_left_x = bottom_center_x - width / 2
                 top_left_y = bottom_center_y - height
                 pygame.draw.rect(screen, (224, 255, 232), (top_left_x, top_left_y, width, height), width=1)
