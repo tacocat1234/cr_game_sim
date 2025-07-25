@@ -225,7 +225,7 @@ def run_loop(screen, evo_enabled = True, side = True):
     rand_input = []
     for i in range(8):
         if all[i].value != "":
-            n = fuzzy_match(all[i].value, troops + buildings + spells + champions)
+            n = fuzzy_match(all[i].value, troops + buildings + spells + champions + ["mirror"])
             rand_input.append([get_type(n), elixir_map[n], n, bool(evo[i].value)])
 
     temp = []

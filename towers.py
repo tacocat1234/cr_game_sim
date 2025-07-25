@@ -136,7 +136,7 @@ class KingTower(Tower):
     def tick(self, arena):
         self.tick_func(arena)
         if self.stun_timer <= 0:
-            if self.target is None or self.target.cur_hp <= 0:
+            if self.target is None or self.target.cur_hp <= 0 or not self.target.targetable:
                 self.update_target(arena)
             if self.activation_timer <= 0 and not self.target is None and self.attack_cooldown <= 0:
                 arena.active_attacks.append(self.attack())

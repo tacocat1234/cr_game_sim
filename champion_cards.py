@@ -76,6 +76,9 @@ class Champion(Troop):
         pass
 
     def activate_ability(self, arena):
+        if self.ability_cooldown_timer > 0:
+            return
+        
         works = False
         if self.side:
             if arena.p1_elixir >= self.ability_cost:
@@ -558,6 +561,175 @@ class MightyMiner(Champion):
         self.invulnerable = False
         self.collideable = True
         self.target_x = None
+
+class LittlePrinceAttackEntity(RangedAttackEntity):
+    def __init__(self, side, damage, position, target):
+        super().__init__(side, damage, 800 * TILES_PER_MIN, position, target)
+
+class LittlePrince(Champion):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 698 * pow(1.1, level - 11),         # Hit points (Example value)
+            h_d= 99 * pow(1.1, level - 11),          # Hit damage (Example value)
+            h_s=1.2,          # Hit speed (Seconds per hit)
+            l_t=0.8,            # First hit cooldown
+            h_r=5.5,            # Hit range
+            s_r=5.5,            # Sight Range
+            g=True,           # Ground troop
+            t_g_o=False,       # Targets ground-only
+            t_o=False,        # Not tower-only
+            m_s=60*TILES_PER_MIN,          # Movement speed 
+            d_t=1,            # Deploy time
+            m=3,            #mass
+            c_r=0.45,        #collision radius
+            p=position,               # Position (vector.Vector object)
+            ability_cost = 3,
+            ability_cast_time=0.933,
+            ability_duration=1,
+            ability_cooldown=30
+        ) 
+        self.level = level
+        self.ability_damage = 207 * pow(1.1, level - 11)
+        self.stage = 1
+        self.stage_duration = 2
+        self.hit_speed_stages = [1.2, 0.8, 0.4]
+
+    def attack(self):
+        return LittlePrinceAttackEntity(self.side, self.hit_damage, self.position, self.target)
+    
+    def tick_func(self, arena):
+        if self.move_vector.magnitude() > 0: #if move
+            self.stage = 1
+            self.stage_duration = 2
+            self.attack_cooldown = self.load_time - self.hit_speed
+            self.hit_speed = 1.2
+            self.load_time = 0.8
+
+    def freeze(self, duration):
+        self.stage = 1
+        self.stage_duration = 2
+        self.attack_cooldown = self.load_time - self.hit_speed
+        self.hit_speed = 1.2
+        self.load_time = 0.8
+        return super().freeze(duration)
+    
+    def kb(self, vector, kb_time=None):
+        self.stage = 1
+        self.stage_duration = 2
+        self.attack_cooldown = self.load_time - self.hit_speed
+        self.hit_speed = 1.2
+        self.load_time = 0.8
+        return super().kb(vector, kb_time) 
+
+    def stun(self):
+        self.stage = 1
+        self.stage_duration = 2
+        self.attack_cooldown = self.load_time - self.hit_speed
+        self.hit_speed = 1.2
+        self.load_time = 0.8
+        super().stun()
+
+    def cleanup_func(self, arena):
+        if self.stun_timer <= 0:
+            if self.stage_duration <= 0:
+                self.stage = self.stage + 1 if self.stage < 3 else self.stage
+                self.stage_duration = 2
+                self.hit_speed = self.hit_speed_stages[self.stage - 1]
+                self.load_time = self.hit_speed - 0.4
+            elif not (self.target is None or self.target.cur_hp <= 0 or vector.distance(self.position, self.target.position) > self.hit_range  + self.target.collision_radius + self.collision_radius or not self.target.targetable):
+                self.stage_duration -= TICK_TIME
+
+
+    
+    def ability(self, arena):
+        self.stun_timer = float('inf')
+        p = copy.deepcopy(self.position)
+        arena.troops.append(Guardienne(self.side, p, self.level))
+        arena.active_attacks.append(RoyalRescueAttackEntity(self.side, self.ability_damage, p, self.position))
+
+    def ability_end(self, arena):
+        self.stun_timer = 0
+
+class RoyalRescueAttackEntity(MeleeAttackEntity):
+    SPLASH_RADIUS = 1.2
+    def __init__(self, side, damage, position, parent_pos):
+        super().__init__(
+            side=side,
+            damage=damage,
+            position=position,
+            target=None #not used
+            )
+        self.parent_pos = parent_pos
+        self.duration = 1
+        self.display_size = self.SPLASH_RADIUS
+        
+    def detect_hits(self, arena):
+        hits = []
+        for each in arena.towers + arena.buildings + arena.troops:
+            if each.side != self.side and (isinstance(each, Tower) or (each.ground and not each.invulnerable)): # if different side
+                if vector.distance(each.position, self.position) <= each.collision_radius + self.SPLASH_RADIUS:
+                    hits.append(each)
+        return hits
+    
+    def tick(self, arena):
+
+        v = 8*self.duration
+     
+        self.position.y += (1 if self.side else -1) * v * 60 * TILES_PER_MIN
+
+        hits = self.detect_hits(arena)
+        for each in hits:
+            new = not any(each is h for h in self.has_hit)
+            if (new):
+                if not each.invulnerable:
+                    each.damage(self.damage)
+                    dir_vec = each.position.subtracted(self.parent_pos)
+                    vec = each.position.subtracted(self.position)
+                    dir_vec.normalize()
+                    dir_vec.scale(2 - vec.magnitude()/self.SPLASH_RADIUS)
+                    each.kb(vec)
+                self.has_hit.append(each)
+
+class GuardienneAttackEntity(MeleeAttackEntity):
+    HIT_RANGE = 1.2
+    COLLISION_RADIUS = 0.8
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            side=side,
+            damage=damage,
+            position=position,
+            target=target
+            )
+
+class Guardienne(Troop):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 1600 * pow(1.1, level - 11),         # Hit points (Example value)
+            h_d= 199 * pow(1.1, level - 11),          # Hit damage (Example value)
+            h_s=1.2,          # Hit speed (Seconds per hit)
+            l_t=0.7,            # First hit cooldown
+            h_r=1.2,            # Hit range
+            s_r=5.5,            # Sight Range
+            g=True,           # Ground troop
+            t_g_o=True,       # Targets ground-only
+            t_o=False,        # Not tower-only
+            m_s=60*TILES_PER_MIN,          # Movement speed 
+            d_t=1.3,            # Deploy time
+            m=6,            #mass
+            c_r=0.8,        #collision radius
+            p=position               # Position (vector.Vector object)
+        )
+        self.level = level
+        self.collideable = False
+
+    def on_deploy(self, arena):
+        self.collideable = True
+
+    def attack(self):
+        return GuardienneAttackEntity(self.side, self.hit_damage, self.position, self.target)
+
 
 class BossBanditAttackEntity(MeleeAttackEntity):
     HIT_RANGE = 0.8

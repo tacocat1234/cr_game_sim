@@ -4,6 +4,7 @@ from abstract_classes import Spell
 import card_factory
 import vector
 import itertools
+import random
 
 class Arena:
     def __init__(self):
@@ -227,5 +228,15 @@ class Arena:
             troop.position.add(vel)
 
         for troop in self.troops:
+            if troop.position.x > 9:
+                troop.position.x = 9
+                troop.position.y += random.random()/100 - 0.005 #avoid overlap
+            if troop.position.x < -9:
+                troop.position.x = -9
+                troop.position.y += random.random()/100 - 0.005 #avoid overlap
+            if troop.position.y > 16:
+                troop.position.y = 16
+            if troop.position.y < -16:
+                troop.position.y = -16
             troop.handle_deaths(self.died)
         self.died = []

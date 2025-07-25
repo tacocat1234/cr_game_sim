@@ -340,6 +340,11 @@ class GoblinGiant(Troop):
         self.backpack_goblins[0].cleanup(arena)
         self.backpack_goblins[1].cleanup(arena)
 
+    def stun(self):
+        self.backpack_goblins[0].target = None
+        self.backpack_goblins[1].target = None
+        return super().stun()
+
     def die(self, arena):
         v1 = vector.Vector(-0.2, 0.45).rotated(self.facing_dir)
         v2 = vector.Vector(-0.2, -0.45).rotated(self.facing_dir)

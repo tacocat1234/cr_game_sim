@@ -234,7 +234,7 @@ class Minion(Troop):
             g=False,           # Ground troop
             t_g_o=False,       # Targets ground-only
             t_o=False,        # Not tower-only
-            m_s=90*TILES_PER_MIN,          # Movement speed 
+            m_s=120*TILES_PER_MIN,          # Movement speed 
             d_t=1,            # Deploy time
             m=2,            #mass
             c_r=0.5,        #collision radius

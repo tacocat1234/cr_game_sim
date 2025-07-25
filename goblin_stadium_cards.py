@@ -298,7 +298,6 @@ class GoblinHut(Building):
             self.update_target(arena)
         
         if self.stun_timer <= 0 and self.target is not None and self.attack_cooldown <= 0:
-            print("t")
             front = vector.Vector(random.random()/4 - 0.125, 1.5) if self.side else vector.Vector(random.random()/4 - 0.125, -1.5)
             newGob = SpearGoblin(self.side, self.position.added(front), self.level)
             newGob.deploy_time = 0

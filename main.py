@@ -886,9 +886,12 @@ while True:
                 l = bot_card.level if bot_card.name != "mirror" else b_prev.level + 1
 
                 game_arena.add(False, bot_pos, n, bot_card.elixir_cost, l, bot_card.cycles_left == 0 if bot_card.name != "mirror" else False)
-                b_prev = bot_card
-                if b_mirror is not None:
-                    b_mirror.elixir_cost = bot_card.elixir_cost + 1
+                
+                if bot_card.name not in champions:
+                    b_prev = bot_card
+                    if b_mirror is not None:
+                        b_mirror.elixir_cost = bot_card.elixir_cost + 1
+                
                 bot_card.cycle_evo()
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -973,9 +976,11 @@ while True:
                         
                         succesful = game_arena.add(True, pos, name, cur_card.elixir_cost, level, cur_card.cycles_left == 0 if cur_card.name != "mirror" else False)
                         if succesful:
-                            p_prev = cur_card
-                            if p_mirror is not None:
-                                p_mirror.elixir_cost = cur_card.elixir_cost + 1
+                            if cur_card.name not in champions:
+                                p_prev = cur_card
+                                if p_mirror is not None:
+                                    p_mirror.elixir_cost = cur_card.elixir_cost + 1
+                            
                             cycle(hand, click_quarter - 1, cycler)
                             cur_card.cycle_evo()
 

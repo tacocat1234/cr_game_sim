@@ -35,7 +35,8 @@ single_elixir_map = {
     "rebornphoenix" : 3,
     "bushgoblin" : 1,
     "lavapup" : 5/6,
-    "cartcannon" : 3
+    "cartcannon" : 3,
+    "guardienne" : 3
 }
 
 def get_elixir(name):
@@ -106,6 +107,8 @@ class Bot:
             elif n == "mightyminer" and champion.target is not None and champion.target.hit_points <= champion.hit_damage * 5 and vector.distance(champion.target.position, champion.position) <= champion.hit_range + champion.collision_radius + champion.target.collision_radius:
                 champion.activate_ability(arena)    
             elif n == "bossbandit" and champion.ability_count > 0 and champion.target is not None and champion.target.cur_hp > champion.hit_damage * 2.1 and vector.distance(champion.target.position, champion.position) <= champion.hit_range + champion.collision_radius + champion.target.collision_radius:
+                champion.activate_ability(arena)
+            elif n == "littleprince" and (champion.position.y < 1 and (champion.position.x > 3 or champion.position.x < -3)) or (champion.target is not None and ((champion.target.target is champion and champion.target.ground) or champion.cur_hp < 1/2 * champion.hit_points)):
                 champion.activate_ability(arena)
 
     def tick(self, elixir, things = None, pocket = "none"):
@@ -247,7 +250,7 @@ class Bot:
         if goal == "wait":
             if random.random() < 1/300: #about once every 5 seconds
                 for index in self.hand:
-                    if self.cards[index].name == "goblinbarrel" or self.cards[index].name == "goblindrill":
+                    if self.cards[index].name == "goblinbarrel" or self.cards[index].name == "goblindrill" or self.cards[index].name == "miner":
                         pos = None
                         if pocket == "none":
                             pos = vector.Vector((-5.5 if random.random() > 0.5 else 5.5) + random.random() - 0.5, -9.5 + random.random() - 0.5)
@@ -305,9 +308,25 @@ class Bot:
             if i > -1:
                 if card.name == "mortar" or card.name == "xbow":
                     pos = vector.Vector(5.5 if random.random() < 0.5 else -5.5, 2)
+                    cycle(self.hand, self.hand.index(i), self.queue, self.champion_index)
                     return card, pos
                 elif card.type == "building":
                     pos = vector.Vector(random.randint(-3, 3), random.randint(2, 7))
+                    cycle(self.hand, self.hand.index(i), self.queue, self.champion_index)
+                    return card, pos
+                
+                elif card.name == "goblinbarrel" or card.name == "goblindrill" or card.name == "miner":
+                    pos = None
+                    if pocket == "none":
+                        pos = vector.Vector((-5.5 if random.random() > 0.5 else 5.5) + random.random() - 0.5, -9.5 + random.random() - 0.5)
+                    elif pocket == "left":
+                        pos = vector.Vector(5.5 + random.random() - 0.5, -9.5 + random.random() - 0.5)
+                    elif pocket == "right":
+                        pos = vector.Vector(-5.5 + random.random() - 0.5, -9.5 + random.random() - 0.5)
+                    elif pocket == "all":
+                        pos = vector.Vector(random.random() - 0.5, -13 + random.random() - 0.5)
+
+                    cycle(self.hand, self.hand.index(i), self.queue, self.champion_index)
                     return card, pos
 
                 if card.elixir_cost > 7 or card.elixir_cost <= 5:
@@ -351,12 +370,16 @@ class Bot:
             if card.type == "building" and threat.position.y < 6:
                 pos = vector.Vector(0.5 + random.randint(0, 2) if threat.position.x > 0 else -0.5 - random.randint(0, 2), round(threat.position.y + 2) + 0.5)
             else:
-                pos = threat.position.added(vector.Vector(random.randint(-2, 2), random.randint(1, 4)))
-                in_p = (pocket == "all" or (pos.x < 0 and pocket == "left") or (pos.x >= 0 and pocket == "right"))
-                if in_p and pos.y < -5:
-                    pos.y = -5
-                elif not in_p and pos.y < 1:
-                    pos.y = 1
+                pos = None
+                if card.name != "miner":
+                    pos = threat.position.added(vector.Vector(random.randint(-2, 2), random.randint(1, 4)))
+                    in_p = (pocket == "all" or (pos.x < 0 and pocket == "left") or (pos.x >= 0 and pocket == "right"))
+                    if in_p and pos.y < -5:
+                        pos.y = -5
+                    elif not in_p and pos.y < 1:
+                        pos.y = 1
+                else:
+                    pos = threat.position.added(vector.Vector(0, -3))
                 return card, pos
 
             return card, pos
@@ -377,7 +400,7 @@ class Bot:
 
                 base_pos = main.position if main is not None else vector.Vector(random.randint(-9, 8) + 0.5, random.randint(1, 15) + 0.5)
 
-                if card.name == "clone" or card.name == "rage" and main is not None:
+                if card.name == "clone" or card.name == "rage" and isinstance(main, Troop):
                     pos = base_pos.added(vector.Vector(0, 2))
                     return card, pos
                 elif card.name == "goblinbarrel" or card.name == "goblindrill":
@@ -403,14 +426,19 @@ class Bot:
                         pos = vector.Vector(0.5, -15.5)
                     return card, pos
 
-                pos = base_pos.added(vector.Vector(random.randint(-2, 2), random.randint(0, 4)))
-                in_p = (pocket == "all" or (pos.x < 0 and pocket == "left") or (pos.x >= 0 and pocket == "right"))
-                if in_p and pos.y < -5:
-                    pos.y = -5
-                elif not in_p and pos.y < 1:
-                    pos.y = 1
-                if pos.y > 15.5:
-                    pos.y = 15.5
+                pos = None
+                if card.name != "miner":
+                    pos = base_pos.added(vector.Vector(random.randint(-2, 2), random.randint(0, 4)))
+                    in_p = (pocket == "all" or (pos.x < 0 and pocket == "left") or (pos.x >= 0 and pocket == "right"))
+                    if in_p and pos.y < -5:
+                        pos.y = -5
+                    elif not in_p and pos.y < 1:
+                        pos.y = 1
+                    if pos.y > 15.5:
+                        pos.y = 15.5
+                else:
+                    pos = base_pos.added(vector.Vector(0, -3))
+
                 return card, pos
             else:
                 return None

@@ -248,6 +248,14 @@ class Miner(Troop):
             cloned=cloned
         )
         self.target = position
+        if self.target.x > 9:
+            self.target.x = 9
+        if self.target.x < -9:
+            self.target.x = -9
+        if self.target.y > 16:
+            self.target.y = 16
+        if self.target.y < -16:
+            self.target.y = -16
         self.level = level
         self.invulnerable = True
         self.targetable = False

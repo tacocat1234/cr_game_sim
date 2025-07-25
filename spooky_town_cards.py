@@ -410,6 +410,7 @@ class RoyalGhost(Troop):
         self.cross_river = True
         self.jump_speed = 90 * TILES_PER_MIN
         self.invisbility_timer = 0
+        self.targetable = False
 
         self.level = level
 
@@ -552,7 +553,7 @@ class PhoenixDeathAttackEntity(AttackEntity):
             new = not each in self.has_hit
             if (new):
                 if (isinstance(each, Tower)):
-                    each.damage(self.ctd)
+                    each.damage(self.damage)
                 else:
                     each.damage(self.damage)
                 self.apply_effect(each)

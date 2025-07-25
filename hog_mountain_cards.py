@@ -108,7 +108,7 @@ class Zappy(Troop):
             h_p= 250 * pow(1.1, level - 3),         # Hit points (Example value)
             h_d= 55 * pow(1.1, level - 3),          # Hit damage (Example value)
             h_s=2.1,          # Hit speed (Seconds per hit)
-            l_t=1,            # First hit cooldown
+            l_t=1.3,            # First hit cooldown
             h_r=4.5,            # Hit range
             s_r=5,            # Sight Range
             g=True,           # Ground troop

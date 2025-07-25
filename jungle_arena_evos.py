@@ -158,7 +158,7 @@ class EvolutionSkeletonBarrelDeathBarrel(Troop):
         super().__init__(
             s=side,              # Side (True for one player, False for the other)
             h_p=  float('inf'),         # Hit points (Example value)
-            h_d= 256 * pow(1.1, level - 11),          # Hit damage (Example value)
+            h_d= 243 * pow(1.1, level - 11),          # Hit damage (Example value)
             h_s=0,          # Hit speed (Seconds per hit)
             l_t=0,            # First hit cooldown
             h_r=0,            # Hit range
