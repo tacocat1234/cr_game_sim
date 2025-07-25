@@ -87,7 +87,7 @@ buildings = ["goblinhut", "goblincage",
              "furnace", "tesla", "xbow",
              "elixircollector"]
 
-champions = ["archerqueen", "skeletonking", "goldenknight", "mightyminer"]
+champions = ["archerqueen", "skeletonking", "goldenknight", "mightyminer", "bossbandit"]
 
 #total 127
 #print(len(troops) + len(spells) + len(buildings))
@@ -106,6 +106,7 @@ effect_radius = {
     "freeze" : 3,
     "lightning" : 3.5,
     "poison" : 3.5,
+    "goblinhut" : 7,
     "tesla" : 5.5,
     "xbow" : 11.5,
     "electrowizard" : 2.5,
@@ -154,6 +155,8 @@ def get_type(name):
         return "building"
     elif name in champions:
         return "troop"
+    elif name == "oldgoblinhut":
+        return "building"
 
 def card_factory(side, position, name, level):
     if name in troops:
@@ -373,6 +376,8 @@ def champion_factory(side, position, name, level):
         return champion_cards.GoldenKnight(side, position, level)
     elif name == "mightyminer":
         return champion_cards.MightyMiner(side, position, level)
+    elif name == "bossbandit":
+        return champion_cards.BossBandit(side, position, level)
     else:
         raise Exception("Invalid champion name")
 
@@ -683,6 +688,8 @@ def building_factory(side, position, name, level):
         return goblin_stadium_cards.GoblinCage(side, position, level)
     elif name == "goblinhut":
         return goblin_stadium_cards.GoblinHut(side, position, level)
+    elif name == "oldgoblinhut":
+        return goblin_stadium_cards.OldGoblinHut(side, position, level)
     elif name == "tombstone":
         return bone_pit_cards.Tombstone(side, position, level)
     elif name == "cannon":
@@ -721,7 +728,8 @@ elixir_map = {
     "speargoblins" : 2,
     "goblins" : 2,
     "goblincage" : 4,
-    "goblinhut" : 5,
+    "goblinhut" : 4,
+    "oldgoblinhut" : 5,
     "skeletons" : 1,
     "bomber" : 2,
     "tombstone" : 3,
@@ -820,7 +828,8 @@ elixir_map = {
     "skeletonking" : 4,
     "goldenknight" : 4,
     "mightyminer" : 4,
-    "archerqueen" : 5
+    "archerqueen" : 5,
+    "bossbandit" : 6
 }
 
 def filter_cards(card_list, min_elixir, max_elixir, used_cards):

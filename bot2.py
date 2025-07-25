@@ -103,9 +103,10 @@ class Bot:
                 champion.activate_ability(arena)
             elif n == "goldenknight" and champion.cur_hp > 1/4 * champion.hit_points:
                 champion.activate_ability(arena)
-            elif n == "mightyminer" and champion.target is not None and champion.target.hit_points <= champion.hit_damage * 5 and vector.distance(champion.target.position, champion.position) <= champion.hit_range:
+            elif n == "mightyminer" and champion.target is not None and champion.target.hit_points <= champion.hit_damage * 5 and vector.distance(champion.target.position, champion.position) <= champion.hit_range + champion.collision_radius + champion.target.collision_radius:
                 champion.activate_ability(arena)    
-
+            elif n == "bossbandit" and champion.ability_count > 0 and champion.target is not None and champion.target.cur_hp > champion.hit_damage * 2.1 and vector.distance(champion.target.position, champion.position) <= champion.hit_range + champion.collision_radius + champion.target.collision_radius:
+                champion.activate_ability(arena)
 
     def tick(self, elixir, things = None, pocket = "none"):
         s = []
@@ -194,7 +195,8 @@ class Bot:
         main_threat_level = 0
         if things:
             attack_investment = 0
-            defense_investment = 0
+            defense_investment_right = 0
+            defense_investment_left = 0
             for each in things:
                 e = get_elixir(each.__class__.__name__.lower())
                 if not each.side: #bot's
@@ -203,7 +205,10 @@ class Bot:
                         attack_investment += 99
                         main = each
                     if each.position.y > 0: #defending
-                        defense_investment += e
+                        if each.position.x > 0:
+                            defense_investment_right += e
+                        else:
+                            defense_investment_left += e
                     else: #attacking
                         attack_investment += e
                         if e > main_threat_level:
@@ -212,19 +217,29 @@ class Bot:
                 else:
                     if each.position.y > -3 and isinstance(each, XBow) or isinstance(each, Mortar):
                         threat_level = 99
-                        defense_investment -= 99
+                        if each.position.x > 0:
+                            defense_investment_right -= 99
+                        else:
+                            defense_investment_left -= 99
                         threat = each
                     if each.position.y > 0: #attacking
-                        defense_investment -= e
+
                         if each.position.y > 9.5 - each.hit_range:
-                            defense_investment -= e/2 #slightly more importnat if in ranges
+                            e *= 3/2
+                        
+                        if each.position.x > 0:
+                            defense_investment_right -= e
+                        else:
+                            defense_investment_left -= e
+
+                        
                         if e > threat_level:
                             threat_level = e
                             threat = each
                     else: #defending
                         attack_investment -= e
 
-            if defense_investment < -2: #3+ more elixir of attackers than defenders
+            if defense_investment_left < -2 or defense_investment_right < -2: #3+ more elixir of attackers than defenders
                 goal = "defend"
             elif attack_investment > -2: # if they only have 2 or less more elixir of defenders tahn our attackers
                 goal = "attack"
@@ -242,6 +257,9 @@ class Bot:
                             pos = vector.Vector(-5.5 + random.random() - 0.5, -9.5 + random.random() - 0.5)
                         elif pocket == "all":
                             pos = vector.Vector(random.random() - 0.5, -13 + random.random() - 0.5)
+
+                        card = self.cards[index]
+                        cycle(self.hand, self.hand.index(index), self.queue, self.champion_index)
                         return card, pos
 
             if random.random() < 1/1600:
@@ -267,7 +285,7 @@ class Bot:
         elif goal == "place":
             card = None
             i = -1
-            if random.random() > 0.5:
+            if random.random() > 0.7: #30% low elixir, 70% high elixir
                minimum = 99
                for ind in self.hand:
                    c = self.cards[ind]

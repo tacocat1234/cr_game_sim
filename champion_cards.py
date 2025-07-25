@@ -318,7 +318,7 @@ class GoldenKnight(Champion):
                     self.target = tower #ensures only locks when activel attacking tower, so giant at bridge doesnt immediatly lock onto tower and ruin everyones day
                     min_dist = dist
 
-                if self.ability_active and dist < 5.5 + self.collision_radius + tower.collision_radius and tower not in self.dashed:
+                if self.ability_active and dist < min_dist and dist < 5.5 + self.collision_radius + tower.collision_radius and tower not in self.dashed:
                     self.target = tower
                     min_dist = dist
 
@@ -338,16 +338,6 @@ class GoldenKnight(Champion):
     def ability_tick(self, arena):
         if self.target is not None and self.stun_timer <= 0:
             d = vector.distance(self.position, self.target.position)
-            if d < 5.5 + self.target.collision_radius + self.collision_radius:
-                self.update_target(arena)
-                self.dash_center = copy.deepcopy(self.position)
-                self.dashing = True
-                self.invulnerable = True
-                self.collideable = False
-                self.move_speed = 400 * TILES_PER_MIN * (1.35 if self.rage_timer > 0 else 1)
-                self.dash_river = True
-                self.hit_range = 0.2
-
             if self.dashing:
                 if d < self.collision_radius + self.hit_range + self.target.collision_radius: #if hit
                     self.dashed.append(self.target) #register
@@ -371,6 +361,16 @@ class GoldenKnight(Champion):
                     self.invulnerable = False
                     self.dash_river = False
             
+            elif d < 5.5 + self.target.collision_radius + self.collision_radius:
+                    self.update_target(arena)
+                    self.dash_center = copy.deepcopy(self.position)
+                    self.dashing = True
+                    self.invulnerable = True
+                    self.collideable = False
+                    self.move_speed = 400 * TILES_PER_MIN * (1.35 if self.rage_timer > 0 else 1)
+                    self.dash_river = True
+                    self.hit_range = 0.2
+
         if self.dashing and (self.target is None or self.target.cur_hp <= 0):
             self.ability_duration_timer = 0 #done
             self.dashing = False
@@ -558,3 +558,141 @@ class MightyMiner(Champion):
         self.invulnerable = False
         self.collideable = True
         self.target_x = None
+
+class BossBanditAttackEntity(MeleeAttackEntity):
+    HIT_RANGE = 0.8
+    COLLISION_RADIUS = 0.6
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            side=side,
+            damage=damage,
+            position=position,
+            target=target
+            )
+
+class BossBandit(Champion):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 2721 * pow(1.1, level - 11),         # Hit points (Example value)
+            h_d= 268 * pow(1.1, level - 11),          # Hit damage (Example value)
+            h_s=1.2,          # Hit speed (Seconds per hit)
+            l_t=0.8,            # First hit cooldown
+            h_r=0.8,            # Hit range
+            s_r=5.5,            # Sight Range
+            g=True,           # Ground troop
+            t_g_o=True,       # Targets ground-only
+            t_o=False,        # Not tower-only
+            m_s=90*TILES_PER_MIN,          # Movement speed 
+            d_t=1,            # Deploy time
+            m=6,            #mass
+            c_r=0.6,        #collision radius
+            p=position,               # Position (vector.Vector object)
+            ability_cost = 1,
+            ability_cast_time=0.933,
+            ability_duration=1,
+            ability_cooldown=3
+        ) 
+        self.level = level
+        self.ability_count = 2
+        self.dashing = False
+        self.should_dash = False
+        self.dash_center = None
+    
+    def attack(self):
+        if not self.dashing:
+            return BossBanditAttackEntity(self.side, self.hit_damage, self.position, self.target)
+        
+    def activate_ability(self, arena):
+        if self.ability_count > 0:
+            self.ability_count -= 1
+            return super().activate_ability(arena)
+        
+    def update_dash_target(self, arena):
+        self.update_target(arena)
+        if self.target is None and self.stun_timer <= 0:
+            t_t = None
+            m_dist = float('inf')
+            for each in arena.towers:
+                if each.side != self.side:
+                    d = vector.distance(each.position, self.position)
+                    if d < 6 + each.collision_radius + self.collision_radius and d > 3.5 + each.collision_radius + self.collision_radius and d < m_dist:
+                        t_t = each
+                        m_dist = d
+
+            if t_t is not None:
+                self.target = t_t
+        
+    def tick_func(self, arena):
+        if self.ability_count <= 0:
+            self.ability_sprite_path = "sprites/bossbandit/bossbandit_ability_0.png"
+        if self.target is None and self.stun_timer <= 0:
+            t_t = None
+            m_dist = float('inf')
+            for each in arena.towers:
+                if each.side != self.side:
+                    d = vector.distance(each.position, self.position)
+                    if d < 6 + each.collision_radius + self.collision_radius and d > 3.5 + each.collision_radius + self.collision_radius and d < m_dist:
+                        t_t = each
+                        m_dist = d
+
+            if t_t is not None:
+                self.target = t_t
+
+        if (self.target is not None and self.stun_timer <= 0):
+            if self.should_dash:
+                self.update_dash_target(arena)
+                self.should_dash = False
+
+                if self.target is not None:
+                    self.invulnerable = True
+                    self.collideable = False
+                    self.dash_river = True
+                    self.dashing = True
+                else:
+                    self.move_speed = self.normal_move_speed
+                    return
+
+            d = vector.distance(self.position, self.target.position)
+            if not self.dashing:
+                if d < 6 + self.target.collision_radius + self.collision_radius and d > 3.5 + self.target.collision_radius + self.collision_radius:
+                    self.dash_center = copy.deepcopy(self.position)
+                    self.should_dash = True
+                    self.move_speed = 500 * (1.35 if self.rage_timer > 0 else 1) * TILES_PER_MIN                    
+                    self.stun_timer = 0.8 #charge time
+
+            if self.dashing:
+                if d < self.collision_radius + self.hit_range + self.target.collision_radius: #if hit
+                    arena.active_attacks.append(BossBanditAttackEntity(self.side, self.hit_damage * 2, copy.deepcopy(self.position), self.target)) #attack
+                    self.dashing = False
+                    self.collideable = True
+                    self.invulnerable = False
+                    self.dash_river = False
+                    self.move_speed = self.normal_move_speed
+                elif vector.distance(self.position, self.dash_center) > 6.1:
+                    self.dashing = False
+                    self.collideable = True
+                    self.invulnerable = False
+                    self.dash_river = False
+                    self.move_speed = self.normal_move_speed
+            
+        if self.dashing and (self.target is None or self.target.cur_hp <= 0):
+            self.dashing = False
+            self.invulnerable = False
+            self.collideable = True
+            self.dash_river = False
+            self.move_speed = self.normal_move_speed
+
+    def ability(self, arena):
+        self.targetable = False
+        self.invulnerable = True
+        self.stun_timer = 1 #completely disable
+
+    def ability_tick(self, arena):
+        if self.stun_timer <= 1/3:
+            self.position.y += (-1 if self.side else 1) * 1080*TILES_PER_MIN
+
+    def ability_end(self, arena):
+        self.stun_timer = 0
+        self.targetable = True
+        self.invulnerable = False

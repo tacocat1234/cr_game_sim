@@ -902,7 +902,7 @@ while True:
                 hovered = None
                 mouse_x, mouse_y = pygame.mouse.get_pos()
 
-                if mouse_x < WIDTH - 10 and mouse_x > WIDTH - 60 and mouse_y > HEIGHT - 128 - 60 and mouse_y < HEIGHT - 128 - 10:
+                if mouse_x < WIDTH - 10 and mouse_x > WIDTH - 60 and mouse_y > HEIGHT - 128 - 60 and mouse_y < HEIGHT - 128 - 10 and game_arena.p1_champion is not None:
                     game_arena.p1_champion.activate_ability(game_arena)
 
                 # Check if the click is in the bottom 128 pixels
@@ -1046,5 +1046,6 @@ while True:
         break
 
     game_arena = arena.Arena()
+    p1_c_index = None
 
 pygame.quit()

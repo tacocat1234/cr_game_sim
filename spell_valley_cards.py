@@ -389,7 +389,7 @@ class InfernoTower(Building):
             self.stage = 1
             self.stage_duration = 2
             self.attack_cooldown = self.load_time - self.hit_speed
-        if self.target.invulnerable:
+        if self.target is not None and self.target.invulnerable:
             self.stage = 1
             self.stage_duration = 2
             self.attack_cooldown = self.load_time - self.hit_speed

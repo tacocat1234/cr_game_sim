@@ -5,6 +5,7 @@ from abstract_classes import TILES_PER_MIN
 from abstract_classes import TICK_TIME
 import vector
 import copy
+import random
 
 class SpearGoblinAttackEntity(AttackEntity):
     def __init__(self, side, damage, position, target):
@@ -210,7 +211,7 @@ class GoblinCage(Building):
         )
         self.level = level
 
-class GoblinHut(Building):
+class OldGoblinHut(Building):
     SPAWN_INTERVAL = 0.5
     def __init__(self, side, position, level):
         super().__init__(
@@ -242,11 +243,11 @@ class GoblinHut(Building):
                 self.next_spawn -= TICK_TIME
         
     def tick(self, arena):
-        if self.preplace:
+        if self.preplace or self.deploy_time > 0:
             return
         if self.stun_timer <= 0:
-            if self.attack_cooldown <= 0: #attack code
-                front = vector.Vector(0, 1.5) if self.side else vector.Vector(0, -1.5)
+            if self.attack_cooldown <= 0: #if wave time
+                front = vector.Vector(random.random()/4 - 0.125, 1.5) if self.side else vector.Vector(random.random()/4 - 0.125, -1.5)
                 newGob = SpearGoblin(self.side, self.position.added(front), self.level)
                 newGob.deploy_time = 0
                 arena.troops.append(newGob)
@@ -255,7 +256,7 @@ class GoblinHut(Building):
                 self.attack_cooldown = self.hit_speed
         
         if self.remaining_spawn_count > 0 and self.next_spawn <= 0: #remaining 2 gobs
-            front = vector.Vector(0, 1.5) if self.side else vector.Vector(0, -1.5)
+            front = vector.Vector(random.random()/4 - 0.125, 1.5) if self.side else vector.Vector(random.random()/4 - 0.125, -1.5)
             newGob = SpearGoblin(self.side, self.position.added(front), self.level)
             newGob.deploy_time = 0
             arena.troops.append(newGob)
@@ -265,3 +266,41 @@ class GoblinHut(Building):
             elif not self.next_spawn is None:
                 self.next_spawn = None #no more
                 self.remaining_spawn_count = 0 #no more
+
+class GoblinHut(Building):
+    SPAWN_INTERVAL = 0.5
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,
+            h_p=617 * pow(1.1, level - 3),
+            h_d = 0,
+            h_s = 1.8,
+            l_t = 0,
+            h_r = 7,
+            s_r = 7,
+            g = True,
+            t_g_o = False,
+            t_o = False,
+            l=30,
+            d_t=1,
+            c_r=1,
+            d_s_c=1,
+            d_s=SpearGoblin,
+            p=position
+        )
+        self.level = level
+    
+    def tick(self, arena):
+        if self.preplace or self.deploy_time > 0:
+            return
+        
+        if self.target is None or self.target.cur_hp <= 0 or not self.target.targetable:
+            self.update_target(arena)
+        
+        if self.stun_timer <= 0 and self.target is not None and self.attack_cooldown <= 0:
+            print("t")
+            front = vector.Vector(random.random()/4 - 0.125, 1.5) if self.side else vector.Vector(random.random()/4 - 0.125, -1.5)
+            newGob = SpearGoblin(self.side, self.position.added(front), self.level)
+            newGob.deploy_time = 0
+            arena.troops.append(newGob)
+            self.attack_cooldown = self.hit_speed

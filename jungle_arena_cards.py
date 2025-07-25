@@ -13,6 +13,7 @@ from goblin_stadium_cards import SpearGoblin
 import vector
 import copy
 import math
+import random
 
 class BeserkerAttackEntity(MeleeAttackEntity):
     HIT_RANGE = 0.8
@@ -231,11 +232,11 @@ class BarbarianHut(Building):
                 self.next_spawn -= TICK_TIME
         
     def tick(self, arena):
-        if self.preplace:
+        if self.preplace or self.deploy_time > 0:
             return
         if self.stun_timer <= 0:
             if self.attack_cooldown <= 0: #attack code
-                front = vector.Vector(0, 1.5) if self.side else vector.Vector(0, -1.5)
+                front = vector.Vector(random.random()/4 - 0.125, 1.5) if self.side else vector.Vector(random.random()/4 - 0.125, -1.5)
                 newBarb = Barbarian(self.side, self.position.added(front), self.level)
                 newBarb.deploy_time = 0
                 arena.troops.append(newBarb)
@@ -244,7 +245,7 @@ class BarbarianHut(Building):
                 self.attack_cooldown = self.hit_speed
         
         if self.remaining_spawn_count > 0 and self.next_spawn <= 0: #remaining 2 gobs
-            front = vector.Vector(0, 1.5) if self.side else vector.Vector(0, -1.5)
+            front = vector.Vector(random.random()/4 - 0.125, 1.5) if self.side else vector.Vector(random.random()/4 - 0.125, -1.5)
             newBarb = Barbarian(self.side, self.position.added(front), self.level)
             newBarb.deploy_time = 0
             arena.troops.append(newBarb)

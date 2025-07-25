@@ -45,7 +45,7 @@ void, clone, tornado
 ## Buildings
 Implemented buildings include:
 
-goblinhut, goblincage, 
+goblinhut, goblincage, #special note, old goblin hut with fixed spawning is still accessible named as "oldgoblinhut" but will never show up otherwise
 tombstone, 
 cannon, 
 bombtower, infernotower, 
@@ -61,6 +61,6 @@ mirror exists too.
 kingtower, princesstower, cannoneer, daggerduchess, royalchef
 
 ## Champions
-archerqueen, skeletonking, goldenknight
+archerqueen, skeletonking, goldenknight, mightyminer, bossbandit
 special note:
 bot can use champions, and randomizing deck will only randomzie a champion if you dont fill in any slots. only one per deck or something might break, but that isnt a hard limit so whatever.
