@@ -99,7 +99,7 @@ class Log(Troop):
     def rage(self):
         pass
 
-    def slow(self):
+    def slow(self, amount, source):
         pass
 
     def attack(self):

@@ -16,7 +16,7 @@ counters = {
 }
 
 class Bot:
-    def __init__(self, cards):
+    def __init__(self, cards, is_true=False):
         self.cards = cards
         self.internal_timer = random.triangular(0, 16.8, 8.4)
 
@@ -27,12 +27,14 @@ class Bot:
 
         self.buffer_check = 2
         self.buffer = []
+        
+        self.side = is_true
 
     def tick(self, elixir, things = None):
         if not things is None:
             danger_level = 0
             for each in things:
-                    if each.side:
+                    if each.side != self.side:
                         if (isinstance(each, XBow) or isinstance(each, Mortar)) and each.position.y >= -3:
                             danger_level += 99 #immediate threat
                         if each.position.y > 0:
@@ -77,13 +79,13 @@ class Bot:
         else:
             self.internal_timer -= TICK_TIME
 
-    def random_pos(name, things = None, pocket = "None"):
+    def random_pos(name, things = None, pocket = "None", side = False):
         isSpell = get_type(name) == "spell" or name == "barbarianbarrel" or name == "log" or name == "miner" or name == "goblindrill"
         enemy = []
         friendly = []
         if not things is None:
             for each in things:
-                    if each.side:
+                    if each.side != side:
                         enemy.append(each)
                     else:
                         friendly.append(each)
@@ -95,7 +97,7 @@ class Bot:
         
         if get_type(name) == "building":
             if name not in ["goblinhut", "barbarianhut", "furnace", "xbow", "mortar", "goblincage", "tombstone", "elixircollector"]: #anywhere builidngs
-                return vector.Vector(random.randint(-3, 3), random.randint(2, 7))
+                return vector.Vector(random.randint(-3, 3), random.randint(-7, -2) if side else random.randint(2, 7))
 
         for each in enemy:
             if (isinstance(each, XBow) or isinstance(each, Mortar)) and each.position.y >= -3:
@@ -132,7 +134,7 @@ class Bot:
             if name == "rage":
                 if not friendly:
                     return False
-                return random.choice(friendly).position.added(vector.Vector(0, -2.75))
+                return random.choice(friendly).position.added(vector.Vector(0, 2.75 if side else -2.75))
             elif name == "clone":
                 if not friendly:
                     return False
@@ -146,13 +148,13 @@ class Bot:
                     if not enemy:
                         return False
                     r = random.choice(enemy)
-                pos = r.position.added(vector.Vector(-5, 1)) if r.position.x > 0 else r.position.added(vector.Vector(5, 1))
+                pos = r.position.added(vector.Vector(-5, -1 if side else 1)) if r.position.x > 0 else r.position.added(vector.Vector(5, -1 if side else 1))
                 if r.position.x < 5 and r.position.x > -5:
                     pos.x = 0
                 return pos
-            if danger_level >= 2:
+            if danger_level >= 2 and name != "log" and name !="barbarianbarrel" and name != "royaldelivery":
                 min = most_dangerous
-                return min.position.added(vector.Vector(0, 1.5))
+                return min.position.added(vector.Vector(0, -1.5 if side else 1.5))
             if len(enemy) > 0:
                 r = random.choice(enemy)
                 while name == "earthquake" or name == "log" or name == "barbarianbarrel" and isinstance(r, Troop) and r.ground == False:
@@ -165,52 +167,73 @@ class Bot:
                     return copy.deepcopy(r.position)
                 if name == "goblinbarrel" or name == "goblindrill":
                     if random.random() > 0.5:
-                        return vector.Vector(-6 + random.random(), -10 + random.random())
+                        return vector.Vector(-6 + random.random(), 9 + random.random() if side else -10 + random.random())
                     else:
-                        return vector.Vector(6 + random.random(), -10 + random.random())
+                        return vector.Vector(6 + random.random(), 9 + random.random() if side else -10 + random.random())
                 if name == "graveyard":
                     if random.random() > 0.5:
-                        return vector.Vector(-9 + random.random(), -10 + random.random())
+                        return vector.Vector(-9 + random.random(), 9 + random.random() if side else -10 + random.random())
                     else:
-                        return vector.Vector(9 + random.random(), -10 + random.random())
+                        return vector.Vector(9 + random.random(), 9 + random.random() if side else -10 + random.random())
                 if r.cur_hp < 900: #cannot use rocket properly
                     if name == "barbarianbarrel":
                         pos = copy.deepcopy(r.position)
-                        if pos.y < -4.7:
-                            return False
-                        elif pos.y < 0:
-                            pos.y = 0
-                        return pos
+                        if side:
+                            if pos.y > 4.7:
+                                return False
+                            elif pos.y > 0:
+                                pos.y = 0
+                            return pos
+                        else:
+                            if pos.y < -4.7:
+                                return False
+                            elif pos.y < 0:
+                                pos.y = 0
+                            return pos
                     elif name == "log":
                         pos = copy.deepcopy(r.position)
-                        if pos.y < -10.1:
-                            return False
-                        elif pos.y < 0:
-                            pos.y = 0
-                        return pos
+                        if side:
+                            if pos.y > 10.1:
+                                return False
+                            elif pos.y > 0:
+                                pos.y = 0
+                            return pos
+                        else:
+                            if pos.y < -10.1:
+                                return False
+                            elif pos.y < 0:
+                                pos.y = 0
+                            return pos
                     elif name == "royaldelivery":
-                        pos = r.position.added(vector.Vector(0, 2.0))
-                        if pos.y > 0:
+                        pos = r.position.added(vector.Vector(0, -2 if side else 2.0))
+                        if (side and pos.y < 0) or (not side and pos.y > 0):
                             return pos
                         else:
                             return False
-                    return r.position.added(vector.Vector(0, 1.5))
+                    return r.position.added(vector.Vector(0, -1.5 if side else 1.5))
                     
             return False
         else:
             if offensive_count > len(enemy) - offensive_count: # if more offensive opps than defensive
                 if danger_level >= 2:
                     min = most_dangerous
-                    m = min.position.added(vector.Vector(random.randint(-2, 2), random.randint(1, 3)))
+                    m = min.position.added(vector.Vector(random.randint(-2, 2), random.randint(-3, -1) if side else random.randint(1, 3)))
                     in_p = (pocket == "all" or (m.x < 0 and pocket == "left") or (m.x >= 0 and pocket == "right"))
-                    if in_p and m.y < -5:
-                        m.y = -5
-                    elif not in_p and m.y < 1:
-                        m.y = 1
+
+                    if side:
+                        if in_p and m.y > 5:
+                            m.y = 5
+                        elif not in_p and m.y > -1:
+                            m.y = -1
+                    else:
+                        if in_p and m.y > -5:
+                            m.y = -5
+                        elif not in_p and m.y < 1:
+                            m.y = 1
                     return m
                 if random.randint(0, 2) >= 1 and len(friendly) > 0:
                     friend_pos = random.choice(friendly).position
-                    friend_pos = friend_pos.added(vector.Vector(random.randint(-2, 2), random.randint(1, 3)))
+                    friend_pos = friend_pos.added(vector.Vector(random.randint(-2, 2), random.randint(-3, -1) if side else random.randint(1, 3)))
 
                     if friend_pos.x > 9:
                         friend_pos.x = 9
@@ -219,26 +242,36 @@ class Bot:
                     
                     
                     if friend_pos.y >= 1 or (friend_pos.y > -5 and (pocket == "all" or (friend_pos.x < 0 and pocket == "left") or (friend_pos.x >= 0 and pocket == "right"))):
-                        if friend_pos.y > 16:
-                            friend_pos.y = 16
+                        if side:
+                            if friend_pos.y < -16:
+                                friend_pos.y = -16
+                        else:
+                            if friend_pos.y > 16:
+                                friend_pos.y = 16
 
                         return friend_pos # if legal friend pos
                 
                 weight = -4.5 if left_count > len(enemy) - left_count else 4.5 #towards left if more troops on left else right
-                return vector.Vector(round(random.triangular(-9, 9, weight)), random.randint(1, 16))
+                return vector.Vector(round(random.triangular(-9, 9, weight)), random.randint(-16, 1) if side else random.randint(1, 16))
             else: # if more defensive opps than offensive, or equal
                 if danger_level >= 4:
                     min = most_dangerous
-                    m = min.position.added(vector.Vector(random.randint(-2, 2), random.randint(1, 3)))
+                    m = min.position.added(vector.Vector(random.randint(-2, 2), random.randint(-3, -1) if side else random.randint(1, 3)))
                     in_p = (pocket == "all" or (m.x < 0 and pocket == "left") or (m.x >= 0 and pocket == "right"))
-                    if in_p and m.y < -5:
-                        m.y = -5
-                    elif not in_p and m.y < 1:
-                        m.y = 1
+                    if side:
+                        if in_p and m.y > 5:
+                            m.y = 5
+                        elif not in_p and m.y > -1:
+                            m.y = -1
+                    else:
+                        if in_p and m.y > -5:
+                            m.y = -5
+                        elif not in_p and m.y < 1:
+                            m.y = 1
                     return m
                 if len(friendly) > 0 and random.random() < 0.8:
                     friend_pos = random.choice(friendly).position
-                    friend_pos = friend_pos.added(vector.Vector(random.randint(-1, 1), random.randint(0, 4)))
+                    friend_pos = friend_pos.added(vector.Vector(random.randint(-1, 1), random.randint(-4, 0) if side else random.randint(0, 4)))
 
                     if friend_pos.x > 9:
                         friend_pos.x = 9
@@ -246,32 +279,36 @@ class Bot:
                         friend_pos.x = -9
                     
                     
-                    
-                    if (friend_pos.y < -5 and (pocket == "all" or (friend_pos.x < 0 and pocket == "left") or (friend_pos.x >= 0 and pocket == "right"))):
-                        friend_pos.y = -5 #if below pocket but in right pocket zone x, set pos y to be in pocket
-                    elif friend_pos.y < 1:
-                        friend_pos.y = 1 #not ahead of pockt, then set to river
-                    if friend_pos.y > 16:
-                        friend_pos.y = 16
+                    in_p = (pocket == "all" or (friend_pos.x < 0 and pocket == "left") or (friend_pos.x >= 0 and pocket == "right"))
+                    if side:
+                        if in_p and friend_pos.y > 5:
+                            friend_pos.y = 5
+                        elif not in_p and friend_pos.y > -1:
+                            friend_pos.y = -1
+                    else:
+                        if in_p and friend_pos.y > -5:
+                            friend_pos.y = -5
+                        elif not in_p and friend_pos.y < 1:
+                            friend_pos.y = 1
 
                     return friend_pos
                 #if illegal friend pos for any reason
                 weight = -4.5 if left_count < len(enemy) - left_count else 4.5 #towards left if more troops on right else left
 
                 if pocket == "all":
-                    return vector.Vector(round(random.triangular(-9, 9, weight)), random.randint(-5, 16))
+                    return vector.Vector(round(random.triangular(-9, 9, weight)), random.randint(-16, 5) if side else random.randint(-5, 16))
                 elif pocket == "left":
-                    vec = vector.Vector(round(random.triangular(-9, 9, weight)), random.randint(-5, 16))
+                    vec = vector.Vector(round(random.triangular(-9, 9, weight)), random.randint(-16, 5) if side else random.randint(-5, 16))
                     if vec.y < 1 and vec.x > 0:
                         vec.y = 1
                     return vec
                 elif pocket == "right":
-                    vec = vector.Vector(round(random.triangular(-9, 9, weight)), random.randint(-5, 16))
+                    vec = vector.Vector(round(random.triangular(-9, 9, weight)), random.randint(-16, 5) if side else random.randint(-5, 16))
                     if vec.y < 1 and vec.x < 0:
                         vec.y = 1
                     return vec
                 else:
-                    return vector.Vector(round(random.triangular(-9, 9, weight)), random.randint(1, 16))
+                    return vector.Vector(round(random.triangular(-9, 9, weight)), random.randint(-16, 5) if side else random.randint(1, 16))
 
 
     

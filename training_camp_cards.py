@@ -199,6 +199,7 @@ class MinionAttackEntity(AttackEntity):
             )
         self.target = target
         self.should_delete = False
+        self.reflectable = True
     
     def detect_hits(self, arena):
         
@@ -258,6 +259,7 @@ class ArcherAttackEntity(AttackEntity):
         )
         self.target = target
         self.should_delete = False
+        self.reflectable = True
 
     def detect_hits(self, arena):
         if (vector.distance(self.target.position, self.position) < self.target.collision_radius):
@@ -324,6 +326,7 @@ class MusketeerAttackEntity(AttackEntity):
         )
         self.target = target
         self.should_delete = False
+        self.reflectable = True
 
     def detect_hits(self, arena):
         if (vector.distance(self.target.position, self.position) < self.target.collision_radius):

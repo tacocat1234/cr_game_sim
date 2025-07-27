@@ -76,7 +76,7 @@ class Champion(Troop):
         pass
 
     def activate_ability(self, arena):
-        if self.ability_cooldown_timer > 0:
+        if self.ability_cooldown_timer > 0 or self.stun_timer > 0:
             return
         
         works = False
@@ -432,7 +432,7 @@ class MightyMinerAbilityBombAttackEntity(AttackEntity):
                     vec.normalize()
                     vec.scale(1.8)
                     each.kb(vec)
-                    self.has_hit.append(each)
+                self.has_hit.append(each)
 
 
 class MightyMinerAbilityBomb(Troop):
@@ -777,8 +777,9 @@ class BossBandit(Champion):
         
     def activate_ability(self, arena):
         if self.ability_count > 0:
-            self.ability_count -= 1
-            return super().activate_ability(arena)
+            super().activate_ability(arena)
+            if self.ability_active:
+                self.ability_count -= 1
         
     def update_dash_target(self, arena):
         self.update_target(arena)

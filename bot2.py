@@ -4,12 +4,183 @@ import math
 import statistics
 import vector
 from abstract_classes import TICK_TIME
-from abstract_classes import Troop
+from abstract_classes import Troop, Tower
 from card_factory import elixir_map, get_radius
 from card_factory import champions
 from builders_workshop_cards import Mortar
 from hog_mountain_cards import XBow
 from card_factory import can_defend
+
+'''
+Improvements:
+sample by area rather than by expensive troop when defending
+fix overcommitment of elixir on nothingburger pushes
+
+types:
+swarm
+lowattackspeed (minipekka, pekka, only non splash)
+highattackspeed 
+lowdps
+highdps
+tank
+minitank
+splash
+control (stun/slow/freeze)
+charge (inferno, prince, ramrider, things that get reset by control)
+building
+towertargeting
+kite
+
+subcat:
+air
+antiair (ground, hits air)
+ground
+
+traits:
+ranged
+melee
+'''
+
+#type : {counters/isnotcountered by, iscountered by}
+counter_type_chart = { #defensively only
+    "swarm": {"lowattackspeed": 2, "tank": 2, "minitank": 2, "control": 1.5, "splash": 0.25},
+    "lowattackspeed": {"swarm": 0.25, "control": 0.5, "kite" : 0.5},
+    "highattackspeed": {"swarm": 1.5, "lowattackspeed": 2, "lowdps": 2, "charge": 1.5, "tank": 0.5},
+    "lowdps": {"swarm": 0.5, "tank": 0.5, "highdps": 0.5},
+    "highdps": {"tank": 2, "minitank": 2, "building": 2, "charge": 2, "swarm": 0.5},
+    "tank": {"building": 1.5, "towertargeting": 1.5, "highdps": 0.5, "swarm": 0.5, "kite" : 0.5, "control" : 2},
+    "minitank": {"charge": 1.5, "towertargeting": 1.5, "highdps": 0.5, "swarm" : 0.5, "kite" : 0.5},
+    "splash": {"swarm": 4, "minitank" : 0.5, "tank": 0.5},
+    "control": {"charge": 2, "tank" : 2, "lowattackspeed": 2, "swarm": 0.5, "building": 0.5},
+    "charge": {"lowdps": 2, "building": 1.5, "control": 0.5, "minitank": 0.5, "kite" : 0.5},
+    "building": {"towertargeting": 2, "charge": 1.5, "highdps": 0.5, "tank": 0.5},
+    "towertargeting": {"kite" : 999, "building": 1.5, "swarm": 0.5, "highdps" : 0, "minitank": 0, "tank" : 0, "charge" : 0},
+    "kite" : {"lowattackspeed" : 2, "charge" : 2, "swarm" : 0.5, "building" : 0.5, "highdps" : 0.5}
+}
+
+troop_types = {"knight" : ["minitank"], 
+    "minipekka" : ["highdps", "minitank", "lowattackspeed"], 
+    "giant" : ["tank", "towertargeting", "kite"], 
+    "minions" : ["swarm", "highdps"], 
+    "archers" : ["swarm"], 
+    "musketeer" : ["highdps"], 
+    "speargoblins" : ["swarm", "lowdps"], 
+    "goblins" : ["swarm", "highdps"], 
+    "skeletons" : ["swarm", "lowdps"], 
+    "bomber" : ["splash", "lowdps"], 
+    "valkyrie" : ["splash", "minitank"],
+    "barbarians" : ["swarm", "highdps"], 
+    "megaminion" : ["minitank", "highdps"], 
+    "battleram" : ["charge", "minitank", "towertargeting", "kite"],
+    "firespirit" : ["splash", "lowdps"], 
+    "electrospirit" : ["splash", "control", "lowdps"], 
+    "skeletondragons" : ["splash", "lowdps"], 
+    "wizard" : ["splash"],
+    "bats" : ["swarm", "highdps"], 
+    "hogrider" : ["towertargeting", "minitank"], 
+    "flyingmachine" : ["highdps"],
+    "skeletonarmy" : ["swarm", "highdps"], 
+    "guards" : ["swarm"], 
+    "babydragon" : ["splash"], 
+    "witch" : ["swarm", "splash"], 
+    "pekka" : ["highdps", "lowattackspeed", "tank"],
+    "darkprince" : ["charge", "splash", "minitank"], 
+    "royalhogs" : ["swarm", "towertargeting"], 
+    "balloon" : ["towertargeting", "tank", "highdps"], 
+    "prince" : ["lowattackspeed", "minitank", "highdps", "charge"], 
+    "royalgiant" : ["towertargeting", "tank"], 
+    "royalrecruits" : ["swarm", "minitank"], 
+    "threemusketeers" : ["highdps"],
+    "icespirit" : ["splash", "control", "lowdps"], 
+    "icegolem" : ["minitank", "kite", "towertargeting", "lowdps"], 
+    "battlehealer" : ["minitank"], 
+    "giantskeleton" : ["tank"],
+    "beserker" : ["highattackspeed"], 
+    "goblingang" : ["swarm", "highdps", "highattackspeed"], 
+    "dartgoblin" : ["highattackspeed"], 
+    "skeletonbarrel" : ["swarm", "towertargeting", "highdps"], 
+    "goblingiant" : ["towertargeting", "tank"],
+    "zappies" : ["control", "swarm", "lowdps"], 
+    "hunter" : ["highdps"], 
+    "minionhorde" : ["swarm"], 
+    "elitebarbarians" : ["minitank", "highdps"], 
+    "golem" : ["tank", "towertargeting"],
+    "miner" : ["minitank"], 
+    "princess" : ["splash", "lowattackspeed"], 
+    "electrowizard" : ["control", "lowdps"], 
+    "infernodragon" : ["charge", "highdps", "lowattackspeed"], 
+    "ramrider" : ["charge", "towertargeting", "minitank"], 
+    "sparky" : ["lowattackspeed", "splash", "highdps"], 
+    "megaknight" : ["lowattackspeed", "splash", "tank"],
+    "wallbreakers" : ["towertargeting", "kite"], 
+    "icewizard" : ["control", "lowdps"], 
+    "royalghost" : ["splash"], 
+    "firecracker" : ["splash"], 
+    "phoenix" : ["highdps", "minitank"], 
+    "electrodragon" : ["splash", "control", "lowdps"],
+    "healspirit" : ["splash", "lowdps"], 
+    "suspiciousbush" : ["towertargeting"], 
+    "bandit" : ["minitank", "charge"], 
+    "magicarcher" : ["splash", "lowdps"], 
+    "rascals" : ["tank", "swarm", "highdps"], 
+    "bowler" : ["tank", "splash", "lowdps"], 
+    "electrogiant" : ["tank", "towertargeting", "splash"], 
+    "lavahound" : ["tank", "towertargeting"],
+    "elixirgolem" : ["tank", "towertargeting"], 
+    "lumberjack" : ["highattackspeed", "minitank"], 
+    "nightwitch" : ["swarm", "minitank"], 
+    "executioner" : ["splash"],
+    "fisherman" : ["minitank", "control"], 
+    "motherwitch" : ["splash"], 
+    "cannoncart" : ["highdps"],
+    "speargoblin" : ["swarm", "lowdps"],
+    "goblin" : ["swarm"],
+    "rascalboy" : ["tank"],
+    "rascalgirl" : ["lowdps"],
+    "skeleton" : ["swarm"],
+    "golemite" : ["minitank", "towertargeting"],
+    "elixirgolemite" : ["minitank", "towertargeting"],
+    "elixirblob" : ["minitank", "towertargeting"],
+    "zappy" : ["control", "lowdps"],
+    "cursedhog" : ["swarm"],
+    "archer" : ["kite"], #not acutally but matches typewise
+    "goblinbrawler" : ["minitank"],
+    "bat" : ["swarm"],
+    "barbarian" : ["swarm"],
+    "skeletondragon" : ["splash", "lowdps"],
+    "guard" : ["swarm"],
+    "royalhog" : ["swarm", "minitank"],
+    "royalrecruit" : ["minitank"],
+    "elitebarbarian" : ["minitank", "highdps"],
+    "wallbreaker" : ["towertargeting", "kite"],
+    "rebornphoenix" : ["minitank"],
+    "bushgoblin" : ["highdps", "towertargeting"],
+    "lavapup" : ["swarm", "lowdps"],
+    "cartcannon" : ["highdps"],
+    "guardienne" : ["minitank"],
+    "skeletonbarreldeathbarrel" : ["swarm", "splash"]
+    }
+
+def calculate_effectiveness(offense, defense):
+    if offense not in troop_types:
+        return 1
+    else:
+        weak = {}
+        for t_type in troop_types[offense]:
+            for d_type, effectiveness in counter_type_chart[t_type].items():
+                if d_type in weak:
+                    weak[d_type] *= effectiveness
+                else:
+                    weak[d_type] = effectiveness
+        out = 1
+        for t, eff in weak.items():
+            if t in troop_types.get(defense, []):
+                out *= eff
+
+        return out
+
+
+
 
 single_elixir_map = {
     "speargoblin" : 2/3,
@@ -36,14 +207,20 @@ single_elixir_map = {
     "bushgoblin" : 1,
     "lavapup" : 5/6,
     "cartcannon" : 3,
-    "guardienne" : 3
+    "guardienne" : 3,
+    "skeletonbarreldeathbarrel" : 3
 }
+
+def can_attack(name):
+    return not (name in ["icegolem", "icewizard", "guards", "electrowizard"])
 
 def get_elixir(name):
     mod = 1
     if name.startswith("evolution"):
         name = name[9:]
         mod = 4/3
+    if name == "elixirgolem":
+        mod = 2
     if name in elixir_map:
         return elixir_map[name] * mod
     elif name in single_elixir_map:
@@ -87,6 +264,7 @@ class Bot:
 
         self.hand = [0, 1, 2, 3]
         self.queue = [4, 5, 6, 7]
+        self.goal = "wait"
 
         self.champion_index = None
         i = 0
@@ -190,7 +368,7 @@ class Bot:
                 cycle(self.hand, self.hand.index(ind), self.queue, self.champion_index)
                 return card, pos
 
-        goal = "wait" if elixir < 8 else "place"
+        goal = "wait" if elixir < 7 else "place"
         threat = None
         threat_level = 0
 
@@ -245,7 +423,17 @@ class Bot:
             if defense_investment_left < -2 or defense_investment_right < -2: #3+ more elixir of attackers than defenders
                 goal = "defend"
             elif attack_investment > -2: # if they only have 2 or less more elixir of defenders tahn our attackers
-                goal = "attack"
+                if attack_investment < 5: #push isnt strong enough
+                    counter = 0
+                    for each in things:
+                        if each.side and (main is None or ((each.position.x < 0 and main.position.x > 0) or (each.position.x > 0 and main.position.x < 0))):
+                            counter += get_elixir(each.__class__.__name__.lower())
+                    if counter <= 5:
+                        goal = "attack"
+                else: #push is strong enough, dont worry about defense
+                    goal = "attack"
+
+        self.goal = goal
 
         if goal == "wait":
             if random.random() < 1/300: #about once every 5 seconds
@@ -270,7 +458,7 @@ class Bot:
                 l = [0, 1, 2, 3]
                 i = random.choice(l)
                 card = self.cards[self.hand[i]]
-                while  card.elixir_cost > elixir or n == "log" or n == "barbarianbarrel" or card.type == "spell" or (card.type == "building" and (card.name != "mortar" and card.name != "xbow" and card.name != "goblindrill")) and l:
+                while  card.elixir_cost > elixir or card.name == "log" or card.name == "barbarianbarrel" or card.type == "spell" or (card.type == "building" and (card.name != "mortar" and card.name != "xbow" and card.name != "goblindrill")) and l:
                     l.remove(i)
                     if not l: #if all spells or builidngs
                         card = None
@@ -364,12 +552,32 @@ class Bot:
                 i = random.choice(l)
                 card = self.cards[self.hand[i]]
 
-            cycle(self.hand, i, self.queue, self.champion_index)
+            
 
             pos = None
-            if card.type == "building" and threat.position.y < 6:
-                pos = vector.Vector(0.5 + random.randint(0, 2) if threat.position.x > 0 else -0.5 - random.randint(0, 2), round(threat.position.y + 2) + 0.5)
+            if card.type == "building":
+                cycle(self.hand, i, self.queue, self.champion_index)
+                if threat.position.y < 5:
+                    pos = vector.Vector(0.5 + random.randint(0, 1) if threat.position.x > 0 else -0.5 - random.randint(0, 1), round(threat.position.y + 3) + 0.5)
+                elif threat.position.y < 9:
+                    pos = vector.Vector(1.5 + random.randint(0, 2) if threat.position.x > 0 else -1.5 - random.randint(0, 2), round(threat.position.y + 2) + 0.5)
+                else:
+                    pos = threat.position.added(vector.Vector(random.randint(-2, 2), random.randint(1, 3)))
+            elif card.name == "icegolem" or card.name == "wallbreakers":
+                if isinstance(threat.target, Tower):
+                    return None
+                if threat.position.y < 5 and (threat.position.x < 5 and threat.position.x > -5):
+                    cycle(self.hand, i, self.queue, self.champion_index)
+                    pos = vector.Vector(-0.5 if threat.position.x > 0 else 0.5, round(threat.position.y + 1) + 0.5) #kite
+                elif threat.position.y < 8:
+                    cycle(self.hand, i, self.queue, self.champion_index)
+                    pos = vector.Vector(threat.position.x, threat.position.y - 2)
+                else:
+                    return None
+            elif card.name == "suspiciousbush":
+                return None
             else:
+                cycle(self.hand, i, self.queue, self.champion_index)
                 pos = None
                 if card.name != "miner":
                     pos = threat.position.added(vector.Vector(random.randint(-2, 2), random.randint(1, 4)))
@@ -387,7 +595,7 @@ class Bot:
             l = [0, 1, 2, 3]
             i = random.choice(l)
             card = self.cards[self.hand[i]]
-            while card.elixir_cost > elixir or n == "log" or n == "barbarianbarrel" or (card.type == "spell" and card.name != "clone" and card.name != "rage" and card.name != "graveyard" and card.name != "goblinbarrel") or (card.type == "building" and card.name != "goblindrill") and l:
+            while card.elixir_cost > elixir or (not can_attack(card.name)) or card.name == "log" or card.name == "barbarianbarrel" or (card.type == "spell" and card.name != "clone" and card.name != "rage" and card.name != "graveyard" and card.name != "goblinbarrel") or (card.type == "building" and card.name != "goblindrill") and l:
                 l.remove(i)
                 if not l: #if all spells or builidngs or too expesnive
                     card = None
@@ -396,14 +604,16 @@ class Bot:
                 card = self.cards[self.hand[i]]
 
             if card is not None:
-                cycle(self.hand, i, self.queue, self.champion_index)
+                pos = None
 
                 base_pos = main.position if main is not None else vector.Vector(random.randint(-9, 8) + 0.5, random.randint(1, 15) + 0.5)
 
                 if card.name == "clone" or card.name == "rage" and isinstance(main, Troop):
+                    cycle(self.hand, i, self.queue, self.champion_index)
                     pos = base_pos.added(vector.Vector(0, 2))
                     return card, pos
                 elif card.name == "goblinbarrel" or card.name == "goblindrill":
+                    cycle(self.hand, i, self.queue, self.champion_index)
                     pos = None
                     if pocket == "none":
                         pos = vector.Vector((-5.5 if random.random() > 0.5 else 5.5) + random.random() - 0.5, -9.5 + random.random() - 0.5)
@@ -416,18 +626,33 @@ class Bot:
                     return card, pos
                 elif card.name == "graveyard":
                     pos = None
-                    if pocket == "none":
-                        pos = vector.Vector(-8.5 if random.random() > 0.5 else 8.5, -9.5)
-                    elif pocket == "left":
-                        pos = vector.Vector(8.5, -9.5)
-                    elif pocket == "right":
-                        pos = vector.Vector(-8.5, -9.5)
-                    elif pocket == "all":
-                        pos = vector.Vector(0.5, -15.5)
+                    if main is None:
+                        return None
+                    elif main.position.x > 0:
+                        if pocket == "none":
+                            cycle(self.hand, i, self.queue, self.champion_index)
+                            pos = vector.Vector(8.5, -9.5)
+                        elif pocket == "left":
+                            cycle(self.hand, i, self.queue, self.champion_index)
+                            pos = vector.Vector(8.5, -9.5)
+                        elif pocket == "right":
+                            return None
+                        elif pocket == "all":
+                            return None
+                    else:
+                        if pocket == "none":
+                            cycle(self.hand, i, self.queue, self.champion_index)
+                            pos = vector.Vector(-8.5, -9.5)
+                        elif pocket == "left":
+                            return None
+                        elif pocket == "right":
+                            cycle(self.hand, i, self.queue, self.champion_index)
+                            pos = vector.Vector(-8.5, -9.5)
+                        elif pocket == "all":
+                            return None
                     return card, pos
-
-                pos = None
-                if card.name != "miner":
+                elif card.name != "miner":
+                    cycle(self.hand, i, self.queue, self.champion_index)
                     pos = base_pos.added(vector.Vector(random.randint(-2, 2), random.randint(0, 4)))
                     in_p = (pocket == "all" or (pos.x < 0 and pocket == "left") or (pos.x >= 0 and pocket == "right"))
                     if in_p and pos.y < -5:
@@ -437,6 +662,7 @@ class Bot:
                     if pos.y > 15.5:
                         pos.y = 15.5
                 else:
+                    cycle(self.hand, i, self.queue, self.champion_index)
                     pos = base_pos.added(vector.Vector(0, -3))
 
                 return card, pos
