@@ -770,6 +770,7 @@ class BossBandit(Champion):
         self.dashing = False
         self.should_dash = False
         self.dash_center = None
+        self.delayed_ability = False
     
     def attack(self):
         if not self.dashing:
@@ -792,11 +793,21 @@ class BossBandit(Champion):
                     if d < 6 + each.collision_radius + self.collision_radius and d > 3.5 + each.collision_radius + self.collision_radius and d < m_dist:
                         t_t = each
                         m_dist = d
+                    if d < 3.5 + each.collision_radius + self.collision_radius:
+                        t_t = None
+                        break
 
             if t_t is not None:
                 self.target = t_t
         
     def tick_func(self, arena):
+        if self.delayed_ability and not self.dashing:
+            print("delayed")
+            self.ability_active = True
+            self.ability_duration_timer = self.ability_duration
+            self.ability_cast_timer = 0
+            self.ability_cooldown_timer = self.ability_cooldown
+            self.delayed_ability = False
         if self.ability_count <= 0:
             self.ability_sprite_path = "sprites/bossbandit/bossbandit_ability_0.png"
         if self.target is None and self.stun_timer <= 0:
@@ -857,6 +868,10 @@ class BossBandit(Champion):
             self.move_speed = self.normal_move_speed
 
     def ability(self, arena):
+        if self.dashing:
+            self.ability_cooldown_timer = 0 #end
+            self.delayed_ability = True
+            return
         self.targetable = False
         self.invulnerable = True
         self.stun_timer = 1 #completely disable
@@ -866,6 +881,7 @@ class BossBandit(Champion):
             self.position.y += (-1 if self.side else 1) * 1080*TILES_PER_MIN
 
     def ability_end(self, arena):
-        self.stun_timer = 0
-        self.targetable = True
-        self.invulnerable = False
+        if not self.dashing:
+            self.stun_timer = 0
+            self.targetable = True
+            self.invulnerable = False

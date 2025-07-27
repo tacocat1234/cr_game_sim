@@ -284,7 +284,7 @@ class Bot:
                 champion.activate_ability(arena)
             elif n == "mightyminer" and champion.target is not None and champion.target.hit_points <= champion.hit_damage * 5 and vector.distance(champion.target.position, champion.position) <= champion.hit_range + champion.collision_radius + champion.target.collision_radius:
                 champion.activate_ability(arena)    
-            elif n == "bossbandit" and champion.ability_count > 0 and champion.target is not None and champion.target.cur_hp > champion.hit_damage * 2.1 and vector.distance(champion.target.position, champion.position) <= champion.hit_range + champion.collision_radius + champion.target.collision_radius:
+            elif n == "bossbandit" and champion.ability_count > 0 and not (champion.dashing or champion.should_dash) and champion.target is not None and champion.target.cur_hp > champion.hit_damage * 2.1 and vector.distance(champion.target.position, champion.position) <= champion.hit_range + champion.collision_radius + champion.target.collision_radius:
                 champion.activate_ability(arena)
             elif n == "littleprince" and (champion.position.y < 1 and (champion.position.x > 3 or champion.position.x < -3)) or (champion.target is not None and ((champion.target.target is champion and champion.target.ground) or champion.cur_hp < 1/2 * champion.hit_points)):
                 champion.activate_ability(arena)
