@@ -120,10 +120,10 @@ class SubmitBox(SelectionBox):
             if self.is_in(*event.pos):
                 self.value = True
 
-def run_loop(screen, evo_enabled = True, side = True):
+def run_loop(screen, evo_enabled = True, side = True, against_bot=True):
     lev = SelectionBox(100, 100, 50, 50)
     lev.font_size = 24
-    lev.value = "11" if side else "13"
+    lev.value = "11" if side or not against_bot else "13"
     rand = CheckBox(WIDTH - 100, 100, 50, 50)
     all = [
         SelectionBox(WIDTH/5, HEIGHT/2 - 70, 80, 80),
@@ -180,7 +180,8 @@ def run_loop(screen, evo_enabled = True, side = True):
 
         font = pygame.font.Font(None, 24) 
 
-        text = font.render("Player Deck" if side else "Bot Deck", True, BLACK)  # White text
+        t = ("Player Deck" if side else "Bot Deck") if against_bot else ("Player 1 Deck" if side else "Player 2 Deck")
+        text = font.render(t, True, BLACK)  # White text
         text_rect = text.get_rect(center=(WIDTH/2, 15))
         screen.blit(text, text_rect)
 

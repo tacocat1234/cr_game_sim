@@ -119,6 +119,7 @@ class EvolutionCannonSpecialAttackEntity(AttackEntity):
         self.display_size = 0.25
         self.resize = True
         self.position = self.position.added(vector.Vector(0, delay * 30))
+        self.mirrored_position = position.subtracted(vector.Vector(0, delay * 30))
         self.delay = delay
         self.delay_left = delay
 
@@ -126,6 +127,7 @@ class EvolutionCannonSpecialAttackEntity(AttackEntity):
         if self.delay_left > 0:
             self.delay_left -= TICK_TIME
             self.position.subtract(vector.Vector(0, 1/2))
+            self.mirrored_position.add(vector.Vector(0, 1/2))
             return
         
         self.resize = False

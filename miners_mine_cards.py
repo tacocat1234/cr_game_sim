@@ -218,7 +218,7 @@ class FishermanSpecialAttackEntity(RangedAttackEntity):
         if target.cur_hp > 0:
             self.parent.casting = False
             self.parent.reeling = True
-            if self.parent.target is not None and isinstance(target, Troop):
+            if self.parent.target is not None and isinstance(self.parent.target, Troop):
                 self.parent.target_ms = self.parent.target.move_speed
         else:
             self.parent.casting = False

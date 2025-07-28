@@ -131,13 +131,13 @@ def get_radius(name):
         return None
     
 def can_defend(name):
-    return not name in ["suspiciousbush", "wallbreakers", "icegolem",
+    return not name in ["suspiciousbush", "wallbreakers",
                         "elixirgolem", "goblinbarrel",
                         "hogrider", "battleram", 
                         "ramrider", "giant", "balloon", 
                         "royalgiant", "goblingiant", 
                         "lavahound", "electrogiant",
-                        "golem"]
+                        "golem", "clone"]
 
 def can_anywhere(name):
     return name != "royaldelivery" and name != "log" and name != "barbarianbarrel" and (get_type(name) == "spell" or name == "miner" or name == "goblindrill")

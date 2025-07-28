@@ -332,6 +332,11 @@ class GoldenKnight(Champion):
     def attack(self):
         if not self.dashing:
             return GoldenKnightAttackEntity(self.side, self.hit_damage, self.position, self.target)
+        
+    def activate_ability(self, arena):
+        if self.ability_duration_timer <= 0:
+            super().activate_ability(arena)
+        
     
     def ability(self, arena):
         self.move_speed *= 2
@@ -724,8 +729,9 @@ class Guardienne(Troop):
         self.level = level
         self.collideable = False
 
-    def on_deploy(self, arena):
-        self.collideable = True
+    def tick_func(self, arena):
+        if self.stun_timer <= 0 and self.deploy_time <= 0 and not self.collideable:
+            self.collideable = True
 
     def attack(self):
         return GuardienneAttackEntity(self.side, self.hit_damage, self.position, self.target)
@@ -802,7 +808,6 @@ class BossBandit(Champion):
         
     def tick_func(self, arena):
         if self.delayed_ability and not self.dashing:
-            print("delayed")
             self.ability_active = True
             self.ability_duration_timer = self.ability_duration
             self.ability_cast_timer = 0
@@ -869,7 +874,8 @@ class BossBandit(Champion):
 
     def ability(self, arena):
         if self.dashing:
-            self.ability_cooldown_timer = 0 #end
+            self.ability_duration_timer_timer = 0 #end
+            self.ability_cooldown_timer = 3
             self.delayed_ability = True
             return
         self.targetable = False

@@ -137,7 +137,7 @@ class Bandit(Troop):
                         m = None
                         for tower in arena.towers:
                             dist = vector.distance(tower.position, self.position)
-                            if m is None or dist < vector.distance(m.position, self.position):
+                            if tower.side != self.side and (m is None or dist < vector.distance(m.position, self.position)):
                                 m = tower
                         self.target = m
                     self.ground = False #allow cross river

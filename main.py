@@ -827,7 +827,7 @@ while True:
 
     #player deck 
 
-    bot = Bot(bot_deck)
+    bot = Bot(bot_deck, BOT_TOWER_TYPE.lower())
 
 
     random.shuffle(deck)

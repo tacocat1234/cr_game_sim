@@ -657,8 +657,8 @@ def draw():
         text_rect = card_name_text.get_rect(center=(card_name_x, card_name_y))
         screen.blit(card_name_text, text_rect)
 
-        if (card.name == "mirror") and p_prev is not None:
-            mirror_text = card_name_font.render("(" + p_prev.name + ")", True, BLACK) #nono, accessing global in local function but easiest
+        if (card.name == "mirror") and b_prev is not None:
+            mirror_text = card_name_font.render("(" + b_prev.name + ")", True, BLACK) #nono, accessing global in local function but easiest
             text_rect = mirror_text.get_rect(center=(card_name_x, card_name_y + 15))
             screen.blit(mirror_text, text_rect)
 
@@ -876,7 +876,7 @@ while True:
 
     #player deck 
 
-    bot = Bot(bot_deck)
+    bot = Bot(bot_deck, BOT_TOWER_TYPE.lower())
     bot2 = BotOld(deck, True)
 
 
@@ -962,7 +962,7 @@ while True:
         bot_card = bot2.tick(game_arena.p1_elixir, game_arena.troops + game_arena.buildings)
 
         if not bot_card is None:
-            n = bot_card.name if bot_card.name != "mirror" else b_prev.name #actual card
+            n = bot_card.name if bot_card.name != "mirror" else p_prev.name #actual card
             bot_pos = BotOld.random_pos(n, game_arena.troops + game_arena.buildings, s, True)
             if bot_pos:
                 if bot_card.name == "royalrecruits":
@@ -971,10 +971,10 @@ while True:
                     elif bot_pos.x > 1.5:
                         bot_pos.x = 1.5
 
-                l = bot_card.level if bot_card.name != "mirror" else b_prev.level + 1
+                l = bot_card.level if bot_card.name != "mirror" else p_prev.level + 1
 
                 game_arena.add(True, bot_pos, n, bot_card.elixir_cost, l, bot_card.cycles_left == 0 if bot_card.name != "mirror" else False)
-                b_prev = bot_card
+                p_prev = bot_card
                 if b_mirror is not None:
                     b_mirror.elixir_cost = bot_card.elixir_cost + 1
                 bot_card.cycle_evo()
