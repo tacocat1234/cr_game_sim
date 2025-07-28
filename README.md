@@ -61,6 +61,6 @@ mirror exists too.
 kingtower, princesstower, cannoneer, daggerduchess, royalchef
 
 ## Champions
-archerqueen, skeletonking, goldenknight, mightyminer, bossbandit
+archerqueen, skeletonking, goldenknight, mightyminer, littleprince, bossbandit
 special note:
 bot can use champions, and randomizing deck will only randomzie a champion if you dont fill in any slots. only one per deck or something might break, but that isnt a hard limit so whatever.

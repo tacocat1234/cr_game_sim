@@ -85,7 +85,7 @@ def run_loop(screen):
         evo_allowed.draw(screen)
 
         font = pygame.font.Font(None, 24) 
-        text = font.render("When playing, press b to return to lobby.", True, BLACK)  # White text
+        text = font.render("When playing, press b or escape to return to lobby.", True, BLACK)  # White text
         text_rect = text.get_rect(center=(WIDTH/2, 200))
         screen.blit(text, text_rect)
 

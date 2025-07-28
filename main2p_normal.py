@@ -2,19 +2,16 @@ import pygame
 import random
 from cards import Card
 from abstract_classes import TICK_TIME
-from bot2 import Bot
-from card_factory import get_type
 from card_factory import get_radius
 from card_factory import can_anywhere
 from card_factory import generate_random_deck
-from card_factory import parse_input
 from card_factory import can_evo
 from card_factory import champions
 import arena
 import deck_select
 import triple_draft
 import draft
-import megadraft
+import megadraft_2p
 import lobby
 import towers
 import vector
@@ -232,6 +229,7 @@ def draw(side):
 
     if side:
         screen.fill(BG_TEMP)
+        pygame.draw.rect(screen, (0, 0, 0), (WIDTH, 0, BUFFER, HEIGHT))
     bg_rect = background_img.get_rect(center=(WIDTH / 2 + offset, (HEIGHT - 128) / 2))
     screen.blit(background_img, bg_rect)
     # Draw river
@@ -773,45 +771,73 @@ def draw(side):
     text_rect = elixir_text.get_rect(center=(elixir_circle_x, elixir_circle_y))
     screen.blit(elixir_text, text_rect)  # Display elixir text
 
+running = True
 while True:
-    game_type, evo_enabled = lobby.run_loop(screen)
+    game_type = None
+    while game_type != "quit":
+        game_type, evo_enabled = lobby.run_loop(screen)
 
-    if game_type == "triple_draft":
-        player_random_deck = False
-        bot_random_deck = True
-        KING_LEVEL = 11
-        BOT_K_L = 13
-        deck, TOWER_TYPE = triple_draft.run_loop(screen, evo_enabled)
-    elif game_type == "draft":
-        player_random_deck = False
-        bot_random_deck = False
-        KING_LEVEL = 11
-        BOT_K_L = 13
-        deck, TOWER_TYPE, bot_deck, BOT_TOWER_TYPE = draft.run_loop(screen, evo_enabled)
-    elif game_type == "normal":
-        player_random_deck, KING_LEVEL, deck, TOWER_TYPE = deck_select.run_loop(screen, evo_enabled, True, False)
-        bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = deck_select.run_loop(screen, evo_enabled, False, False)
-    elif game_type == "double":
-        player_random_deck, KING_LEVEL, deck, TOWER_TYPE = deck_select.run_loop(screen, evo_enabled, True, False)
-        bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = deck_select.run_loop(screen, evo_enabled, False, False)
-        game_arena.elixir_rate = 2
-    elif game_type == "triple":
-        player_random_deck, KING_LEVEL, deck, TOWER_TYPE = deck_select.run_loop(screen, evo_enabled, True, False)
-        bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = deck_select.run_loop(screen, evo_enabled, False, False)
-        game_arena.elixir_rate = 3
-    elif game_type == "septuple":
-        player_random_deck, KING_LEVEL, deck, TOWER_TYPE = deck_select.run_loop(screen, evo_enabled, True, False)
-        bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = deck_select.run_loop(screen, evo_enabled, False, False)
-        game_arena.elixir_rate = 7
-    elif game_type == "megadraft":
-        player_random_deck = False
-        bot_random_deck = False
-        KING_LEVEL = 11
-        BOT_K_L = 13
-        deck, TOWER_TYPE, bot_deck, BOT_TOWER_TYPE = megadraft.run_loop(screen, evo_enabled)
-    else:
-        TOWER_TYPE = "randomtower"
-        BOT_TOWER_TYPE = "randomtower"
+        if game_type == "triple_draft":
+            player_random_deck = False
+            bot_random_deck = True
+            KING_LEVEL = 11
+            BOT_K_L = 13
+            deck, TOWER_TYPE = triple_draft.run_loop(screen, evo_enabled)
+            break
+        elif game_type == "draft":
+            player_random_deck = False
+            bot_random_deck = False
+            KING_LEVEL = 11
+            BOT_K_L = 13
+            deck, TOWER_TYPE, bot_deck, BOT_TOWER_TYPE = draft.run_loop(screen, evo_enabled)
+            break
+        elif game_type == "normal":
+            tup = deck_select.run_loop(screen, evo_enabled, True, False)
+            if tup is not None:
+                player_random_deck, KING_LEVEL, deck, TOWER_TYPE = tup
+                tup = deck_select.run_loop(screen, evo_enabled, False, False)
+                if tup is not None:
+                    bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = tup
+                    break
+        elif game_type == "double":
+            tup = deck_select.run_loop(screen, evo_enabled, True, False)
+            if tup is not None:
+                player_random_deck, KING_LEVEL, deck, TOWER_TYPE = tup
+                tup = deck_select.run_loop(screen, evo_enabled, False, False)
+                if tup is not None:
+                    game_arena.elixir_rate = 2
+                    bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = tup
+                    break
+        elif game_type == "triple":
+            tup = deck_select.run_loop(screen, evo_enabled, True, False)
+            if tup is not None:
+                player_random_deck, KING_LEVEL, deck, TOWER_TYPE = tup
+                tup = deck_select.run_loop(screen, evo_enabled, False, False)
+                if tup is not None:
+                    game_arena.elixir_rate = 3
+                    bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = tup
+                    break
+        elif game_type == "septuple":
+            tup = deck_select.run_loop(screen, evo_enabled, True, False)
+            if tup is not None:
+                player_random_deck, KING_LEVEL, deck, TOWER_TYPE = tup
+                tup = deck_select.run_loop(screen, evo_enabled, False, False)
+                if tup is not None:
+                    bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = tup
+                    game_arena.elixir_rate = 7
+                    break
+        elif game_type == "megadraft":
+            player_random_deck = False
+            bot_random_deck = False
+            KING_LEVEL = 11
+            BOT_K_L = 11
+            tup = megadraft_2p.run_loop(screen, evo_enabled)
+            if tup is not None:
+                deck, TOWER_TYPE, bot_deck, BOT_TOWER_TYPE = tup
+                break
+        else:
+            TOWER_TYPE = "randomtower"
+            BOT_TOWER_TYPE = "randomtower"
 
     PRINCESS_LEVEL = KING_LEVEL
     BOT_P_L = BOT_K_L
@@ -897,6 +923,7 @@ while True:
 
     # Main Loop
     running = game_type != "quit"
+
     clock = pygame.time.Clock()
 
     # Variables to store click and drag information
@@ -929,7 +956,7 @@ while True:
                 game_type = "quit"
                 running = False
             if event.type == pygame.KEYDOWN:
-                if event.unicode == "b":
+                if event.unicode == "b" or event.key == pygame.K_ESCAPE:
                     running = False
             # Detect finger click in the bottom 128 pixels
             elif event.type == pygame.FINGERDOWN:
@@ -1125,7 +1152,7 @@ while True:
         if fin is not None:
             win = fin
             break
-
+        
         draw(True)  # Redraw screen
         draw(False)
         pygame.display.flip()
@@ -1142,25 +1169,27 @@ while True:
 
 
     # Get text rectangle and center it
-    text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
+    text_rect = text.get_rect(center=(BUFFER // 2 + WIDTH, HEIGHT // 2))
     tip = font.render("CLICK TO RETURN TO LOBBY", True, WHITE)
-    tip_rect = tip.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 60))
+    tip_rect = tip.get_rect(center=(BUFFER // 2 + WIDTH, HEIGHT // 2 + 60))
 
     pause = 60
+
+    if running:
+        screen.blit(text, text_rect)  # Draw text
+        screen.blit(tip, tip_rect)
+        pygame.display.flip()  # Update display
 
     while running:
         clock.tick(60)  # 60 FPS
         pause -= 1
-        screen.fill(BLACK)  # Fill background
-        screen.blit(text, text_rect)  # Draw text
-        screen.blit(tip, tip_rect)
 
         if pause <= 0:
             for event in pygame.event.get():
                 if event.type == pygame.QUIT or event.type == pygame.MOUSEBUTTONDOWN:
                     running = False
 
-        pygame.display.flip()  # Update display
+       
 
 
         #count += 1

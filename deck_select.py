@@ -205,6 +205,9 @@ def run_loop(screen, evo_enabled = True, side = True, against_bot=True):
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    return
             for each in all:
                 each.handle_event(event)
             for i in range(8):
