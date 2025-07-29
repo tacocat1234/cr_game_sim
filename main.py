@@ -150,6 +150,16 @@ def format_time(seconds):
     s = str(s) if s >= 10 else "0" + str(s)
     return m + ":" + s
 
+def is_beam(attack):
+    return attack.__class__.__name__.lower() in [
+        "goblinsteinabilityattackentity", 
+        "infernodragonattackentity", 
+        "electrowizardattackentity", 
+        "infernotowerattackentity", 
+        "zappyattackentity", 
+        "teslaattackentity"
+    ]
+
 def convert_to_pygame(coordinate):
     pygame_x = int(WIDTH / 2 + coordinate.x * SCALE)
     pygame_y = int(HEIGHT / 2 - 64 - coordinate.y * SCALE)  # Invert Y-axis 
@@ -582,7 +592,16 @@ def draw():
 
     for attack in game_arena.active_attacks:
         attack_x, attack_y= convert_to_pygame(attack.position)
-        if attack.display_size != 0.25 and attack.resize == False:
+        if is_beam(attack): 
+            attack_x2, attack_y2 = convert_to_pygame(attack.target.position)
+            pygame.draw.line(
+                screen,
+                YELLOW,
+                (attack_x, attack_y),
+                (attack_x2, attack_y2),
+                int(attack.display_size * SCALE)
+            )     
+        elif attack.display_size != 0.25 and attack.resize == False:
             # Create a transparent surface
             attack_size = attack.display_size * SCALE
             attack_surface = pygame.Surface((attack_size * 2, attack_size * 2), pygame.SRCALPHA)
@@ -874,7 +893,6 @@ while True:
     enemy_left = True
     enemy_right = True
 
-    game_arena.p2_elixir = 7
     #game_arena.p2_elixir = -999 #disable bot for testing
     p_prev = None
     b_prev = None

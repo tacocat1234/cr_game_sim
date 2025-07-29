@@ -190,7 +190,10 @@ class ElectroGiantAttackEntity(MeleeAttackEntity):
             position=position,
             target=target
             )
-        
+
+def are_equal(a, b, epsilon=1e-9):
+    return abs(a - b) < epsilon        
+
 class ElectroGiantReflectDisplay(MeleeAttackEntity):
     HIT_RANGE = 2
     COLLISION_RADIUS = 0.75
@@ -227,14 +230,18 @@ class ElectroGiantReflectAttackEntity(MeleeAttackEntity):
     def apply_effect(self, target):
         target.attack_cooldown -= TICK_TIME
         target.stun()
-        
 
     def detect_hits(self, arena):
         hits = []
-        for each in arena.towers + arena.buildings + arena.troops:
-                if each.side != self.side and not each.invulnerable and (each.attack_cooldown >= each.hit_speed - TICK_TIME) and each.target is self.parent: # if different side
+        before = True
+        for each in arena.towers + arena.buildings + arena.troops:  
+            if each is self.parent:
+                before = False
+            if each.side != self.side and not each.invulnerable and each.target is self.parent: # if different 
+                if (before and (each.attack_cooldown == each.hit_speed)) or (not before and (are_equal(each.attack_cooldown, each.hit_speed - TICK_TIME))):
                     if vector.distance(self.position, each.position) < self.HIT_RANGE + self.COLLISION_RADIUS + each.collision_radius:
                         hits.append(each)
+                        print(each.attack_cooldown)
         return hits
 
     def tick(self, arena):
@@ -252,7 +259,7 @@ class ElectroGiant(Troop):
         super().__init__(
             s=side,              # Side (True for one player, False for the other)
             h_p= 2410 * pow(1.1, level - 6),         # Hit points (Example value)
-            h_d= 102 * pow(1.1, level - 6),          # Hit damage (Example value)
+            h_d= 0 * 102 * pow(1.1, level - 6),          # Hit damage (Example value)
             h_s=2.1,          # Hit speed (Seconds per hit)
             l_t=0.6,            # First hit cooldown
             h_r=1.2,            # Hit range

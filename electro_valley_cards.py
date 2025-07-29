@@ -110,10 +110,13 @@ class ElectroWizardAttackEntity(RangedAttackEntity):
         super().__init__(
             side=side,
             damage=damage,
-            velocity=2000*TILES_PER_MIN,
+            velocity=0, #actually infinite
             position=position,
             target=target,
         )
+
+    def detect_hits(self, arena):
+        return [self.target]
 
     def apply_effect(self, target):
         target.stun()
@@ -743,10 +746,28 @@ class InfernoDragonAttackEntity(RangedAttackEntity):
         super().__init__(
             side=side,
             damage=damage,
-            velocity=2000*TILES_PER_MIN,
+            velocity=0,
             position=position,
             target=target,
         )
+        self.duration = 0.4 + TICK_TIME
+        self.hit = False
+
+    def detect_hits(self, arena):
+        return [self.target]
+
+    def tick(self, arena):
+        self.tick_func(arena)
+        if not self.hit:
+            hits = self.detect_hits(arena)
+            if len(hits) > 0:
+                for each in hits:
+                    self.hit = True
+                    each.damage(self.damage)
+                    self.apply_effect(each)
+        if self.target is None or self.target.cur_hp <= 0:
+            self.should_delete = True
+
 
 class InfernoDragon(Troop):
     def __init__(self, side, position, level):

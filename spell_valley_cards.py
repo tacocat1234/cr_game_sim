@@ -1,4 +1,4 @@
-from abstract_classes import AttackEntity
+from abstract_classes import AttackEntity, RangedAttackEntity
 from abstract_classes import Troop
 from abstract_classes import Building
 from abstract_classes import Tower
@@ -301,43 +301,32 @@ class SkeletonDragon(Troop):
     def attack(self):
         return SkeletonDragonAttackEntity(self.side, self.hit_damage, self.position, self.target)
     
-class InfernoTowerAttackEntity(AttackEntity):
+class InfernoTowerAttackEntity(RangedAttackEntity):
     def __init__(self, side, damage, position, target):
         super().__init__(
-            s=side,
-            d=damage,
-            v=2000*TILES_PER_MIN,
-            l=float('inf'),
-            i_p=copy.deepcopy(position)
+            side=side,
+            damage=damage,
+            velocity=0,
+            position=position,
+            target=target,
         )
-        self.target = target
-        self.should_delete = False
+        self.duration = 0.4 + TICK_TIME
+        self.hit = False
 
     def detect_hits(self, arena):
-        if (vector.distance(self.target.position, self.position) < self.target.collision_radius):
-            return [self.target] # has hit
-        else:
-            return [] #hasnt hit yet
-            
+        return [self.target]
+
     def tick(self, arena):
-        hits = self.detect_hits(arena)
-        if len(hits) > 0:
-            hits[0].damage(self.damage)
+        self.tick_func(arena)
+        if not self.hit:
+            hits = self.detect_hits(arena)
+            if len(hits) > 0:
+                for each in hits:
+                    self.hit = True
+                    each.damage(self.damage)
+                    self.apply_effect(each)
+        if self.target is None or self.target.cur_hp <= 0:
             self.should_delete = True
-        else:
-            direction = vector.Vector(
-                self.target.position.x - self.position.x, 
-                self.target.position.y - self.position.y
-            )
-            direction.normalize()
-
-            movement = direction.scaled(self.velocity)
-            self.position.add(movement)
-
-    def cleanup(self, arena):
-        if self.should_delete:
-            arena.active_attacks.remove(self)
-
 
 class InfernoTower(Building):
     def __init__(self, side, position, level):

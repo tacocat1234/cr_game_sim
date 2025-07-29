@@ -178,6 +178,8 @@ troop_types = {"knight" : ["minitank"],
     "skeletonking" : ["splash", "swarm"],
     "bossbandit" : ["highdps", "minitank"],
     "littleprince" : ["charge"],
+    "goblinstein" : ["control", "lowdps"],
+    "goblinsteinmonster" : ["towertargeting", "tank"],
     "goldenknight" : ["highattackspeed", "minitank"],
     "mightyminer" : ["charge", "minitank"]
     }
@@ -289,6 +291,7 @@ troop_is_air = {"knight" : "ground",
     "skeletonking" : "ground",
     "bossbandit" : "ground",
     "littleprince" : "antiair",
+    "goblinstein" : "antiair",
     "goldenknight" : "ground",
     "mightyminer" : "ground"
     }
@@ -400,6 +403,7 @@ troop_attack_range = {
     "skeletonking" : "short",
     "bossbandit" : "long",
     "littleprince" : "long",
+    "goblinstein" : "medium",
     "goldenknight" : "short",
     "mightyminer" : "short"
 }
@@ -459,7 +463,8 @@ single_elixir_map = {
     "lavapup" : 5/6,
     "cartcannon" : 3,
     "guardienne" : 3,
-    "skeletonbarreldeathbarrel" : 3
+    "skeletonbarreldeathbarrel" : 3,
+    "goblinsteinmonster" : 3
 }
 
 def can_attack(name):

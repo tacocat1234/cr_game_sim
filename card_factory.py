@@ -87,7 +87,7 @@ buildings = ["goblinhut", "goblincage",
              "furnace", "tesla", "xbow",
              "elixircollector"]
 
-champions = ["littleprince", "archerqueen", "skeletonking", "goldenknight", "mightyminer", "bossbandit"]
+champions = ["littleprince", "archerqueen", "skeletonking", "goldenknight", "mightyminer", "goblinstein", "bossbandit"]
 
 #total 127
 #print(len(troops) + len(spells) + len(buildings))
@@ -380,6 +380,8 @@ def champion_factory(side, position, name, level):
         return champion_cards.BossBandit(side, position, level)
     elif name == "littleprince":
         return champion_cards.LittlePrince(side, position, level)
+    elif name == "goblinstein":
+        return champion_cards.Goblinstein(side, position, level)
     else:
         raise Exception("Invalid champion name")
 
@@ -833,6 +835,7 @@ elixir_map = {
     "goldenknight" : 4,
     "mightyminer" : 4,
     "archerqueen" : 5,
+    "goblinstein" : 5,
     "bossbandit" : 6
 }
 

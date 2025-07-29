@@ -15,7 +15,7 @@ class Champion(Troop):
         self.ability_cast_timer = ability_cast_time
         self.ability_cast_time = ability_cast_time
         self.ability_duration = ability_duration
-        self.ability_duration_timer = ability_duration
+        self.ability_duration_timer = 0
         self.ability_cooldown = ability_cooldown
         self.ability_cooldown_timer = 0
 
@@ -727,11 +727,6 @@ class Guardienne(Troop):
             p=position               # Position (vector.Vector object)
         )
         self.level = level
-        self.collideable = False
-
-    def tick_func(self, arena):
-        if self.stun_timer <= 0 and self.deploy_time <= 0 and not self.collideable:
-            self.collideable = True
 
     def attack(self):
         return GuardienneAttackEntity(self.side, self.hit_damage, self.position, self.target)
@@ -891,3 +886,176 @@ class BossBandit(Champion):
             self.stun_timer = 0
             self.targetable = True
             self.invulnerable = False
+
+def distance_to_segment(p, a, b):
+    """
+    p, a, b: Vector
+    Returns distance from point p to the line segment a-b
+    """
+    ab = b.subtracted(a)
+    ap = p.subtracted(a)
+    ab_length_squared = ab.x ** 2 + ab.y ** 2
+
+    if ab_length_squared == 0:
+        # a and b are the same point
+        return vector.distance(p, a)
+
+    t = (ap.x * ab.x + ap.y * ab.y) / ab_length_squared
+    t = max(0, min(1, t))  # Clamp to segment
+
+    closest = vector.Vector(a.x + t * ab.x, a.y + t * ab.y)
+    return vector.distance(p, closest)
+
+class GoblinsteinAttackEntity(RangedAttackEntity):
+    def __init__(self, side, damage, position, target):
+        super().__init__(side, damage, 600 * TILES_PER_MIN, position, target)
+        self.display_size = 0.4
+
+    def apply_effect(self, target):
+        target.stun()
+
+class GoblinsteinAbilityAttackEntity(AttackEntity):
+    def __init__(self, side, damage, ctd, position, monster, parent):
+        super().__init__(
+            s=side,
+            d=damage,
+            v=0,
+            l=4,
+            i_p=position
+        )
+        self.ctd = ctd
+        self.target = monster
+        self.has_hit = []
+        self.next_damage_tick = 0.5
+        self.parent = parent
+
+    def tick(self, arena):
+        if self.parent is None or self.parent.cur_hp <= 0:
+            self.should_delete = True
+        hits = self.detect_hits(arena)
+        for each in hits:
+            new = not any(each is h for h in self.has_hit)
+            if (new):
+                if isinstance(each, Tower):
+                    each.damage(self.ctd)
+                else:
+                    each.damage(self.damage)
+                self.has_hit.append(each)
+        
+        if self.next_damage_tick > 0:
+            self.next_damage_tick -= TICK_TIME
+        else:
+            self.next_damage_tick = 0.5
+            self.has_hit = []
+
+    def detect_hits(self, arena):
+        out = []
+        for each in arena.troops + arena.buildings + arena.towers:
+            if each.side != self.side and not each.invulnerable:
+                if vector.distance(each.position, self.position) <= 2 or vector.distance(each.position, self.target.position) <= 2 or distance_to_segment(each.position, self.position, self.target.position) <= 2:
+                    out.append(each)
+        return out
+
+class Goblinstein(Champion):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 721 * pow(1.1, level - 11),         # Hit points (Example value)
+            h_d= 92 * pow(1.1, level - 11),          # Hit damage (Example value)
+            h_s=1.8,          # Hit speed (Seconds per hit)
+            l_t=0.5,            # First hit cooldown
+            h_r=5.5,            # Hit range
+            s_r=5.5,            # Sight Range
+            g=True,           # Ground troop
+            t_g_o=False,       # Targets ground-only
+            t_o=False,        # Not tower-only
+            m_s=60*TILES_PER_MIN,          # Movement speed 
+            d_t=1,            # Deploy time
+            m=3,            #mass
+            c_r=0.45,        #collision radius
+            p=position.added(vector.Vector(0, -2 if side else 2)),               # Position (vector.Vector object)
+            ability_cost = 2,
+            ability_cast_time=0.933,
+            ability_duration=4,
+            ability_cooldown=17
+        ) 
+        self.level = level
+        self.monster = GoblinsteinMonster(self.side, position.added(vector.Vector(0, 2 if side else -2)), level, self)
+        self.ability_damage = 107 * pow(1.1, level - 11)
+        self.ability_ctd = 23 * pow(1.1, level - 11)
+
+    def level_up(self):
+        self.ability_damage *= 1.1
+        self.ability_ctd *= 1.1
+        super().level_up()
+    
+    def on_deploy(self, arena):
+        arena.troops.append(self.monster)
+        super().on_deploy(arena)
+
+    def attack(self):
+        return GoblinsteinAttackEntity(self.side, self.hit_damage, self.position, self.target)
+
+    def ability(self, arena):
+        arena.active_attacks.append(GoblinsteinAbilityAttackEntity(self.side, self.ability_damage, self.ability_ctd, self.position, self.monster, self))
+        
+class GoblinsteinMonster(Troop):
+    def __init__(self, side, position, level, parent):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 2393 * pow(1.1, level - 11),         # Hit points (Example value)
+            h_d= 128 * pow(1.1, level - 11),          # Hit damage (Example value)
+            h_s=1.5,          # Hit speed (Seconds per hit)
+            l_t=0.8,            # First hit cooldown
+            h_r=1.2,            # Hit range
+            s_r=5.5,            # Sight Range
+            g=True,           # Ground troop
+            t_g_o=True,       # Targets ground-only
+            t_o=True,        # Not tower-only
+            m_s=60*TILES_PER_MIN,          # Movement speed 
+            d_t=1,            # Deploy time
+            m=3,            #mass
+            c_r=0.75,        #collision radius
+            p=position,               # Position (vector.Vector object)
+        )
+        self.level = level
+        self.parent = parent
+
+    def die(self, arena):
+        if self.parent is not None and self.parent.cur_hp > 0:
+            self.parent.monster = GoblinsteinAntenna(self.side, self.position, self.level, self.parent)
+            arena.troops.append(self.parent.monster)
+        super().die(arena)
+
+class GoblinsteinAntenna(Troop):
+    def __init__(self, side, position, level, parent):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= float('inf'),         # Hit points (Example value)
+            h_d= 0,          # Hit damage (Example value)
+            h_s= float('inf'),          # Hit speed (Seconds per hit)
+            l_t= 0,            # First hit cooldown
+            h_r= 0,            # Hit range
+            s_r= 0,            # Sight Range
+            g=True,           # Ground troop
+            t_g_o=True,       # Targets ground-only
+            t_o=True,        # Not tower-only
+            m_s= 0,          # Movement speed 
+            d_t= 0,            # Deploy time
+            m=100,            #mass
+            c_r=0.3,        #collision radius
+            p=position,               # Position (vector.Vector object)
+        )
+        self.level = level
+        self.moveable = False
+        self.invulnerable = True
+        self.targetable = False
+        self.parent = parent
+
+    def tick(self, arena):
+        pass
+
+    def cleanup_func(self, arena):
+        if self.parent is None or self.parent.cur_hp <= 0:
+            self.should_delete = True
+            self.cur_hp = -1

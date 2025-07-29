@@ -93,10 +93,13 @@ class ZappyAttackEntity(RangedAttackEntity):
         super().__init__(
             side=side, 
             damage=damage, 
-            velocity=2000*TILES_PER_MIN, 
+            velocity=0, 
             position=position, 
             target=target
         )
+
+    def detect_hits(self, arena):
+        return [self.target]
 
     def apply_effect(self, target):
         target.stun()
@@ -238,13 +241,15 @@ class Hunter(Troop):
 class TeslaAttackEntity(RangedAttackEntity):
     def __init__(self, side, damage, position, target):
         super().__init__(
-            side=side,
-            damage=damage,
-            velocity=2000*TILES_PER_MIN,
-            position=position,
-            target=target,
+            side=side, 
+            damage=damage, 
+            velocity=0, 
+            position=position, 
+            target=target
         )
-        
+
+    def detect_hits(self, arena):
+        return [self.target]
 
 
 class Tesla(Building):

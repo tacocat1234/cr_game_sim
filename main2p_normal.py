@@ -149,6 +149,16 @@ def format_time(seconds):
     s = str(s) if s >= 10 else "0" + str(s)
     return m + ":" + s
 
+def is_beam(attack):
+    return attack.__class__.__name__.lower() in [
+        "goblinsteinabilityattackentity", 
+        "infernodragonattackentity", 
+        "electrowizardattackentity", 
+        "infernotowerattackentity", 
+        "zappyattackentity", 
+        "teslaattackentity"
+    ]
+
 def convert_to_pygame(coordinate, side):
     pygame_x = int(WIDTH / 2 + coordinate.x * SCALE) + (0 if side else WIDTH + BUFFER)
     pygame_y = int(HEIGHT / 2 - 64 - coordinate.y * SCALE)  # Invert Y-axis 
@@ -633,7 +643,17 @@ def draw(side):
             attack_x, attack_y= convert_to_pygame(attack.mirrored_position, side)
         else:
             attack_x, attack_y= convert_to_pygame(attack.position, side)
-        if attack.display_size != 0.25 and attack.resize == False:
+
+        if is_beam(attack):
+            attack_x2, attack_y2 = convert_to_pygame(attack.target.position, side)
+            pygame.draw.line(
+                screen,
+                YELLOW,
+                (attack_x, attack_y),
+                (attack_x2, attack_y2),
+                int(attack.display_size * SCALE)
+            )        
+        elif attack.display_size != 0.25 and attack.resize == False:
             # Create a transparent surface
             attack_size = attack.display_size * SCALE
             attack_surface = pygame.Surface((attack_size * 2, attack_size * 2), pygame.SRCALPHA)

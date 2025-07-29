@@ -720,7 +720,7 @@ class Tower:
         self.tick_func(arena)
 
         if self.stun_timer <= 0:
-            if self.target is None or self.target.cur_hp <= 0 or not self.target.targetable or vector.distance(self.target.position, self.position) > self.hit_range + self.target.collision_radius + self.collision_radius + 3:
+            if self.target is None or self.target.cur_hp <= 0 or (not self.target.targetable) or (vector.distance(self.target.position, self.position) > self.hit_range + self.target.collision_radius + self.collision_radius + 3):
                 self.update_target(arena)
             if not self.target is None and self.attack_cooldown <= 0:
                 atk = self.attack()
@@ -756,12 +756,11 @@ class Tower:
 
         if self.stun_timer <= 0:
             if self.target is None or (vector.distance(self.target.position, self.position) > self.hit_range + self.collision_radius + self.target.collision_radius and (self.attack_cooldown <= self.hit_speed - self.load_time)):
-                    self.attack_cooldown = self.hit_speed - self.load_time #if not currently attacking but cooldown is less than first hit delay
+                self.attack_cooldown = self.hit_speed - self.load_time #if not currently attacking but cooldown is less than first hit delay
             else: #otherwise
                 self.attack_cooldown -= TICK_TIME
         else:
             self.stun_timer -= TICK_TIME
-
 
 
 class Spell:
@@ -984,7 +983,7 @@ class Building:
         self.tick_func(arena)
         if self.target is None or self.target.cur_hp <= 0 or not self.target.targetable or (self.ground_only and not self.target.ground):
             self.update_target(arena)
-        if not self.target is None and self.attack_cooldown <= 0:
+        if (not self.target is None) and self.attack_cooldown <= 0:
             atk = self.attack()
             if isinstance(atk, list) and len(atk) > 0:
                 arena.active_attacks.extend(atk)
@@ -1004,9 +1003,6 @@ class Building:
     def cleanup(self, arena):
         if self.preplace:
             return
-        
-        if self.stun_timer > 0:
-            self.stun_timer -= TICK_TIME
 
         if self.deploy_time > 0:
             self.deploy_time -= TICK_TIME
@@ -1014,7 +1010,7 @@ class Building:
         
         self.cleanup_func(arena)
 
-        self.cur_hp -= self.hit_points * TICK_TIME / self.lifespan
+        #self.cur_hp -= self.hit_points * TICK_TIME / self.lifespan
         if self.cur_hp <= 0:
             self.die(arena)
         
@@ -1032,7 +1028,7 @@ class Building:
             
         if self.stun_timer <= 0:
             if not self.is_spawner and (self.target is None or (vector.distance(self.target.position, self.position) > self.hit_range + self.target.collision_radius + self.collision_radius and (self.attack_cooldown <= self.hit_speed - self.load_time))):
-                    self.attack_cooldown = self.hit_speed - self.load_time #if not currently attacking but cooldown is less than first hit delay
+                self.attack_cooldown = self.hit_speed - self.load_time #if not currently attacking but cooldown is less than first hit delay
             else: #otherwise
                 self.attack_cooldown -= TICK_TIME
         else:
