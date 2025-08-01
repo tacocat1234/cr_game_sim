@@ -25,6 +25,7 @@ evo_cycles = {
     "goblingiant" : 1,
     "dartgoblin" : 2,
     "hunter" : 2,
+    "furnace" : 2,
     "tesla" : 2,
     "infernodragon" : 2,
     "megaknight" : 1,

@@ -1010,7 +1010,7 @@ class Building:
         
         self.cleanup_func(arena)
 
-        #self.cur_hp -= self.hit_points * TICK_TIME / self.lifespan
+        self.cur_hp -= self.hit_points * TICK_TIME / self.lifespan
         if self.cur_hp <= 0:
             self.die(arena)
         

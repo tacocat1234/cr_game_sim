@@ -47,7 +47,7 @@ def can_evo(n):
             n == "royalgiant" or n == "royalrecruits" or
             n == "icespirit" or n == "giantsnowball" or
             n == "dartgoblin" or n == "goblingiant" or n == "skeletonbarrel" or
-            n == "hunter" or n == "tesla" or
+            n == "hunter" or n == "tesla" or n == "furnace" or 
             n == "infernodragon" or n == "megaknight" or 
             n == "wallbreakers" or n == "firecracker" or n == "electrodragon" or
             n == "goblindrill" or n == "lumberjack" or n == "executioner")
@@ -62,7 +62,7 @@ troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer",
           "darkprince", "royalhogs", "balloon", "prince", "royalgiant", "royalrecruits", "threemusketeers",
           "icespirit", "icegolem", "battlehealer", "giantskeleton",
           "barbarianbarrel", "beserker", "goblingang", "dartgoblin", "skeletonbarrel", "goblingiant",
-          "zappies", "hunter", "minionhorde", "elitebarbarians", "golem",
+          "furnace", "zappies", "hunter", "minionhorde", "elitebarbarians", "golem",
           "log", "miner", "princess", "electrowizard", "infernodragon", "ramrider", "sparky", "megaknight",
           "wallbreakers", "icewizard", "royalghost", "firecracker", "phoenix", "electrodragon",
           "healspirit", "suspiciousbush", "bandit", "magicarcher", "rascals", "bowler", "electrogiant", "lavahound",
@@ -84,7 +84,7 @@ buildings = ["goblinhut", "goblincage",
              "bombtower", "infernotower",
              "mortar",
              "barbarianhut",
-             "furnace", "tesla", "xbow",
+             "tesla", "xbow",
              "elixircollector"]
 
 champions = ["littleprince", "archerqueen", "skeletonking", "goldenknight", "mightyminer", "goblinstein", "bossbandit"]
@@ -235,6 +235,8 @@ def get_clone(obj):
             return jungle_arena_cards.GoblinGiant(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionHunter":
             return hog_mountain_cards.Hunter(obj.side, copy.deepcopy(obj.position), obj.level)
+        elif n == "EvolutionFurnace":
+            return hog_mountain_cards.Furnace(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionInfernoDragon":
             return electro_valley_cards.InfernoDragon(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionMegaKnight":
@@ -329,6 +331,8 @@ def evolution_troop_factory(side, position, name, level):
         return jungle_arena_evos.EvolutionGoblinGiant(side, position, level)
     elif name == "hunter":
         return hog_mountain_evos.EvolutionHunter(side, position, level)
+    elif name == "furnace":
+        return hog_mountain_evos.EvolutionFurnace(side, position, level)
     elif name == "infernodragon":
         return electro_valley_evos.EvolutionInfernoDragon(side, position, level)
     elif name == "megaknight":
@@ -550,6 +554,8 @@ def troop_factory(side, position, name, level):
         return jungle_arena_cards.SkeletonBarrel(side, position, level)
     elif name == "goblingiant":
         return jungle_arena_cards.GoblinGiant(side, position, level)
+    elif name == "furnace":
+        return hog_mountain_cards.Furnace(side, position, level)
     elif name == "zappies":
         flip = 1 if side else -1
         radius = 1
@@ -706,8 +712,6 @@ def building_factory(side, position, name, level):
         return builders_workshop_cards.Mortar(side, position, level)
     elif name == "barbarianhut":
         return jungle_arena_cards.BarbarianHut(side, position, level)
-    elif name == "furnace":
-        return hog_mountain_cards.Furnace(side, position, level)
     elif name == "tesla":
         return hog_mountain_cards.Tesla(side, position, level)
     elif name == "xbow":

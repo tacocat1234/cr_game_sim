@@ -3,6 +3,7 @@ from abstract_classes import RangedAttackEntity
 from abstract_classes import AttackEntity
 from abstract_classes import TILES_PER_MIN
 from abstract_classes import TICK_TIME
+from spell_valley_cards import FireSpirit
 import vector
 
 class Net(RangedAttackEntity):
@@ -87,4 +88,30 @@ class EvolutionTesla(hog_mountain_cards.Tesla):
             arena.active_attacks.append(EvolutionTeslaPulseAttackEntity(self.side, self.pulse_damage, self.position))
         return super().change_state(arena)
 
-    
+class EvolutionFurnace(hog_mountain_cards.Furnace):
+    def __init__(self, side, position, level):
+        super().__init__(side, position, level)
+        self.evo = True
+        self.spawn_side = False
+        self.hot_spawn = False
+
+    def tick_func(self, arena):
+        if self.spawn_timer > 0:
+            if not self.hot_spawn:
+                self.spawn_timer -= TICK_TIME
+        else:
+            if self.hot_spawn:
+                self.spawn_timer = 1.8
+            else:
+                self.spawn_timer = 5
+            f_s = FireSpirit(self.side, self.position.added(vector.Vector((-1.5 if self.spawn_side else 1.5) if self.hot_spawn else 0, 0 if self.hot_spawn else (0.6 if self.side else -0.6))), self.level)
+            f_s.deploy_time = 0
+            arena.troops.append(f_s)
+            if self.hot_spawn:
+                self.spawn_side = not self.spawn_side
+                self.hot_spawn = False
+
+    def attack(self):
+        self.hot_spawn = True
+        self.spawn_timer = 0
+        return super().attack()

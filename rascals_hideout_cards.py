@@ -241,7 +241,6 @@ class ElectroGiantReflectAttackEntity(MeleeAttackEntity):
                 if (before and (each.attack_cooldown == each.hit_speed)) or (not before and (are_equal(each.attack_cooldown, each.hit_speed - TICK_TIME))):
                     if vector.distance(self.position, each.position) < self.HIT_RANGE + self.COLLISION_RADIUS + each.collision_radius:
                         hits.append(each)
-                        print(each.attack_cooldown)
         return hits
 
     def tick(self, arena):

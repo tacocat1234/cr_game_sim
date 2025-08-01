@@ -1,4 +1,5 @@
 import pygame
+import webbrowser
 
 GRAY = (200, 200, 200)
 WHITE = (255, 255, 255)
@@ -65,6 +66,7 @@ def run_loop(screen):
     triple_e = SelectionBox(WIDTH/2, HEIGHT/2 + 60, 100, 50, "3x Elxiir")
     septuple = SelectionBox(WIDTH - 100, HEIGHT/2 + 60, 100, 50, "7x Elxiir")
     mega = SelectionBox(WIDTH/2, HEIGHT/2 + 120, 100, 50, "Mega-Draft")
+    feedback = SelectionBox(50, HEIGHT - 50, 60, 60, "Feedback")
 
     evo_allowed = CheckBox(WIDTH - 30, 30, 40, 40)
     
@@ -81,6 +83,7 @@ def run_loop(screen):
         triple_e.draw(screen)
         septuple.draw(screen)
         mega.draw(screen)
+        feedback.draw(screen)
 
         evo_allowed.draw(screen)
 
@@ -122,6 +125,8 @@ def run_loop(screen):
             if quit.handle_event(event) is not None:
                 out = "quit"
                 running = False
+            if feedback.handle_event(event) is not None:
+                webbrowser.open("https://docs.google.com/forms/d/1hAG7VlG38uD6lM9FJef6nG3XhCRz8WkfT2WNUrUI8IA/viewform?edit_requested=true")
 
             evo_allowed.handle_event(event)
 

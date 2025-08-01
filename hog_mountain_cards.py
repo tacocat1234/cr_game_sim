@@ -46,7 +46,7 @@ class EliteBarbarian(Troop):
     def attack(self):
         return EliteBarbarianAttackEntity(self.side, self.hit_damage, self.position, self.target)
 
-class Furnace(Building):
+class OldFurnace(Building):
     SPAWN_INTERVAL = 0.5
     def __init__(self, side, position, level):
         super().__init__(
@@ -87,6 +87,44 @@ class Furnace(Building):
                 newFire.deploy_time = 0
                 arena.troops.append(newFire)
                 self.attack_cooldown = self.hit_speed
+
+class FurnaceAttackEntity(RangedAttackEntity):
+    def __init__(self, side, damage, position, target):
+        super().__init__(side, damage, 600*TILES_PER_MIN, position, target)
+
+class Furnace(Troop):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 1302 * pow(1.1, level - 11),         # Hit points (Example value)
+            h_d= 260 * pow(1.1, level - 3),          # Hit damage (Example value)
+            h_s=1.8,          # Hit speed (Seconds per hit)
+            l_t=0.9,            # First hit cooldown
+            h_r=6,            # Hit range
+            s_r=6,            # Sight Range
+            g=True,           # Ground troop
+            t_g_o=False,       # Targets ground-only
+            t_o=False,        # Not tower-only
+            m_s=45*TILES_PER_MIN,          # Movement speed 
+            d_t=1,            # Deploy time
+            m=8,            #mass
+            c_r=0.6,     #collision radius
+            p=position               # Position (vector.Vector object)
+        )
+        self.level = level
+        self.spawn_timer = 2
+
+    def tick_func(self, arena):
+        if self.spawn_timer > 0:
+            self.spawn_timer -= TICK_TIME
+        else:
+            self.spawn_timer = 5
+            f_s = FireSpirit(self.side, self.position.added(vector.Vector(0, 0.6 if self.side else -0.6)), self.level)
+            arena.troops.append(f_s)
+
+    def attack(self):
+        return FurnaceAttackEntity(self.side, self.hit_damage, self.position, self.target)
+    
 
 class ZappyAttackEntity(RangedAttackEntity):
     def __init__(self, side, damage, position, target):

@@ -561,7 +561,7 @@ class MightyMiner(Champion):
 
     
     def ability_end(self, arena):
-        self.move_speed = self.normal_move_speed
+        self.target = None
         self.targetable = True
         self.invulnerable = False
         self.collideable = True
@@ -727,6 +727,11 @@ class Guardienne(Troop):
             p=position               # Position (vector.Vector object)
         )
         self.level = level
+        self.collideable = False
+
+    def tick_func(self, arena):
+        if self.deploy_time < 1 and self.deploy_time > 0:
+            self.collideable = True
 
     def attack(self):
         return GuardienneAttackEntity(self.side, self.hit_damage, self.position, self.target)

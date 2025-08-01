@@ -142,6 +142,7 @@ troop_types = {"knight" : ["minitank"],
     "golemite" : ["minitank", "towertargeting"],
     "elixirgolemite" : ["minitank", "towertargeting"],
     "elixirblob" : ["minitank", "towertargeting"],
+    "furnace" : ["minitank", "splash"],
     "zappy" : ["control", "lowdps"],
     "cursedhog" : ["swarm"],
     "archer" : ["kite"], #not acutally but matches typewise
@@ -168,7 +169,6 @@ troop_types = {"knight" : ["minitank"],
     "infernotower" : ["building", "charge"],
     "mortar" : ["building", "splash", "lowattackspeed"],
     "barbarianhut" : ["building", "swarm"],
-    "furnace" : ["building", "splash"], 
     "tesla" : ["building"], 
     "xbow" : ["building", "highattackspeed"],
     "elixircollector" : ["building", "tank", "towertargeting"],
@@ -227,6 +227,7 @@ troop_is_air = {"knight" : "ground",
     "skeletonbarrel" : "air",
     "goblingiant" : "ground",
     "zappies" : "antiair",
+    "furnace" : "antiair",
     "hunter" : "antiair", 
     "minionhorde" : "air", 
     "elitebarbarians" : "ground",
@@ -339,6 +340,7 @@ troop_attack_range = {
     "dartgoblin": "long",
     "skeletonbarrel": "short",
     "goblingiant": "short",
+    "furnace" : "medium",
     "zappies": "long",
     "hunter": "short",
     "minionhorde": "short",
@@ -548,7 +550,7 @@ class Bot:
                 champion.activate_ability(arena)
             elif n == "littleprince" and (champion.position.y < 1 and (champion.position.x > 3 or champion.position.x < -3)) or (champion.target is not None and ((champion.target.target is champion and champion.target.ground) or champion.cur_hp < 1/2 * champion.hit_points)):
                 champion.activate_ability(arena)
-            elif n == "goblinstein" and ("swarm" in troop_types.get(champion.target.__class__.__name__.lower(), [])):
+            elif n == "goblinstein" and ("swarm" in troop_types.get(champion.target.__class__.__name__.lower(), [])) or isinstance(self.target, Tower):
                 champion.activate_ability(arena)
 
     def tick(self, elixir, things = None, pocket = "none"):
@@ -878,15 +880,30 @@ class Bot:
                     pos = vector.Vector(1.5 + random.randint(0, 2) if threat.position.x > 0 else -1.5 - random.randint(0, 2), round(threat.position.y + 2) + 0.5)
                 else:
                     pos = threat.position.added(vector.Vector(random.randint(-2, 2), random.randint(1, 3)))
+                in_p = (pocket == "all" or (pos.x < 0 and pocket == "left") or (pos.x >= 0 and pocket == "right"))
+                if in_p and pos.y < -5:
+                    pos.y = -5
+                elif not in_p and pos.y < 1:
+                    pos.y = 1
             elif card.name == "icegolem" or card.name == "wallbreakers":
                 if isinstance(threat.target, Tower):
                     return None
                 if threat.position.y < 5 and (threat.position.x < 5 and threat.position.x > -5):
                     cycle(self.hand, i, self.queue, self.champion_index)
                     pos = vector.Vector(-0.5 if threat.position.x > 0 else 0.5, round(threat.position.y + 1) + 0.5) #kite
+                    in_p = (pocket == "all" or (pos.x < 0 and pocket == "left") or (pos.x >= 0 and pocket == "right"))
+                    if in_p and pos.y < -5:
+                        pos.y = -5
+                    elif not in_p and pos.y < 1:
+                        pos.y = 1
                 elif threat.position.y < 8:
                     cycle(self.hand, i, self.queue, self.champion_index)
                     pos = vector.Vector(threat.position.x, threat.position.y - 2)
+                    in_p = (pocket == "all" or (pos.x < 0 and pocket == "left") or (pos.x >= 0 and pocket == "right"))
+                    if in_p and pos.y < -5:
+                        pos.y = -5
+                    elif not in_p and pos.y < 1:
+                        pos.y = 1
                 else:
                     return None
             elif card.name == "suspiciousbush":

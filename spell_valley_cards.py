@@ -60,7 +60,7 @@ class FireSpirit(Troop):
             h_d= 81 * pow(1.1, level - 1),          # Hit damage (Example value)
             h_s=0.3,          # Hit speed (Seconds per hit)
             l_t=0.1,            # First hit cooldown
-            h_r=2,            # Hit range
+            h_r=2.5,            # Hit range
             s_r=5.5,            # Sight Range
             g=True,           # Ground troop
             t_g_o=False,       # Targets ground-only

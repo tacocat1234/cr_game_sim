@@ -735,6 +735,8 @@ def draw():
 
 while True:
     game_type = None
+    TOWER_TYPE = None
+    BOT_TOWER_TYPE = None
     while game_type != "quit":
         game_type, evo_enabled = lobby.run_loop(screen)
 
@@ -803,11 +805,13 @@ while True:
 
     if player_random_deck:
         deck = [Card(True, card, KING_LEVEL, evo_enabled and evo_enabled and can_evo(card)) for card in generate_random_deck()]
-        TOWER_TYPE = "randomtower"
+        if TOWER_TYPE is None:
+            TOWER_TYPE = "randomtower"
 
     # Generate Random Bot Deck
     if bot_random_deck:
-        BOT_TOWER_TYPE = "randomtower"
+        if BOT_TOWER_TYPE is None:
+            BOT_TOWER_TYPE = "randomtower"
         bot_deck = [Card(False, card, BOT_K_L, evo_enabled and can_evo(card)) for card in generate_random_deck()]
 
     p_mirror = next((each for each in deck if each.name == "mirror"), None)
