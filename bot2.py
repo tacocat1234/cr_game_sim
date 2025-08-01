@@ -3,9 +3,8 @@ import copy
 import math
 import statistics
 import vector
-from abstract_classes import TICK_TIME
 from abstract_classes import Troop, Tower
-from card_factory import elixir_map, get_radius
+from card_factory import elixir_map, get_radius, get_type
 from card_factory import champions
 from builders_workshop_cards import Mortar
 from hog_mountain_cards import XBow
@@ -294,7 +293,18 @@ troop_is_air = {"knight" : "ground",
     "littleprince" : "antiair",
     "goblinstein" : "antiair",
     "goldenknight" : "ground",
-    "mightyminer" : "ground"
+    "mightyminer" : "ground",
+    "goblinhut" : "antiair",
+    "goblincage" : "antiair", 
+    "tombstone" : "ground",
+    "cannon" : "ground",
+    "bombtower" : "ground", 
+    "infernotower" : "antiair",
+    "mortar" : "ground",
+    "barbarianhut" : "ground",
+    "tesla" : "ground", 
+    "xbow" : "ground",
+    "elixircollector" : "antiair"
     }
 
 troop_attack_range = {
@@ -415,7 +425,7 @@ def calculate_effectiveness(offense, defense):
 
     o_g = troop_is_air.get(offense, "ground")
     d_g = troop_is_air.get(defense, "ground")
-    if o_g == "air" and d_g == "ground":
+    if o_g == "air" and d_g == "ground" and not get_type(defense) == "building":
         return 0
 
     if offense not in troop_types:
@@ -550,7 +560,7 @@ class Bot:
                 champion.activate_ability(arena)
             elif n == "littleprince" and (champion.position.y < 1 and (champion.position.x > 3 or champion.position.x < -3)) or (champion.target is not None and ((champion.target.target is champion and champion.target.ground) or champion.cur_hp < 1/2 * champion.hit_points)):
                 champion.activate_ability(arena)
-            elif n == "goblinstein" and ("swarm" in troop_types.get(champion.target.__class__.__name__.lower(), [])) or isinstance(self.target, Tower):
+            elif n == "goblinstein" and ("swarm" in troop_types.get(champion.target.__class__.__name__.lower(), [])) or isinstance(champion.target, Tower):
                 champion.activate_ability(arena)
 
     def tick(self, elixir, things = None, pocket = "none"):
