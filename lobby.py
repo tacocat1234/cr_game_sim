@@ -67,6 +67,7 @@ def run_loop(screen):
     septuple = SelectionBox(WIDTH - 100, HEIGHT/2 + 60, 100, 50, "7x Elxiir")
     mega = SelectionBox(WIDTH/2, HEIGHT/2 + 120, 100, 50, "Mega-Draft")
     feedback = SelectionBox(50, HEIGHT - 50, 60, 60, "Feedback")
+    deck_select = SelectionBox(WIDTH - 50, HEIGHT - 50, 60, 60, "Decks")
 
     evo_allowed = CheckBox(WIDTH - 30, 30, 40, 40)
     
@@ -84,6 +85,7 @@ def run_loop(screen):
         septuple.draw(screen)
         mega.draw(screen)
         feedback.draw(screen)
+        deck_select.draw(screen)
 
         evo_allowed.draw(screen)
 
@@ -127,7 +129,9 @@ def run_loop(screen):
                 running = False
             if feedback.handle_event(event) is not None:
                 webbrowser.open("https://docs.google.com/forms/d/1hAG7VlG38uD6lM9FJef6nG3XhCRz8WkfT2WNUrUI8IA/viewform?edit_requested=true")
-
+            if deck_select.handle_event(event) is not None:
+                out = "edit"
+                running = False
             evo_allowed.handle_event(event)
 
         if running:

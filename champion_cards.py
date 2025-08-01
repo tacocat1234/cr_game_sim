@@ -957,7 +957,7 @@ class GoblinsteinAbilityAttackEntity(AttackEntity):
         out = []
         for each in arena.troops + arena.buildings + arena.towers:
             if each.side != self.side and not each.invulnerable:
-                if vector.distance(each.position, self.position) <= 2 or vector.distance(each.position, self.target.position) <= 2 or distance_to_segment(each.position, self.position, self.target.position) <= 2:
+                if vector.distance(each.position, self.position) <= 2 + each.collision_radius or vector.distance(each.position, self.target.position) <= 2 + each.collision_radius or distance_to_segment(each.position, self.position, self.target.position) <= 2 + each.collision_radius:
                     out.append(each)
         return out
 
@@ -1003,7 +1003,18 @@ class Goblinstein(Champion):
 
     def ability(self, arena):
         arena.active_attacks.append(GoblinsteinAbilityAttackEntity(self.side, self.ability_damage, self.ability_ctd, self.position, self.monster, self))
-        
+
+class GoblinsteinMonsterAttackEntity(MeleeAttackEntity):
+    HIT_RANGE = 1.2
+    COLLISION_RADIUS = 0.75
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            side=side,
+            damage=damage,
+            position=position,
+            target=target
+            )
+
 class GoblinsteinMonster(Troop):
     def __init__(self, side, position, level, parent):
         super().__init__(
@@ -1031,6 +1042,9 @@ class GoblinsteinMonster(Troop):
             self.parent.monster = GoblinsteinAntenna(self.side, self.position, self.level, self.parent)
             arena.troops.append(self.parent.monster)
         super().die(arena)
+
+    def attack(self):
+        return GoblinsteinMonsterAttackEntity(self.side, self.hit_damage, self.position, self.target)
 
 class GoblinsteinAntenna(Troop):
     def __init__(self, side, position, level, parent):

@@ -119,16 +119,144 @@ class SubmitBox(SelectionBox):
         if event.type == pygame.MOUSEBUTTONDOWN:
             if self.is_in(*event.pos):
                 self.value = True
-                return True
 
-def run_loop(screen, evo_enabled = True, side = True, against_bot=True, decks=None):
+class DeckBox(SelectionBox):
+    def __init__(self, x, y, width, height):
+        super().__init__(x, y, width, height)
+        self.value = "New Deck"
+
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if self.is_in(*event.pos):
+                x, y = event.pos
+                if x > self.x + self.width / 2 - self.height - 20:
+                    return False  # Clicked on the delete button
+                return True
+            
+    def draw(self, screen):
+        rect = pygame.Rect(self.x - self.width/2, self.y - self.height/2, self.width, self.height)
+        pygame.draw.rect(screen, LIGHT_GRAY if not self.active else GRAY, rect)
+        pygame.draw.rect(screen, BLACK, rect, 2)  # Border
+
+        font = pygame.font.Font(None, self.font_size)
+        text = font.render(str(self.value), True, BLACK)
+        text_rect = text.get_rect(center=(self.x, self.y))
+        screen.blit(text, text_rect)
+
+        # Draw red delete box with X
+        delete_box_size = self.height - 20
+        delete_box_x = self.x + self.width / 2 - delete_box_size - 10
+        delete_box_y = self.y - self.height / 2 + 10
+        delete_rect = pygame.Rect(delete_box_x, delete_box_y, delete_box_size, delete_box_size)
+        pygame.draw.rect(screen, (200, 0, 0), delete_rect)
+        pygame.draw.rect(screen, BLACK, delete_rect, 2)
+
+        # Draw X
+        pygame.draw.line(screen, BLACK, delete_rect.topleft, delete_rect.bottomright, 3)
+        pygame.draw.line(screen, BLACK, delete_rect.topright, delete_rect.bottomleft, 3)
+
+class DeckListBox(SelectionBox):
+    def __init__(self, x, y, width, height):
+        super().__init__(x, y, width, height)
+        self.decks = []
+        self.deck_boxes = []
+
+    def new_deck(self, screen, evo_enabled=True):
+        deck = create_deck(screen, evo_enabled, "ND" + str(len(self.deck_boxes) + 1))
+        if deck is not None:
+            self.deck_boxes.append(DeckBox(self.x, self.y - self.height/2 + 35 + len(self.deck_boxes) * (60), self.width - 20, 50))
+            level, cards, tower_type, name = deck
+            self.deck_boxes[len(self.deck_boxes) - 1].value = name
+            self.decks.append((name, cards, tower_type, level))
+
+    def edit_deck(self, screen, index, evo_enabled=True):
+        if 0 <= index < len(self.deck_boxes):
+            deck = create_deck(screen, evo_enabled, self.deck_boxes[index].value, self.decks[index][3], self.decks[index][1], self.decks[index][2])
+            if deck is not None:
+                level, cards, tower_type, name = deck
+                self.deck_boxes[index].value = name
+                self.decks[index] = (name, cards, tower_type, level)
+    
+    def handle_event(self, event):
+        if event.type == pygame.MOUSEBUTTONDOWN:
+            if self.is_in(*event.pos):
+                for i in range(len(self.deck_boxes)):
+                    h = self.deck_boxes[i].handle_event(event)
+                    if h is not None:
+                        if h:
+                            return i  #index of the deck box clicked
+                        else:
+                            # Handle delete button click
+                            del self.deck_boxes[i]
+                            del self.decks[i]
+                            for j in range(i, len(self.deck_boxes)):
+                                self.deck_boxes[j].y -= 60
+                            return None  # Deck deleted
+
+    def draw(self, screen):
+        rect = pygame.Rect(self.x - self.width/2, self.y - self.height/2, self.width, self.height)
+        pygame.draw.rect(screen, LIGHT_GRAY if not self.active else GRAY, rect)
+        pygame.draw.rect(screen, BLACK, rect, 2)  # Border
+
+        for each in self.deck_boxes:
+            each.draw(screen)
+
+def deck_list_loop(screen, evo_enabled = True, decks=None):
+    deck_list = DeckListBox(WIDTH/2, HEIGHT/2, 300, 640)
+
+    if decks is not None:
+        for name, cards, tower_type, level in decks:
+            deck_list.deck_boxes.append(DeckBox(deck_list.x, deck_list.y - deck_list.height/2 + 35 + len(deck_list.deck_boxes) * 60, deck_list.width - 20, 50))
+            deck_list.deck_boxes[-1].value = name
+            deck_list.decks.append((name, cards, tower_type, level))
+
+    return_box = SubmitBox(WIDTH/2, HEIGHT - 60, 100, 50)
+    new_deck_button = SubmitBox(WIDTH/2, 50, 50, 50) #modify position later
+    new_deck_button.value = "+"
+    new_deck_button.font_size = 48
+    return_box.value = "Return"
+
+    running = True
+    while running:
+        screen.fill((100, 100, 100))
+        deck_list.draw(screen)
+        return_box.draw(screen)
+        new_deck_button.draw(screen)
+
+        font = pygame.font.Font(None, 24) 
+        t = "Deck List"
+        text = font.render(t, True, BLACK)
+        text_rect = text.get_rect(center=(WIDTH/2, 15))
+        screen.blit(text, text_rect)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+            elif event.type == pygame.KEYDOWN:
+                if event.key == pygame.K_ESCAPE:
+                    return None
+            i = deck_list.handle_event(event)
+            return_box.handle_event(event)
+            new_deck_button.handle_event(event)
+
+            if new_deck_button.value == True:
+                deck_list.new_deck(screen, evo_enabled)
+                new_deck_button.value = "+"
+            elif i is not None:
+                deck_list.edit_deck(screen, i, evo_enabled)
+            elif return_box.value == True:
+                return deck_list.decks
+        pygame.display.flip()
+        
+
+
+def create_deck(screen, evo_enabled = True, default_name = "New Deck", level=None, cards=None, tower_type=None):
     lev = SelectionBox(100, 100, 50, 50)
     lev.font_size = 24
-    lev.value = "11" if side or not against_bot else "13"
-    load_deck = SubmitBox(WIDTH - 100, 160, 50, 50) #change position later
-    load_deck.value = "Load"
-    load_deck_text_input = SelectionBox(WIDTH - 100, 100, 150, 50)
-    deck_names = [name for name, _, _, _ in decks] if decks else []
+    lev.value = "11"
+    deck_name = SelectionBox(WIDTH/2, 200, 300, 50)
+    deck_name.value = default_name
+    deck_name.font_size = 24
     all = [
         SelectionBox(WIDTH/5, HEIGHT/2 - 70, 80, 80),
         SelectionBox(2*WIDTH/5, HEIGHT/2 - 70, 80, 80),
@@ -161,6 +289,22 @@ def run_loop(screen, evo_enabled = True, side = True, against_bot=True, decks=No
         CheckBox(4*WIDTH/5, HEIGHT/2 + 10, 20, 20)
     ]
 
+    if cards is not None:
+        for i in range(len(cards)):
+            all[i].value = cards[i].name
+            if cards[i].is_evo and evo_enabled:
+                display_evo[i] = True
+                evo[i].value = True
+            else:
+                display_evo[i] = False
+                evo[i].value = False
+
+    if level is not None:
+        lev.value = str(level)
+
+    if tower_type is not None:
+        tower.value = tower_type
+
     running = True
     while running:
         screen.fill((100, 100, 100))
@@ -180,26 +324,17 @@ def run_loop(screen, evo_enabled = True, side = True, against_bot=True, decks=No
         lev.draw(screen)
         tower.draw(screen)
         submit.draw(screen)
-        load_deck.draw(screen)
-        load_deck_text_input.draw(screen)
+        deck_name.draw(screen)
 
         font = pygame.font.Font(None, 24) 
 
-        t = ("Player Deck" if side else "Bot Deck") if against_bot else ("Player 1 Deck" if side else "Player 2 Deck")
+        t = "Deck Editor"
         text = font.render(t, True, BLACK)  # White text
         text_rect = text.get_rect(center=(WIDTH/2, 15))
         screen.blit(text, text_rect)
 
         text = font.render("Type in boxes", True, BLACK)  # White text
-        text_rect = text.get_rect(center=(WIDTH/2, 180))
-        screen.blit(text, text_rect)
-
-        text = font.render("Empty will be randomized", True, BLACK)  # White text
-        text_rect = text.get_rect(center=(WIDTH/2, 210))
-        screen.blit(text, text_rect)
-
-        text = font.render("Load deck from decks", True, BLACK)  # White text
-        text_rect = text.get_rect(center=(WIDTH - 100, 50))
+        text_rect = text.get_rect(center=(WIDTH/2, 100))
         screen.blit(text, text_rect)
 
         text = font.render("Level", True, BLACK)  # White text
@@ -225,26 +360,7 @@ def run_loop(screen, evo_enabled = True, side = True, against_bot=True, decks=No
             lev.handle_event(event)
             tower.handle_event(event)
             submit.handle_event(event)
-
-            load_deck_text_input.handle_event(event)
-
-            if len(deck_names) > 0 and load_deck_text_input.value != "" and load_deck.handle_event(event) is not None :
-                d_name = fuzzy_match(load_deck_text_input.value, deck_names)
-                index = deck_names.index(d_name)
-                name, cards, tower_type, level = decks[index]
-                for i in range(len(cards)):
-                    all[i].value = cards[i].name
-                    if cards[i].is_evo and evo_enabled:
-                        display_evo[i] = True
-                        evo[i].value = True
-                    else:
-                        display_evo[i] = False
-                        evo[i].value = False
-                tower.value = tower_type
-                lev.value = str(level)
-                load_deck_text_input.value = ""
-                load_deck.value = "Load"  # Reset button text
-
+            deck_name.handle_event(event)
             if submit.value != "Submit":
                 running = False
         pygame.display.flip()
@@ -262,14 +378,11 @@ def run_loop(screen, evo_enabled = True, side = True, against_bot=True, decks=No
 
     temp = []
 
-    if len(rand_input) != 8:
-        temp = generate_random_remaining(rand_input, evo_enabled)
-    else:
-        temp = [[each[2], each[3]] for each in rand_input]
+    temp = [[each[2], each[3]] for each in rand_input]
 
     for each in temp:
-        out.append(Card(side, each[0], int(lev.value), each[1]))
+        out.append(Card(True, each[0], int(lev.value), each[1])) #not nesscarily full deck, side also gets rewritten later
 
-    t = random.choice(["princesstower", "cannoneer", "daggerduchess", "royalchef"]) if tower.value == "" else fuzzy_match(tower.value, ["princesstower", "cannoneer", "daggerduchess", "royalchef"])
+    t = "" if tower.value == "" else fuzzy_match(tower.value, ["princesstower", "cannoneer", "daggerduchess", "royalchef"])
 
-    return len(rand_input) == 0, int(lev.value), out, t
+    return int(lev.value), out, t, deck_name.value

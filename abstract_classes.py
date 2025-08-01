@@ -123,9 +123,15 @@ class RangedAttackEntity(AttackEntity):
         self.cleanup_func(arena)
         self.duration -= TICK_TIME
         if self.duration <= 0:
-            arena.active_attacks.remove(self)
+            try:
+                arena.active_attacks.remove(self)
+            except ValueError:
+                print(self.__class__.__name__ + " not in active attacks")
         if self.should_delete:
-            arena.active_attacks.remove(self)
+            try:
+                arena.active_attacks.remove(self)
+            except ValueError:
+                print(self.__class__.__name__ + " not in active attacks")
 
 class MeleeAttackEntity(AttackEntity):
     HIT_RANGE = 0

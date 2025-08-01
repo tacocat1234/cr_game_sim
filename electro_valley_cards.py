@@ -627,7 +627,7 @@ class MegaKnightJumpAttackEntity(AttackEntity):
         if not isinstance(target, Tower) and vector.distance(self.position, target.position) < 1:
             vec = target.position.subtracted(self.position)
             vec.normalize()
-            if target.can_kb and not target.invulnerable:
+            if not target.invulnerable and isinstance(target, Troop) and target.can_kb:
                 target.kb(vec)
     
     def detect_hits(self, arena):

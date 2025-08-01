@@ -48,6 +48,11 @@ class RoyalRecruit(Troop):
         class_name = self.__class__.__name__.lower()
         self.sprite_path = f"sprites/{class_name}/{class_name}_0.png"
 
+    def level_up(self):
+        self.shield_max_hp *= 1.1
+        self.shield_hp *= 1.1
+        return super().level_up()
+
     def damage(self, amount):
         if self.shield_hp > 0:
             self.shield_hp -= amount
@@ -368,6 +373,11 @@ class DarkPrince(Troop):
         self.shield_hp = self.shield_max_hp
         class_name = self.__class__.__name__.lower()
         self.sprite_path = f"sprites/{class_name}/{class_name}_0.png"
+    
+    def level_up(self):
+        self.shield_max_hp *= 1.1
+        self.shield_hp *= 1.1
+        return super().level_up()
     
     def kb(self, vec, t=None):
         if vec.magnitude() > 0:

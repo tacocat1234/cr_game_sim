@@ -621,14 +621,13 @@ class Bot:
             if target is not None:
                 ind = each[3]
                 card = self.cards[ind]
+                pos = target
                 if card.name == "barbarianbarrel":
-                    pos = target
                     if pos.y < -4.7:
                         return None
                     elif pos.y < 0:
                         pos.y = 1
                 elif card.name == "log":
-                    pos = target
                     if pos.y < -10.1:
                         return None
                     elif pos.y < 0:
@@ -882,7 +881,28 @@ class Bot:
                 return None
 
             pos = None
-            if card.type == "building":
+            if card.type == "spell":
+                if card.name == "barbarianbarrel":
+                    if threat.position.y < -4.7:
+                        return None
+                    elif threat.position.y < 0:
+                        pos = vector.Vector(threat.position.x, 1)
+                    else:
+                        pos = threat.position.added(vector.Vector(0, 1.5))
+                elif card.name == "log":
+                    if threat.position.y < -10.1:
+                        return None
+                    elif threat.position.y < 0:
+                        pos = vector.Vector(threat.position.x, 1)
+                    else:
+                        pos = threat.position.added(vector.Vector(0, 1.5))
+                elif card.name == "royaldelivery":
+                    pos = threat.position.added(vector.Vector(0, 2.0))
+                    if pos.y <= 0:
+                        return None
+                else:
+                    pos = threat.position.added(vector.Vector(0, 1.5))
+            elif card.type == "building":
                 cycle(self.hand, i, self.queue, self.champion_index)
                 if threat.position.y < 5:
                     pos = vector.Vector(0.5 + random.randint(0, 1) if threat.position.x > 0 else -0.5 - random.randint(0, 1), round(threat.position.y + 3) + 0.5)

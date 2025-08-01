@@ -12,6 +12,7 @@ from card_factory import can_evo
 from card_factory import champions
 import arena
 import deck_select
+import deck_save
 import triple_draft
 import draft
 import megadraft
@@ -733,56 +734,65 @@ def draw():
 
     pygame.display.flip()
 
+
+saved_decks = None
 while True:
     game_type = None
     TOWER_TYPE = None
     BOT_TOWER_TYPE = None
     while game_type != "quit":
         game_type, evo_enabled = lobby.run_loop(screen)
-
+        if game_type == "edit":
+            decks = deck_save.deck_list_loop(screen, evo_enabled, saved_decks)
+            if decks is not None:
+                if len(decks) == 0:
+                    saved_decks = None
+                saved_decks = decks
         if game_type == "triple_draft":
             player_random_deck = False
             bot_random_deck = True
             KING_LEVEL = 11
             BOT_K_L = 13
             deck, TOWER_TYPE = triple_draft.run_loop(screen, evo_enabled)
+            break
         elif game_type == "draft":
             player_random_deck = False
             bot_random_deck = False
             KING_LEVEL = 11
             BOT_K_L = 13
             deck, TOWER_TYPE, bot_deck, BOT_TOWER_TYPE = draft.run_loop(screen, evo_enabled)
+            break
         elif game_type == "normal":
-            tup = deck_select.run_loop(screen, evo_enabled, True)
+            tup = deck_select.run_loop(screen, evo_enabled, True, True, saved_decks)
             if tup is not None:
                 player_random_deck, KING_LEVEL, deck, TOWER_TYPE = tup
-                tup = deck_select.run_loop(screen, evo_enabled, False)
+                tup = deck_select.run_loop(screen, evo_enabled, False, True, saved_decks)
                 if tup is not None:
                     bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = tup
                     break
         elif game_type == "double":
-            tup = deck_select.run_loop(screen, evo_enabled, True)
+            tup = deck_select.run_loop(screen, evo_enabled, True, True, saved_decks)
             if tup is not None:
                 player_random_deck, KING_LEVEL, deck, TOWER_TYPE = tup
-                tup = deck_select.run_loop(screen, evo_enabled, False)
+                tup = deck_select.run_loop(screen, evo_enabled, False, True, saved_decks)
                 if tup is not None:
                     game_arena.elixir_rate = 2
                     bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = tup
                     break
         elif game_type == "triple":
-            tup = deck_select.run_loop(screen, evo_enabled, True)
+            tup = deck_select.run_loop(screen, evo_enabled, True, True, saved_decks)
             if tup is not None:
                 player_random_deck, KING_LEVEL, deck, TOWER_TYPE = tup
-                tup = deck_select.run_loop(screen, evo_enabled, False)
+                tup = deck_select.run_loop(screen, evo_enabled, False, True, saved_decks)
                 if tup is not None:
                     game_arena.elixir_rate = 3
                     bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = tup
                     break
         elif game_type == "septuple":
-            tup = deck_select.run_loop(screen, evo_enabled, True)
+            tup = deck_select.run_loop(screen, evo_enabled, True, True, saved_decks)
             if tup is not None:
                 player_random_deck, KING_LEVEL, deck, TOWER_TYPE = tup
-                tup = deck_select.run_loop(screen, evo_enabled, False)
+                tup = deck_select.run_loop(screen, evo_enabled, False, True, saved_decks)
                 if tup is not None:
                     bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = tup
                     game_arena.elixir_rate = 7
