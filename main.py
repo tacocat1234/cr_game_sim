@@ -187,6 +187,11 @@ dd_symbol_img = pygame.image.load("sprites/daggerduchess/duchess_symbol.png").co
 rc_symbol_img = pygame.image.load("sprites/royalchefkingtower/royalchef_symbol.png").convert_alpha()
 elixir_int_img = pygame.image.load("sprites/elixir_bar.png").convert_alpha()
 
+red_crown_img = pygame.image.load("sprites/red_crown.png").convert_alpha()
+blue_crown_img = pygame.image.load("sprites/blue_crown.png").convert_alpha()
+blue_display_img = pygame.image.load("sprites/blue_display.png").convert_alpha()
+red_display_img = pygame.image.load("sprites/red_display.png").convert_alpha()
+
 #temp
 #game_arena.troops.append(training_camp_cards.Giant(True, vector.Vector(-2, -3)
 #game_arena.troops.append(training_camp_cards.Archer(True, vector.Vector(-3, -4)
@@ -866,8 +871,8 @@ while True:
         bot_tower_a = towers.DaggerDuchess(False, BOT_P_L, True)
         bot_tower_b = towers.DaggerDuchess(False, BOT_P_L, False)
     elif BOT_TOWER_TYPE.lower() == "royalchef":
-        bot_tower_a = towers.RoyalChef(False, PRINCESS_LEVEL, True)
-        bot_tower_b = towers.RoyalChef(False, PRINCESS_LEVEL, False)
+        bot_tower_a = towers.RoyalChef(False, BOT_P_L, True)
+        bot_tower_b = towers.RoyalChef(False, BOT_P_L, False)
         b_k = towers.RoyalChefKingTower(False, BOT_K_L)
 
     err = False
@@ -1072,25 +1077,88 @@ while True:
     winfont = pygame.font.Font(None, 100)  # Adjust font size as needed
     text = None
     if win is None:
-        text = winfont.render("quit_screen_text", True, WHITE)
+        text = winfont.render("quit_screen_text", True, BLACK)
     elif win:
-        text = winfont.render("YOU WIN", True, WHITE)
+        text = winfont.render("YOU WIN", True, BLACK)
     else:
-        text = winfont.render("YOU LOSE", True, WHITE)
+        text = winfont.render("YOU LOSE", True, BLACK)
 
+    p_has_k = False
+    b_has_k = False
+    for tower in game_arena.towers:
+        if isinstance(tower, towers.KingTower):
+            if tower.side:
+                p_has_k = True
+            else:
+                b_has_k = True
+    
+    if not p_has_k:
+        for each in game_arena.towers:
+            if each.side:
+                game_arena.towers.remove(each)
 
+    if not b_has_k:
+        for each in game_arena.towers:
+            if not each.side:
+                game_arena.towers.remove(each)
+
+    
+    b_taken = 3
+    p_taken = 3
+    for each in game_arena.towers:
+        if each.side:
+            b_taken -= 1
+        else:
+            p_taken -= 1
+            
 
     # Get text rectangle and center it
-    text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2))
-    tip = font.render("CLICK TO RETURN TO LOBBY", True, WHITE)
-    tip_rect = tip.get_rect(center=(WIDTH // 2, HEIGHT // 2 + 60))
+    text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 64 - 60))
 
-    pause = 60
+    tip_font = pygame.font.Font(None, 30)  # Adjust font size as needed
+    tip = tip_font.render("CLICK TO RETURN TO LOBBY", True, GRAY)
+    tip_rect = tip.get_rect(center=(WIDTH // 2, HEIGHT // 2  - 64 ))
+
+    draw() # Redraw screen with final state
+
+    display_rect = red_display_img.get_rect(center=(WIDTH / 2, (HEIGHT - 128) / 2 - 130))
+    screen.blit(red_display_img, display_rect)
+
+    display_rect = blue_display_img.get_rect(center=(WIDTH / 2, (HEIGHT - 128) / 2 + 130))
+    screen.blit(blue_display_img, display_rect)
+    
+    d = 60
+    h = 45
+    e_h = 10
+
+    p_crown_positions = []
+    if p_taken == 3:
+        p_crown_positions = [(64 + d, (HEIGHT - 128) / 2 + 130 - h), (64 + 180, (HEIGHT - 128) / 2 + 130 - h - e_h), (64 + 360 - d, (HEIGHT - 128) / 2 + 130 - h)]
+    elif p_taken == 2:
+        p_crown_positions = [(64 + d, (HEIGHT - 128) / 2 + 130 - h), (64 + 180, (HEIGHT - 128) / 2 + 130 - h - e_h)]
+    elif p_taken == 1:
+        p_crown_positions = [(64 + d, (HEIGHT - 128) / 2 + 130 - h)]
+
+    b_crown_positions = []
+    if b_taken == 3:
+        b_crown_positions = [(64 + d, (HEIGHT - 128) / 2 - 130 - h), (64 + 180, (HEIGHT - 128) / 2 - 130 - h - e_h), (64 + 360 - d, (HEIGHT - 128) / 2 - 130 - h)]
+    elif b_taken == 2:
+        b_crown_positions = [(64 + d, (HEIGHT - 128) / 2 - 130 - h), (64 + 180, (HEIGHT - 128) / 2 - 130 - h - e_h)]
+    elif b_taken == 1:
+        b_crown_positions = [(64 + d, (HEIGHT - 128) / 2 - 130 - h)]
+
+    for each in p_crown_positions:
+        crown_rect = blue_crown_img.get_rect(center=each)
+        screen.blit(blue_crown_img, crown_rect)
+    for each in b_crown_positions:
+        crown_rect = red_crown_img.get_rect(center=each)
+        screen.blit(red_crown_img, crown_rect)
+
+    pause = 120
 
     while running:
         clock.tick(60)  # 60 FPS
         pause -= 1
-        screen.fill(BLACK)  # Fill background
         screen.blit(text, text_rect)  # Draw text
         screen.blit(tip, tip_rect)
 

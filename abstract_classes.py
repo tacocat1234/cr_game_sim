@@ -532,14 +532,15 @@ class Troop:
             direction_y = self.target.position.y - self.position.y
             distance_to_target = math.sqrt(direction_x ** 2 + direction_y ** 2)
 
-
-        if vector.distance(self.target.position, self.position) >= self.hit_range + self.collision_radius + self.target.collision_radius - 0.1: #within hit range, then dont move just attack
+        d = vector.distance(self.target.position, self.position)
+        if d >= self.hit_range + self.collision_radius + self.target.collision_radius - 0.1: #within hit range, then dont move just attack
             direction_x /= distance_to_target
             direction_y /= distance_to_target
             # Move in the direction of the target
 
-            self.position.x += direction_x  * m_s
-            self.position.y += direction_y * m_s
+            if d >= self.hit_range + self.collision_radius + self.target.collision_radius or isinstance(self.target, Troop):
+                self.position.x += direction_x  * m_s
+                self.position.y += direction_y * m_s
             angle = math.degrees(math.atan2(direction_y, direction_x))  # Get angle in degrees
             self.facing_dir = angle
             self.move_vector = vector.Vector(direction_x * m_s, direction_y * m_s)
