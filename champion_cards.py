@@ -873,9 +873,9 @@ class BossBandit(Champion):
             self.move_speed = self.normal_move_speed
 
     def ability(self, arena):
-        if self.dashing:
+        if self.dashing or self.should_dash:
             self.ability_duration_timer_timer = 0 #end
-            self.ability_cooldown_timer = 3
+            self.ability_cooldown_timer = 999
             self.delayed_ability = True
             return
         self.targetable = False
