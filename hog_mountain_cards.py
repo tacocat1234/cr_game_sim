@@ -96,7 +96,7 @@ class Furnace(Troop):
     def __init__(self, side, position, level):
         super().__init__(
             s=side,              # Side (True for one player, False for the other)
-            h_p= 1302 * pow(1.1, level - 11),         # Hit points (Example value)
+            h_p= 727 * pow(1.1, level - 11),         # Hit points (Example value)
             h_d= 260 * pow(1.1, level - 11),          # Hit damage (Example value)
             h_s=1.8,          # Hit speed (Seconds per hit)
             l_t=0.9,            # First hit cooldown
@@ -119,7 +119,7 @@ class Furnace(Troop):
             if self.spawn_timer > 0:
                 self.spawn_timer -= TICK_TIME
             else:
-                self.spawn_timer = 5
+                self.spawn_timer = 7
                 f_s = FireSpirit(self.side, self.position.added(vector.Vector(0, 0.6 if self.side else -0.6)), self.level)
                 arena.troops.append(f_s)
 

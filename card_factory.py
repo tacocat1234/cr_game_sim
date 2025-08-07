@@ -191,7 +191,7 @@ def tower_factory(side, name, level):
         raise Exception("Invalid tower type.")
 
 def get_clone(obj):
-    if obj.__class__.__name__.lower() in champions:
+    if obj.__class__.__name__.lower() in champions or obj.__class__.__name__.lower() in troops or obj.__class__.__name__.lower() == "goblinsteinmonster":
         return None
     if obj.__class__.__name__ == "Miner":
         return electro_valley_cards.Miner(obj.side, copy.deepcopy(obj.position), obj.level, True)
