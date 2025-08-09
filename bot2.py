@@ -902,6 +902,7 @@ class Bot:
                         return None
                 else:
                     pos = threat.position.added(vector.Vector(0, 1.5))
+                cycle(self.hand, i, self.queue, self.champion_index)
             elif card.type == "building":
                 cycle(self.hand, i, self.queue, self.champion_index)
                 if threat.position.y < 5:

@@ -362,7 +362,7 @@ class Troop:
         min_dist = float('inf')
         if not self.tower_only: #if not tower targeting
             for each in arena.troops: #for each troop
-                if each.targetable and not each.invulnerable and each.side != self.side and (not self.ground_only or (self.ground_only and each.ground)): #targets air or is ground only and each is ground troup
+                if each.targetable and each.side != self.side and (not self.ground_only or (self.ground_only and each.ground)): #targets air or is ground only and each is ground troup
                     dist = vector.distance(each.position, self.position)
                     if  dist < min_dist and dist < self.sight_range + self.collision_radius + each.collision_radius:
                         self.target = each
@@ -719,7 +719,7 @@ class Tower:
         min_dist = float('inf')
         for each in arena.troops + arena.buildings:
             dist = vector.distance(each.position, self.position)
-            if not each.invulnerable and each.targetable and each.side != self.side and dist < min_dist and dist < self.hit_range + self.collision_radius + each.collision_radius:
+            if each.targetable and each.side != self.side and dist < min_dist and dist < self.hit_range + self.collision_radius + each.collision_radius:
                 self.target = each
                 min_dist = vector.distance(each.position, self.position)
     
@@ -977,7 +977,7 @@ class Building:
         min_dist = float('inf')
         for each in arena.troops + arena.buildings + arena.towers:
             dist = vector.distance(each.position, self.position)
-            if (isinstance(each, Tower) or ((not each.invulnerable and each.targetable) and (not self.ground_only or (self.ground_only and each.ground)))) and each.side != self.side and dist < min_dist and dist < self.hit_range + self.collision_radius + each.collision_radius:
+            if (isinstance(each, Tower) or (each.targetable and (not self.ground_only or (self.ground_only and each.ground)))) and each.side != self.side and dist < min_dist and dist < self.hit_range + self.collision_radius + each.collision_radius:
                 self.target = each
                 min_dist = vector.distance(each.position, self.position)
 

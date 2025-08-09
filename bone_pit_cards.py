@@ -153,7 +153,7 @@ class Tombstone(Building):
                 self.next_spawn -= TICK_TIME
     
     def tick(self, arena):
-        if self.preplace:
+        if self.preplace or self.deploy_time > 0:
             return
         if self.stun_timer <= 0:
             if self.attack_cooldown <= 0: #attack code

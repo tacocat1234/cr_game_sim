@@ -120,18 +120,20 @@ class CheckBox(SelectionBox):
     def __init__(self, x, y, width, height, text=None):
         super().__init__(x, y, width, height)
         self.value = False
+        self.side = None
         self.text = text
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
             if not self.value and self.is_in(*event.pos):
                 self.value = True
+                self.side = True
                 return True
         return False
 
     def draw(self, screen):
         rect = pygame.Rect(self.x - self.width / 2, self.y - self.height / 2, self.width, self.height)
-        pygame.draw.rect(screen, (220, 220, 220) if not self.value else LIGHT_GRAY, rect)
+        pygame.draw.rect(screen, (220, 220, 220) if not self.value else ((150, 150, 200) if self.side else (200, 150, 150)), rect)
         pygame.draw.rect(screen, BLACK, rect, 2)  # Border
         font = pygame.font.Font(None, self.font_size) 
         text = font.render(str(self.text), True, BLACK)  # White text
@@ -304,6 +306,7 @@ def run_loop(screen, evo_enabled = False, side = True):
             chosen.append(selected)
 
             all[selected].value = True
+            all[selected].side = False
             bot_deck[b_i].value = choose
             b_i += 1
             out2.append(Card(side, choose, 13, evo_enabled and can_evo(choose)))

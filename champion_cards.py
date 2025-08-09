@@ -689,11 +689,12 @@ class RoyalRescueAttackEntity(MeleeAttackEntity):
             if (new):
                 if not each.invulnerable:
                     each.damage(self.damage)
-                    dir_vec = each.position.subtracted(self.parent_pos)
-                    vec = each.position.subtracted(self.position)
-                    dir_vec.normalize()
-                    dir_vec.scale(2 - vec.magnitude()/self.SPLASH_RADIUS)
-                    each.kb(vec)
+                    if isinstance(each, Troop) and each.can_kb and not each.invulnerable:
+                        dir_vec = each.position.subtracted(self.parent_pos)
+                        vec = each.position.subtracted(self.position)
+                        dir_vec.normalize()
+                        dir_vec.scale(2 - vec.magnitude()/self.SPLASH_RADIUS)
+                        each.kb(vec)
                 self.has_hit.append(each)
 
 class GuardienneAttackEntity(MeleeAttackEntity):
@@ -807,7 +808,7 @@ class BossBandit(Champion):
                 self.target = t_t
         
     def tick_func(self, arena):
-        if self.delayed_ability and not self.dashing:
+        if self.delayed_ability and not self.dashing and self.stun_timer <= 0:
             self.ability_active = True
             self.ability_duration_timer = self.ability_duration
             self.ability_cast_timer = 0
@@ -875,7 +876,7 @@ class BossBandit(Champion):
     def ability(self, arena):
         if self.dashing or self.should_dash:
             self.ability_duration_timer_timer = 0 #end
-            self.ability_cooldown_timer = 999
+            self.ability_cooldown_timer = 3
             self.delayed_ability = True
             return
         self.targetable = False
