@@ -59,6 +59,7 @@ class EvolutionGoblinCage(goblin_stadium_cards.GoblinCage):
         if self.target is not None:
             self.target.collideable = True
             self.target.targetable = True
+            self.target.position.add(vector.Vector(0, 0.5 if self.side else -0.5))
         arena.troops.append(EvolutionGoblinBrawler(self.side, self.position, self.level))
         arena.buildings.remove(self)
         self.cur_hp = -1

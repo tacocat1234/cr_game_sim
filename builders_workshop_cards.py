@@ -102,6 +102,12 @@ class Mortar(Building):
 
                 angle = math.degrees(math.atan2(each.position.y - self.position.y, each.position.x - self.position.x))  # Get angle in degrees
                 self.facing_dir = angle
+
+    def tick_func(self, arena):
+        if self.target is not None:
+            dist = vector.distance(self.target.position, self.position)
+            if dist < self.min_hit_range + self.collision_radius - self.target.collision_radius:
+                self.update_target(arena)
     
     def attack(self):
         return MortarAttackEntity(self.side, self.hit_damage, self.position, copy.deepcopy(self.target.position))
