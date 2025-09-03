@@ -3,6 +3,18 @@
 
 dependencies: python, pygame
 
+if on school computer:
+DOWNLOAD PYTHON SUITE 3.12 FROM SOFTWARE CENTER (SEARCH "PYTHON") OR THIS WON'T WORK
+otherwise:
+pip install pygame
+
+VIDEO INSTRUCTIONS IF YALL DON'T WANT TO READ
+downloading:
+https://youtube.com/watch?v=ApuAUBtC7hk
+creating shortcut:
+https://www.youtube.com/watch?v=tYmvUgQlXNE
+
+
 run `_CRASH_ROYALE.bat`
 
 or `_CRASH_ROYALE_LOCAL2P.bat` for local 2P. Draft/Triple Draft dont fully work yet for 2P
