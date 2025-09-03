@@ -9,8 +9,8 @@ from card_factory import can_evo
 from card_factory import champions
 import arena
 import deck_select
-import triple_draft
-import draft
+import triple_draft_2p
+import draft_2p
 import megadraft_2p
 import lobby
 import towers
@@ -806,17 +806,17 @@ while True:
                 saved_decks = decks
         if game_type == "triple_draft":
             player_random_deck = False
-            bot_random_deck = True
+            bot_random_deck = False
             KING_LEVEL = 11
-            BOT_K_L = 13
-            deck, TOWER_TYPE = triple_draft.run_loop(screen, evo_enabled)
+            BOT_K_L = 11
+            deck, TOWER_TYPE, bot_deck, BOT_TOWER_TYPE = triple_draft_2p.run_loop(screen, evo_enabled)
             break
         elif game_type == "draft":
             player_random_deck = False
             bot_random_deck = False
             KING_LEVEL = 11
-            BOT_K_L = 13
-            deck, TOWER_TYPE, bot_deck, BOT_TOWER_TYPE = draft.run_loop(screen, evo_enabled)
+            BOT_K_L = 11
+            deck, TOWER_TYPE, bot_deck, BOT_TOWER_TYPE = draft_2p.run_loop(screen, evo_enabled)
             break
         elif game_type == "normal":
             tup = deck_select.run_loop(screen, evo_enabled, True, False, saved_decks)
@@ -977,6 +977,7 @@ while True:
     p_prev = None
     b_prev = None
     OFFSET = WIDTH + BUFFER
+    paused = False
     while running:
         clock.tick(60)  # 60 FPS
 
@@ -987,6 +988,8 @@ while True:
             if event.type == pygame.KEYDOWN:
                 if event.unicode == "b" or event.key == pygame.K_ESCAPE:
                     running = False
+                if event.unicode == "p":
+                    paused = not paused
             # Detect finger click in the bottom 128 pixels
             elif event.type == pygame.FINGERDOWN:
                 finger_x = event.x * FULL_WIDTH#
@@ -1167,24 +1170,25 @@ while True:
                 elif each.position.x < 0: #is negative
                     true_has_left = True
 
-        game_arena.tick()  # Update game logic
-        fin = game_arena.cleanup()
+        if not paused:
+            game_arena.tick()  # Update game logic
+            fin = game_arena.cleanup()
 
-        if p1_c_index is not None and game_arena.p1_champion is None:
-            cycler.append(p1_c_index)
-            p1_c_index = None
+            if p1_c_index is not None and game_arena.p1_champion is None:
+                cycler.append(p1_c_index)
+                p1_c_index = None
 
-        if p2_c_index is not None and game_arena.p2_champion is None:
-            cycler.append(p2_c_index)
-            p2_c_index = None
+            if p2_c_index is not None and game_arena.p2_champion is None:
+                cycler.append(p2_c_index)
+                p2_c_index = None
 
-        if fin is not None:
-            win = fin
-            break
-        
-        draw(True)  # Redraw screen
-        draw(False)
-        pygame.display.flip()
+            if fin is not None:
+                win = fin
+                break
+            
+            draw(True)  # Redraw screen
+            draw(False)
+            pygame.display.flip()
 
     winfont = pygame.font.Font(None, 100)  # Adjust font size as needed
     text = None

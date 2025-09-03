@@ -258,7 +258,7 @@ class ElectroGiant(Troop):
         super().__init__(
             s=side,              # Side (True for one player, False for the other)
             h_p= 2410 * pow(1.1, level - 6),         # Hit points (Example value)
-            h_d= 0 * 102 * pow(1.1, level - 6),          # Hit damage (Example value)
+            h_d= 102 * pow(1.1, level - 6),          # Hit damage (Example value)
             h_s=2.1,          # Hit speed (Seconds per hit)
             l_t=0.6,            # First hit cooldown
             h_r=1.2,            # Hit range
