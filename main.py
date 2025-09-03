@@ -1074,6 +1074,9 @@ while True:
 
         draw()  # Redraw screen
 
+    if game_type == "quit":
+        break
+
     winfont = pygame.font.Font(None, 100)  # Adjust font size as needed
     text = None
     if win is None:
@@ -1111,7 +1114,6 @@ while True:
         else:
             p_taken -= 1
             
-
     # Get text rectangle and center it
     text_rect = text.get_rect(center=(WIDTH // 2, HEIGHT // 2 - 64 - 60))
 
@@ -1171,9 +1173,6 @@ while True:
 
 
         #count += 1
-
-    if game_type == "quit":
-        break
 
     game_arena = arena.Arena()
     p1_c_index = None
