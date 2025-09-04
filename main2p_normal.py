@@ -189,6 +189,14 @@ select_img = pygame.image.load("sprites/tileselect.png").convert_alpha()
 dd_symbol_img = pygame.image.load("sprites/daggerduchess/duchess_symbol.png").convert_alpha()
 rc_symbol_img = pygame.image.load("sprites/royalchefkingtower/royalchef_symbol.png").convert_alpha()
 elixir_int_img = pygame.image.load("sprites/elixir_bar.png").convert_alpha()
+timer_images = []
+for i in range(9):
+    img = pygame.image.load(f"sprites/timer/timer_{i}.png").convert_alpha()
+    w, h = img.get_size()
+    img = pygame.transform.scale(img, (w // 2.5, h // 2.5))  # scale to 1/2 size
+    timer_images.append(img)
+loss_images = [pygame.image.load(f"sprites/elixir_loss/{i + 1}.png").convert_alpha() for i in range (10)]
+
 
 #temp
 #game_arena.troops.append(training_camp_cards.Giant(True, vector.Vector(-2, -3)
@@ -450,6 +458,13 @@ def draw(side):
 
             pygame.draw.rect(screen, building_color, (level_box_x, level_box_y, level_box_size, level_box_size))
 
+            if building.deploy_time > 0 and not building.preplace:
+                ratio = max(0, min(1, 1 - building.deploy_time / 1))  # clamp between 0–1
+                index = int(ratio * 8)  # 0 → timer_0, 1 → timer_8
+                timer_img = timer_images[index]
+                timer_rect = timer_img.get_rect(center=(building_x, building_y))
+                screen.blit(timer_img, timer_rect)
+
             # Render level number text
             level_text = font.render(str(building.level), True, WHITE)  # White text
             text_rect = level_text.get_rect(center=(level_box_x + level_box_size / 2, level_box_y + level_box_size / 2))
@@ -551,6 +566,12 @@ def draw(side):
                     # Draw square
                     pygame.draw.rect(screen, troop_color, (level_box_x, level_box_y, level_box_size, level_box_size))
 
+                if troop.deploy_time > 0 and not troop.preplace:
+                    ratio = max(0, min(1, 1 - troop.deploy_time / 1))  # clamp between 0–1
+                    index = int(ratio * 8)  # 0 → timer_0, 1 → timer_8
+                    timer_img = timer_images[index]
+                    timer_rect = timer_img.get_rect(center=(troop_x, troop_y))
+                    screen.blit(timer_img, timer_rect)
 
                 # Render level number text 
                 level_text = font.render(str(troop.level), True, WHITE)  # White text
@@ -630,6 +651,12 @@ def draw(side):
                 # Draw square
                 pygame.draw.rect(screen, troop_color, (level_box_x, level_box_y, level_box_size, level_box_size))
 
+            if troop.deploy_time > 0 and not troop.preplace:
+                ratio = max(0, min(1, 1 - troop.deploy_time / 1))  # clamp between 0–1
+                index = int(ratio * 8)  # 0 → timer_0, 1 → timer_8
+                timer_img = timer_images[index]
+                timer_rect = timer_img.get_rect(center=(troop_x, troop_y))
+                screen.blit(timer_img, timer_rect)
 
             # Render level number text 
             level_text = font.render(str(troop.level), True, WHITE)  # White text
@@ -681,7 +708,7 @@ def draw(side):
             else:
                 spell_x, spell_y = convert_to_pygame(spell.position, side)
                 is_gs = spell.__class__.__name__ == "EvolutionGiantSnowball"
-                size = spell.radius * SCALE if spell.spawn_timer <= 0 and not is_gs else 1 * SCALE
+                size = spell.radius * SCALE if not is_gs and spell.spawn_timer <= 0 else 1 * SCALE
 
 
                 if spell.spawn_timer <= 0 and not is_gs:
@@ -700,6 +727,32 @@ def draw(side):
                 text_surface = font.render(class_name, True, (255, 255, 255))  # White color text
                 text_rect = text_surface.get_rect(center=(spell_x, spell_y))  # 10 pixels above the troop
                 screen.blit(text_surface, text_rect)
+
+    for tracker in game_arena.elixir_trackers:
+        if tracker.side == side:
+            timer_img = loss_images[tracker.amount - 1]
+
+            # scale factor based on tracker.timer (0 → shrink, 1 → grow)
+            # at 0.5 → normal size (1.0 scale)
+            a = 1.7
+            scale = -(a*(tracker.timer - (1 - 1/a)))**4 + 1
+            off = (scale - 1) * (1 if side else -1)
+
+            # calculate new size
+            new_size = (
+                int(timer_img.get_width() * scale),
+                int(timer_img.get_height() * scale)
+            )
+
+            # resize the image
+            scaled_img = pygame.transform.smoothscale(timer_img, new_size)
+
+            # keep image centered
+            timer_rect = scaled_img.get_rect(
+                center=convert_to_pygame(vector.Vector(tracker.x, tracker.y + off), side)
+            )
+
+            screen.blit(scaled_img, timer_rect)
         
     card_name_font = pygame.font.Font(None, 24)  # Use a larger font for card names
     

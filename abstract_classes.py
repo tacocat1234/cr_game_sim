@@ -1040,3 +1040,17 @@ class Building:
                 self.attack_cooldown -= TICK_TIME
         else:
             self.stun_timer -= TICK_TIME
+
+class ElixirLossTracker:
+    def __init__(self, x, y, amount, side, container):
+        self.x = x
+        self.y = y
+        self.amount = amount
+        self.timer = 1
+        self.side = side
+        self.container = container
+
+    def tick(self):
+        self.timer -= TICK_TIME
+        if self.timer <= 0:
+            self.container.elixir_trackers.remove(self)

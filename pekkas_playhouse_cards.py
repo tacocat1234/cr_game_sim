@@ -207,10 +207,22 @@ class Witch(Troop):
                     self.spawn_timer = self.spawn_time
 
     def spawn(self, arena):
-        arena.troops.append(Skeleton(self.side, self.position.added(vector.Vector(2, 0)), self.level, self.cloned))
-        arena.troops.append(Skeleton(self.side, self.position.added(vector.Vector(-2, 0)), self.level, self.cloned))
-        arena.troops.append(Skeleton(self.side, self.position.added(vector.Vector(0, 2)), self.level, self.cloned))
-        arena.troops.append(Skeleton(self.side, self.position.added(vector.Vector(0, -2)), self.level, self.cloned))
+        s1 = Skeleton(self.side, self.position.added(vector.Vector(2, 0)), self.level, self.cloned)
+        s1.deploy_time = 0
+        arena.troops.append(s1)
+
+        s2 = Skeleton(self.side, self.position.added(vector.Vector(-2, 0)), self.level, self.cloned)
+        s2.deploy_time = 0
+        arena.troops.append(s2)
+
+        s3 = Skeleton(self.side, self.position.added(vector.Vector(0, 2)), self.level, self.cloned)
+        s3.deploy_time = 0
+        arena.troops.append(s3)
+
+        s4 = Skeleton(self.side, self.position.added(vector.Vector(0, -2)), self.level, self.cloned)
+        s4.deploy_time = 0
+        arena.troops.append(s4)
+
 
     def attack(self):
         return WitchAttackEntity(self.side, self.hit_damage, self.position, self.target)

@@ -186,6 +186,14 @@ select_img = pygame.image.load("sprites/tileselect.png").convert_alpha()
 dd_symbol_img = pygame.image.load("sprites/daggerduchess/duchess_symbol.png").convert_alpha()
 rc_symbol_img = pygame.image.load("sprites/royalchefkingtower/royalchef_symbol.png").convert_alpha()
 elixir_int_img = pygame.image.load("sprites/elixir_bar.png").convert_alpha()
+timer_images = []
+for i in range(9):
+    img = pygame.image.load(f"sprites/timer/timer_{i}.png").convert_alpha()
+    w, h = img.get_size()
+    img = pygame.transform.scale(img, (w // 2.5, h // 2.5))  # scale to 1/2 size
+    timer_images.append(img)
+
+loss_images = [pygame.image.load(f"sprites/elixir_loss/{i + 1}.png").convert_alpha() for i in range (10)]
 
 red_crown_img = pygame.image.load("sprites/red_crown.png").convert_alpha()
 blue_crown_img = pygame.image.load("sprites/blue_crown.png").convert_alpha()
@@ -372,6 +380,8 @@ def draw():
             screen.blit(rc_symbol_img, (tower_x - 3, tower_y + offset - 8))
     
     for building in game_arena.buildings:
+        if building.preplace and not building.side:
+            continue
         building_x, building_y = convert_to_pygame(building.position)
         building_color = BLUE if building.side else RED
 
@@ -409,6 +419,13 @@ def draw():
 
         pygame.draw.rect(screen, building_color, (level_box_x, level_box_y, level_box_size, level_box_size))
 
+        if building.deploy_time > 0 and not building.preplace:
+            ratio = max(0, min(1, 1 - building.deploy_time / 1))  # clamp between 0–1
+            index = int(ratio * 8)  # 0 → timer_0, 1 → timer_8
+            timer_img = timer_images[index]
+            timer_rect = timer_img.get_rect(center=(building_x, building_y))
+            screen.blit(timer_img, timer_rect)
+
         # Render level number text
         level_text = font.render(str(building.level), True, WHITE)  # White text
         text_rect = level_text.get_rect(center=(level_box_x + level_box_size / 2, level_box_y + level_box_size / 2))
@@ -419,6 +436,8 @@ def draw():
     flying = []
     for troop in game_arena.troops:
         if troop.ground:
+            if troop.preplace and not troop.side:
+                continue
             troop_x, troop_y = convert_to_pygame(troop.position)
             troop_color = GRAY if troop.preplace else (BLUE if troop.side else RED)
 
@@ -461,6 +480,14 @@ def draw():
             text_surface = font.render(class_name, True, (255, 255, 255))  # White color text
             text_rect = text_surface.get_rect(center=(troop_x, troop_y))  # 10 pixels above the troop
             screen.blit(text_surface, text_rect)
+
+            
+            if troop.deploy_time > 0 and not troop.preplace:
+                ratio = max(0, min(1, 1 - troop.deploy_time / 1))  # clamp between 0–1
+                index = int(ratio * 8)  # 0 → timer_0, 1 → timer_8
+                timer_img = timer_images[index]
+                timer_rect = timer_img.get_rect(center=(troop_x, troop_y))
+                screen.blit(timer_img, timer_rect)
 
             # Health bar
             hp_bar_x = troop_x - 10
@@ -588,6 +615,12 @@ def draw():
             # Draw square
             pygame.draw.rect(screen, troop_color, (level_box_x, level_box_y, level_box_size, level_box_size))
 
+        if troop.deploy_time > 0 and not troop.preplace:
+            ratio = max(0, min(1, 1 - troop.deploy_time / 1))  # clamp between 0–1
+            index = int(ratio * 8)  # 0 → timer_0, 1 → timer_8
+            timer_img = timer_images[index]
+            timer_rect = timer_img.get_rect(center=(troop_x, troop_y))
+            screen.blit(timer_img, timer_rect)
 
         # Render level number text 
         level_text = font.render(str(troop.level), True, WHITE)  # White text
@@ -652,6 +685,33 @@ def draw():
             text_surface = font.render(class_name, True, (255, 255, 255))  # White color text
             text_rect = text_surface.get_rect(center=(spell_x, spell_y))  # 10 pixels above the troop
             screen.blit(text_surface, text_rect)
+
+    for tracker in game_arena.elixir_trackers:
+        if tracker.side:
+            timer_img = loss_images[tracker.amount - 1]
+
+            # scale factor based on tracker.timer (0 → shrink, 1 → grow)
+            # at 0.5 → normal size (1.0 scale)
+            a = 1.7
+            scale = -(a*(tracker.timer - (1 - 1/a)))**4 + 1
+            off = (scale - 1)
+
+            # calculate new size
+            new_size = (
+                int(timer_img.get_width() * scale),
+                int(timer_img.get_height() * scale)
+            )
+
+            # resize the image
+            scaled_img = pygame.transform.smoothscale(timer_img, new_size)
+
+            # keep image centered
+            timer_rect = scaled_img.get_rect(
+                center=convert_to_pygame(vector.Vector(tracker.x, tracker.y + off))
+            )
+
+            screen.blit(scaled_img, timer_rect)
+            
     
     card_name_font = pygame.font.Font(None, 24)  # Use a larger font for card names
 
@@ -916,6 +976,8 @@ while True:
     p_prev = None
     b_prev = None
 
+    paused = False
+
     while running:
         clock.tick(60)  # 60 FPS
         s = 0
@@ -962,6 +1024,8 @@ while True:
             if event.type == pygame.KEYDOWN:
                 if event.unicode == "b" or event.key == pygame.K_ESCAPE:
                     running = False
+                elif event.unicode == "p":
+                    paused = not paused
             # Detect mouse click in the bottom 128 pixels
             if event.type == pygame.MOUSEBUTTONDOWN:
                 hovered = None
@@ -1058,21 +1122,22 @@ while True:
                 elif each.position.x < 0: #is negative
                     enemy_left = True
 
-        game_arena.tick()  # Update game logic
-        fin = game_arena.cleanup()
+        if not paused:
+            game_arena.tick()  # Update game logic
+            fin = game_arena.cleanup()
 
-        if p1_c_index is not None and game_arena.p1_champion is None:
-            cycler.append(p1_c_index)
-            p1_c_index = None
+            if p1_c_index is not None and game_arena.p1_champion is None:
+                cycler.append(p1_c_index)
+                p1_c_index = None
 
-        if len(bot.queue) < 4 and game_arena.p2_champion is None:
-            bot.queue.append(bot.champion_index)
+            if len(bot.queue) < 4 and game_arena.p2_champion is None:
+                bot.queue.append(bot.champion_index)
 
-        if fin is not None:
-            win = fin
-            break
+            if fin is not None:
+                win = fin
+                break
 
-        draw()  # Redraw screen
+            draw()  # Redraw screen
 
     if game_type == "quit":
         break

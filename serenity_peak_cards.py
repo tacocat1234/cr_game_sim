@@ -185,8 +185,12 @@ class NightWitch(Troop):
                     self.spawn_timer = self.spawn_time
 
     def spawn(self, arena):
-        arena.troops.append(Bat(self.side, self.position.added(vector.Vector(1.5, 0)), self.level, self.cloned))
-        arena.troops.append(Bat(self.side, self.position.added(vector.Vector(-1.5, 0)), self.level, self.cloned))
+        b1 = Bat(self.side, self.position.added(vector.Vector(1.5, 0)), self.level, self.cloned)
+        b2 = Bat(self.side, self.position.added(vector.Vector(-1.5, 0)), self.level, self.cloned)
+        b1.deploy_time = 0
+        b2.deploy_time = 0
+        arena.troops.append(b1)
+        arena.troops.append(b2)
 
     def die(self, arena):
         arena.troops.append(Bat(self.side, self.position, self.level, self.cloned))
