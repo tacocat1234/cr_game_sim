@@ -195,6 +195,12 @@ for i in range(9):
     w, h = img.get_size()
     img = pygame.transform.scale(img, (w // 2.5, h // 2.5))  # scale to 1/2 size
     timer_images.append(img)
+timer_images_red = []
+for i in range(9):
+    img = pygame.image.load(f"sprites/timer_red/timer_{i}.png").convert_alpha()
+    w, h = img.get_size()
+    img = pygame.transform.scale(img, (w // 2.5, h // 2.5))  # scale to 1/2 size
+    timer_images_red.append(img)
 loss_images = [pygame.image.load(f"sprites/elixir_loss/{i + 1}.png").convert_alpha() for i in range (10)]
 
 
@@ -461,7 +467,7 @@ def draw(side):
             if building.deploy_time > 0 and not building.preplace:
                 ratio = max(0, min(1, 1 - building.deploy_time / 1))  # clamp between 0–1
                 index = int(ratio * 8)  # 0 → timer_0, 1 → timer_8
-                timer_img = timer_images[index]
+                timer_img = timer_images[index] if building.side == side else timer_images_red[index]
                 timer_rect = timer_img.get_rect(center=(building_x, building_y))
                 screen.blit(timer_img, timer_rect)
 
@@ -569,7 +575,7 @@ def draw(side):
                 if troop.deploy_time > 0 and not troop.preplace:
                     ratio = max(0, min(1, 1 - troop.deploy_time / 1))  # clamp between 0–1
                     index = int(ratio * 8)  # 0 → timer_0, 1 → timer_8
-                    timer_img = timer_images[index]
+                    timer_img = timer_img = timer_images[index] if troop.side == side else timer_images_red[index]
                     timer_rect = timer_img.get_rect(center=(troop_x, troop_y))
                     screen.blit(timer_img, timer_rect)
 
@@ -654,7 +660,7 @@ def draw(side):
             if troop.deploy_time > 0 and not troop.preplace:
                 ratio = max(0, min(1, 1 - troop.deploy_time / 1))  # clamp between 0–1
                 index = int(ratio * 8)  # 0 → timer_0, 1 → timer_8
-                timer_img = timer_images[index]
+                timer_img = timer_img = timer_images[index] if troop.side == side else timer_images_red[index]
                 timer_rect = timer_img.get_rect(center=(troop_x, troop_y))
                 screen.blit(timer_img, timer_rect)
 

@@ -314,7 +314,7 @@ class RoyalChefKingTower(KingTower):
         max_hp = 0
         t = None
         for each in arena.troops:
-            if each.side == self.side:
+            if each.side == self.side and not each.preplace:
                 if each.cur_hp > max_hp and each.cur_hp != float('inf'):
                     t = each
                     max_hp = each.cur_hp

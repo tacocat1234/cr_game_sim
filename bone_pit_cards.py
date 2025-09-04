@@ -158,14 +158,18 @@ class Tombstone(Building):
         if self.stun_timer <= 0:
             if self.attack_cooldown <= 0: #attack code
                 front = vector.Vector(0, 1.5) if self.side else vector.Vector(0, -1.5)
-                arena.troops.append(Skeleton(self.side, self.position.added(front), self.level))
+                s = Skeleton(self.side, self.position.added(front), self.level)
+                s.deploy_time = 0
+                arena.troops.append(s)
                 self.next_spawn = 0.5
                 self.remaining_spawn_count = 1
                 self.attack_cooldown = self.hit_speed
         
         if self.remaining_spawn_count > 0 and self.next_spawn <= 0: #remaining skeleton
             front = vector.Vector(0, 1.5) if self.side else vector.Vector(0, -1.5)
-            arena.troops.append(Skeleton(self.side, self.position.added(front), self.level))
+            s = Skeleton(self.side, self.position.added(front), self.level)
+            s.deploy_time = 0
+            arena.troops.append(s)
             self.remaining_spawn_count -= 1 #one less spawn
             if self.remaining_spawn_count > 0: #if still spawns left
                 self.next_spawn = 0.5 #reset timer

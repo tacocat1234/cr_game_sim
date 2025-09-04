@@ -37,7 +37,9 @@ class EvolutionSkeleton(bone_pit_cards.Skeleton):
     def tick_func(self, arena):
         if self.attack_cooldown >= self.hit_speed - TICK_TIME and self.count.can_more(): #after attack
             self.count.add()
-            arena.troops.append(EvolutionSkeleton(self.side, self.target.position.added(vector.Vector(random.random() - 0.5, random.random() - 0.5)), self.level, self.count))
+            s = EvolutionSkeleton(self.side, self.target.position.added(vector.Vector(random.random() - 0.5, random.random() - 0.5)), self.level, self.count)
+            s.deploy_time = 0
+            arena.troops.append(s)
 
 class EvolutionBomberAttackEntity(AttackEntity):
     def __init__(self, side, damage, position, target_pos, dir, remaining=2):
