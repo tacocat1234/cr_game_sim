@@ -1009,7 +1009,7 @@ while True:
 
                 l = bot_card.level if bot_card.name != "mirror" else b_prev.level + 1
 
-                game_arena.add(False, bot_pos, n, bot_card.elixir_cost, l, bot_card.cycles_left == 0 if bot_card.name != "mirror" else False)
+                game_arena.add(False, bot_pos, n, bot_card.elixir_cost, l, bot_card.cycles_left == 0 if bot_card.name != "mirror" else False, True)
                 
                 if bot_card.name not in champions:
                     b_prev = bot_card

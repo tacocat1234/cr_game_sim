@@ -67,7 +67,7 @@ class EvolutionWitch(pekkas_playhouse_cards.Witch):
     def __init__(self, side, position, level):
         super().__init__(side, position, level)
         self.evo = True
-        self.heal_amount = 46 * pow(1.1, level - 6)
+        self.heal_amount = 36 * pow(1.1, level - 6)
 
         self.heal_timers = []
 

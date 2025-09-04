@@ -29,7 +29,7 @@ class Arena:
         # queue of [cards, card_type, delay_remaining]
         self.pending_preplacements = []
 
-    def add(self, side, position, name, cost, level, evo=False):
+    def add(self, side, position, name, cost, level, evo=False, zero_delay=False):
         e = cost
         if (side and e <= self.p1_elixir) or (not side and e <= self.p2_elixir):  # must fully afford
             if evo:
@@ -62,7 +62,7 @@ class Arena:
                         self.p2_elixir -= e
 
                     # push into pending queue with 1s delay
-                    self.pending_preplacements.append([cards, card_type, 1.0])  # delay in seconds
+                    self.pending_preplacements.append([cards, card_type, 0.0 if zero_delay else 1.0])  # delay in seconds
                 else:
                     self.troops.extend(cards)
                     return True

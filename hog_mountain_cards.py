@@ -121,6 +121,7 @@ class Furnace(Troop):
             else:
                 self.spawn_timer = 7
                 f_s = FireSpirit(self.side, self.position.added(vector.Vector(0, 0.6 if self.side else -0.6)), self.level)
+                f_s.deploy_time = 0
                 arena.troops.append(f_s)
 
     def attack(self):
