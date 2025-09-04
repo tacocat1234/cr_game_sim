@@ -55,6 +55,12 @@ class Arena:
                         else:
                             self.buildings.append(c)
 
+                        if name in card_factory.champions:
+                            if side:
+                                self.p1_champion = c
+                            else:
+                                self.p2_champion = c
+    
                     # deduct elixir immediately
                     if side:
                         self.p1_elixir -= e

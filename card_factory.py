@@ -67,7 +67,7 @@ troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer",
           "wallbreakers", "icewizard", "royalghost", "firecracker", "phoenix", "electrodragon",
           "healspirit", "suspiciousbush", "bandit", "magicarcher", "rascals", "bowler", "electrogiant", "lavahound",
           "elixirgolem", "goblindrill", "lumberjack", "nightwitch", "executioner",
-          "fisherman", "motherwitch", "cannoncart"]
+          "fisherman", "motherwitch", "cannoncart", "goblinmachine"]
 
 spells = ["fireball", "arrows",
           "zap", "rocket",
@@ -652,6 +652,8 @@ def troop_factory(side, position, name, level):
         return miners_mine_cards.MotherWitch(side, position, level)
     elif name == "cannoncart":
         return miners_mine_cards.CannonCart(side, position, level)
+    elif name == "goblinmachine":
+        return miners_mine_cards.GoblinMachine(side, position, level)
     else:
         raise Exception("Invalid troop name.")
 
@@ -832,6 +834,7 @@ elixir_map = {
     "fisherman" : 3,
     "motherwitch" : 4,
     "cannoncart" : 5,
+    "goblinmachine" : 5,
     "elixircollector" : 6,
     "mirror" : float('inf'),
     "littleprince" : 3,

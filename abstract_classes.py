@@ -127,7 +127,7 @@ class RangedAttackEntity(AttackEntity):
                 arena.active_attacks.remove(self)
             except ValueError:
                 print(self.__class__.__name__ + " not in active attacks")
-        if self.should_delete:
+        elif self.should_delete:
             try:
                 arena.active_attacks.remove(self)
             except ValueError:

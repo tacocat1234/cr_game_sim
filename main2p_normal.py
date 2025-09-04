@@ -686,7 +686,9 @@ def draw(side):
                 (attack_x, attack_y),
                 (attack_x2, attack_y2),
                 int(attack.display_size * SCALE)
-            )        
+            )
+        elif attack.__class__.__name__.lower() == "goblinmachinetargetindicator":
+            pygame.draw.circle(screen, (224, 255, 232), (attack_x, attack_y), 1.2 * SCALE, width=1)        
         elif attack.display_size != 0.25 and attack.resize == False:
             # Create a transparent surface
             attack_size = attack.display_size * SCALE

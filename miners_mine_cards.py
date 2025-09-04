@@ -1,5 +1,6 @@
 from abstract_classes import RangedAttackEntity
 from abstract_classes import MeleeAttackEntity
+from abstract_classes import AttackEntity
 from abstract_classes import Troop
 from abstract_classes import Spell
 from abstract_classes import Tower
@@ -474,3 +475,168 @@ class CartCannon(Building):
     
     def attack(self):
         return CartCannonAttackEntity(self.side, self.hit_damage, self.position, self.target)
+    
+class GoblinMachineAttackEntity(MeleeAttackEntity):
+    HIT_RANGE = 1.2
+    COLLISION_RADIUS = 0.6
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            side=side,
+            damage=damage,
+            position=position,
+            target=target
+            )
+
+
+class GoblinMachineTargetIndicator(AttackEntity):
+    def __init__(self, side, position):
+        super().__init__(self, side, 0, float('inf'), position)
+        self.display_size = 1.5
+
+class GoblinMachineRocket(RangedAttackEntity):
+    SPLASH_RADIUS = 1.5
+    def __init__(self, side, damage, ctd, position, target):
+        super().__init__(
+            side=side, 
+            damage=damage, 
+            velocity=300*TILES_PER_MIN, 
+            position=position, 
+            target=target
+        )
+        self.homing = False
+        self.set_move_vec()
+        self.ctd = ctd
+        self.exploded = False
+        self.has_hit = []
+        
+    def tick(self, arena):
+        self.tick_func(arena)
+        if self.exploded:
+            hits = self.detect_hits(arena)
+            if len(hits) > 0:
+                for each in hits:
+                    self.has_hit.append(each)
+                    if (isinstance(each, Tower)):
+                        each.damage(self.ctd)
+                    else:
+                        each.damage(self.damage)
+                    self.apply_effect(each)
+        else:
+            self.position.add(self.move_vec)
+            if vector.distance(self.position, self.target) < 0.1:
+                self.exploded = True
+                self.display_size = 1.5
+                self.duration = 0.1
+        
+    
+    def detect_hits(self, arena):
+        hits = []
+        for each in arena.towers + arena.buildings + arena.troops:
+            if each.side != self.side: # if different side
+                if vector.distance(self.position, each.position) < self.SPLASH_RADIUS + each.collision_radius and each not in self.has_hit:
+                    hits.append(each)
+
+        return hits
+    
+class GoblinMachine(Troop):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 1908 * pow(1.1, level - 9),         # Hit points (Example value)
+            h_d= 175 * pow(1.1, level - 9),          # Hit damage (Example value)
+            h_s=1.2,          # Hit speed (Seconds per hit)
+            l_t=0.7,            # First hit cooldown
+            h_r=1.2,            # Hit range
+            s_r=6,            # Sight Range
+            g=True,           # Ground troop
+            t_g_o=True,       # Targets ground-only
+            t_o=False,        # Not tower-only
+            m_s=60*TILES_PER_MIN,          # Movement speed 
+            d_t=1,            # Deploy time
+            m=3,            #mass
+            c_r=0.6,        #collision radius
+            p=position               # Position (vector.Vector object)
+        )
+        self.level = level
+        self.rocket_damage = 324 * pow(1.1, level - 9)
+        self.rocket_ctd = 146 * pow(1.1, level - 9)
+        self.rocket_hit_speed = 3.5
+        self.rocket_load_time = 1.5
+        self.rocket_cooldown = 1.5
+        self.rocket_min = 2.5
+        self.rocket_max = 5
+        self.extra = 0
+        self.rocket = None
+        self.rocket_target = None
+        self.rocket_indicator = GoblinMachineTargetIndicator(self.side, vector.Vector(0, 0))
+
+    def level_up(self):
+        self.rocket_damage *= 1.1
+        self.rocket_ctd *= 1.1
+        return super().level_up()
+
+    def attack(self):
+        return GoblinMachineAttackEntity(self.side, self.hit_damage, self.position, self.target)
+
+    def tick_func(self, arena):
+        if self.rocket_cooldown <= self.rocket_load_time and self.rocket_target is None:
+            self.rocket_cooldown = self.rocket_load_time
+        else:
+            if self.rocket_cooldown <= 0:
+                self.rocket = GoblinMachineRocket(self.side, self.rocket_damage, self.rocket_ctd, self.position, self.rocket_target)
+                arena.active_attacks.append(self.rocket)
+                self.rocket_cooldown = self.rocket_hit_speed
+            else:
+                self.rocket_cooldown -= TICK_TIME
+        
+        if self.rocket_target is None:
+            self.update_rocket_target(arena)
+            if self.rocket_target is not None:
+                self.rocket_indicator.position = self.rocket_target
+                arena.active_attacks.append(self.rocket_indicator)
+        elif vector.distance(self.position, self.rocket_target) + self.collision_radius - self.extra < self.rocket_min:
+            arena.active_attacks.remove(self.rocket_indicator)
+            self.rocket_target = None
+
+        if self.rocket is not None and self.rocket.exploded:
+            self.update_rocket_target(arena)
+            if self.rocket_target is None:
+                if self.rocket_indicator in arena.active_attacks:
+                    arena.active_attacks.remove(self.rocket_indicator)
+            else:
+                self.rocket_indicator.position = self.rocket_target
+            self.rocket = None #release the rocket
+
+    def die(self, arena):
+        self.rocket_indicator.should_delete = True
+        if self.rocket_indicator in arena.active_attacks:
+            arena.active_attacks.remove(self.rocket_indicator)
+        super().die(arena)
+    
+    def update_rocket_target(self, arena):
+        self.rocket_target = None 
+        self.extra = 0
+        
+        min_dist = self.rocket_max
+        for each in arena.troops: #for each troop
+            if each.targetable and each.side != self.side: #targets air or is ground only and each is ground troup
+                dist = vector.distance(each.position, self.position)
+                if dist > self.rocket_min and dist < min_dist and dist < self.rocket_max + self.collision_radius:
+                    self.rocket_target = each.position
+                    min_dist = vector.distance(each.position, self.position)
+        for each in arena.buildings: #for each building, so if any building is closer then non tower targeting switches, or if tower targeting then finds closest building
+            if each.side != self.side and each.targetable:
+                dist = vector.distance(each.position, self.position)
+                if dist < min_dist and dist < self.rocket_max + self.collision_radius:
+                    self.rocket_target = each.position
+                    min_dist = vector.distance(each.position, self.position)
+        
+        for tower in arena.towers: #check for towers that it can currently hit
+            if tower.side != self.side:
+                dist = vector.distance(tower.position, self.position)
+                if dist - tower.collision_radius > self.rocket_min and dist < self.rocket_max + self.collision_radius + tower.collision_radius and dist < min_dist: #iff can hit tower, then it locks on.
+                    self.extra = tower.collision_radius
+                    self.rocket_target = tower.position #ensures only locks when activel attacking tower, so giant at bridge doesnt immediatly lock onto tower and ruin everyones day
+                    min_dist = vector.distance(tower.position, self.position)
+
+        self.rocket_target = copy.deepcopy(self.rocket_target)
