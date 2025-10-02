@@ -580,6 +580,11 @@ class Troop:
                     elif not atk is None:
                         arena.active_attacks.append(atk)
                     self.attack_cooldown = self.hit_speed
+                if not (self.cross_river or not self.ground) and self.position.y > -1 and self.position.y < 1 and not on_bridge(self.position.x):
+                    if self.position.y < 0:
+                        self.position.y = -1
+                    else:
+                        self.position.y = 1
             
     
     def cleanup(self, arena): # each troop runs this after ALL ticks are finished

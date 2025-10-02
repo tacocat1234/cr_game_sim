@@ -731,7 +731,7 @@ class Bot:
                 if attack_investment < 5: #push isnt strong enough
                     counter = 0
                     for each in things:
-                        if each.side and (main is None or ((each.position.x < 0 and main.position.x > 0) or (each.position.x > 0 and main.position.x < 0))):
+                        if each.side and can_defend(each.__class__.__name__.lower()) and (main is None or ((each.position.x < 0 and main.position.x > 0) or (each.position.x > 0 and main.position.x < 0))):
                             counter += get_elixir(each.__class__.__name__.lower())
                     if counter <= 7: #tune val for aggresivness, greater val is greater agressiveness
                         goal = "attack"
