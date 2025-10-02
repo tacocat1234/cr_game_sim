@@ -202,17 +202,11 @@ class Lightning(Spell):
     
     def detect_hits(self, arena): #override
         max = None
-        for each in arena.troops + arena.buildings:
+        for each in arena.troops + arena.buildings + arena.towers:
             if not each in self.has_hit:
                 if not each.invulnerable and each.side != self.side and (vector.distance(each.position, self.position) <= self.radius + each.collision_radius):
                     if max is None or each.cur_hp > max.cur_hp:
                         max = each
-        if max is None:
-            for each in arena.towers:
-                if not each in self.has_hit:
-                    if not each.invulnerable and each.side != self.side and (vector.distance(each.position, self.position) <= self.radius + each.collision_radius):
-                        if max is None or each.cur_hp > max.cur_hp:
-                            max = each
         
         if max is not None:
             self.has_hit.append(max)
@@ -466,3 +460,77 @@ class GiantSkeletonDeathBomb(Troop):
     
     def attack(self):
         return GiantSkeletonDeathBombAttackEntity(self.side, self.hit_damage, self.position)
+    
+class VinesDisplayEntity(AttackEntity):
+    def __init__(self, side, target):
+        super().__init__(side, 0, 0, 0.47*5, target.position)
+        self.display_size = target.collision_radius + 0.2
+    
+class Vines(Spell):
+    def __init__(self, side, target, level):
+        super().__init__(
+            s=side,
+            d=41 * pow(1.1, level - 6),
+            c_t_d=9 * pow(1.1, level - 6),
+            w=5,
+            t=0.47,
+            kb=0,
+            r=2.5,
+            v=0,
+            tar=target
+        )
+        self.has_hit = []
+        self.did_ground = []
+        self.display_duration = 0.47*5+0.1
+
+    def apply_effect(self, each):
+        self.did_ground.append(each.ground)
+        each.ground = True
+        each.stun_timer = self.time_between*self.waves
+
+    def tick(self, arena):
+        if len(self.has_hit) == 0:
+            self.detect_initial_hits(arena)
+            for each in self.has_hit:
+                arena.active_attacks.append(VinesDisplayEntity(self.side, each))
+            self.damage_cd = 0
+        elif self.waves > 0 and self.damage_cd <= 0:
+            for each in self.has_hit:
+                if not each.invulnerable or (each.__class__.__name__ == "Tesla" or each.__class__.__name__ == "EvolutionTesla"):
+                    if (isinstance(each, Tower)):
+                        each.damage(self.crown_tower_damage)
+                    else:
+                        each.damage(self.damage); #end damage, start kb
+                self.apply_effect(each)
+            self.waves -= 1 #decrease waves
+            if self.waves > 0:
+                self.damage_cd = self.time_between #reset cooldown
+
+    def cleanup(self, arena):
+        if self.preplace:
+            return
+        self.damage_cd -= TICK_TIME
+        if self.should_delete or self.display_duration <= 0:
+            i = 0
+            for each in self.has_hit:
+                each.ground = self.did_ground[i]
+                i += 1
+            arena.spells.remove(self) #delete
+        self.display_duration -= TICK_TIME
+
+    def detect_initial_hits(self, arena): #override
+        out = []
+        for _ in range(3):
+            max = None
+            for each in arena.troops + arena.buildings + arena.towers:
+                if not each in self.has_hit:
+                    if not each.invulnerable and each.side != self.side and (vector.distance(each.position, self.position) <= self.radius + each.collision_radius):
+                        if max is None or each.cur_hp > max.cur_hp:
+                            max = each
+
+            if max is not None:
+                self.has_hit.append(max)
+                out.append(max)
+        return out
+    
+    

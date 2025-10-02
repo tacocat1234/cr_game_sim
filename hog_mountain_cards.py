@@ -303,7 +303,7 @@ class Tesla(Building):
             h_r = 5.5,
             s_r = 5.5,
             g = True,
-            t_g_o = True,
+            t_g_o = False,
             t_o = False,
             l=30,
             d_t=1,

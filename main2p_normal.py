@@ -503,7 +503,7 @@ def draw(side):
                     circle_pos = (troop_x, troop_y)
                     circle_radius = int(troop.collision_radius * SCALE)
 
-                    if not troop.targetable and not troop.invulnerable:
+                    if not troop.targetable and (not troop.invulnerable or troop.__class__.__name__ == "EvolutionSkeletonArmy"):
                         # Make semi-transparent circle
                         temp_surface = pygame.Surface((circle_radius * 2, circle_radius * 2), pygame.SRCALPHA)
                         
@@ -688,14 +688,22 @@ def draw(side):
                 int(attack.display_size * SCALE)
             )
         elif attack.__class__.__name__.lower() == "goblinmachinetargetindicator":
-            pygame.draw.circle(screen, (224, 255, 232), (attack_x, attack_y), 1.2 * SCALE, width=1)        
+            pygame.draw.circle(screen, (224, 255, 232), (attack_x, attack_y), 1.2 * SCALE, width=1)
+        elif attack.__class__.__name__.lower() == "evolutionbabydragonwindentity":
+            attack_size = 8*SCALE
+            attack_surface = pygame.Surface((attack_size * 2, attack_size * 2), pygame.SRCALPHA)
+            rect = pygame.Rect(0, 0, attack_size, attack_size)
+            rect.center = (attack_size // 2, attack_size // 2)
+            pygame.draw.rect(attack_surface, (255, 255, 0, 128), rect)
+            screen.blit(attack_surface, (attack_x - attack_size//2, attack_y - attack_size//2))    
         elif attack.display_size != 0.25 and attack.resize == False:
             # Create a transparent surface
             attack_size = attack.display_size * SCALE
             attack_surface = pygame.Surface((attack_size * 2, attack_size * 2), pygame.SRCALPHA)
             
             # Draw a semi-trfansparent yellow circle
-            pygame.draw.circle(attack_surface, (255, 255, 0, 128), (attack_size, attack_size), attack_size)
+            c =  (60, 255, 60, 128) if attack.__class__.__name__.lower() == "vinesdisplayentity" else  (255, 255, 0, 128)
+            pygame.draw.circle(attack_surface, c, (attack_size, attack_size), attack_size)
             
             # Blit the surface onto the screen
             screen.blit(attack_surface, (attack_x - attack_size, attack_y - attack_size))
@@ -1232,6 +1240,18 @@ while True:
                     true_has_left = True
 
         if not paused:
+            for card_i in hand:
+                if deck[card_i].name == "spiritempress":
+                    if game_arena.p1_elixir >= 6:
+                        deck[card_i].elixir_cost = 6
+                    else:
+                        deck[card_i].elixir_cost = 3
+            for card_i in hand2:
+                if deck[card_i].name == "spiritempress":
+                    if game_arena.p2_elixir >= 6:
+                        bot_deck[card_i].elixir_cost = 6
+                    else:
+                        bot_deck[card_i].elixir_cost = 3
             game_arena.tick()  # Update game logic
             fin = game_arena.cleanup()
 

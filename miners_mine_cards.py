@@ -640,3 +640,67 @@ class GoblinMachine(Troop):
                     min_dist = vector.distance(tower.position, self.position)
 
         self.rocket_target = copy.deepcopy(self.rocket_target)
+
+class SpiritEmpressGroundAttackEntity(MeleeAttackEntity):
+    HIT_RANGE = 0.8
+    COLLISION_RADIUS = 0.6
+    def __init__(side, damage, position, target):
+        super().__init__(side, damage, position, target)
+
+class SpiritEmpressAttackEntity(RangedAttackEntity):
+    def __init__(side, damage, position, target):
+        super().__init__(
+            side=side, 
+            damage=damage, 
+            velocity=800*TILES_PER_MIN, 
+            position=position, 
+            target=target
+        )
+
+class SpiritEmpressGround(Troop):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 919 * pow(1.1, level - 9),         # Hit points (Example value)
+            h_d= 276 * pow(1.1, level - 9),          # Hit damage (Example value)
+            h_s=1.1,          # Hit speed (Seconds per hit)
+            l_t=0.8,            # First hit cooldown
+            h_r=0.8,            # Hit range
+            s_r=5.5,            # Sight Range
+            g=True,           # Ground troop
+            t_g_o=True,       # Targets ground-only
+            t_o=False,        # Not tower-only
+            m_s=60*TILES_PER_MIN,          # Movement speed 
+            d_t=1,            # Deploy time
+            m=3,            #mass
+            c_r=0.6,        #collision radius
+            p=position               # Position (vector.Vector object)
+        )
+        self.level = level
+    
+    def attack(self):
+        return SpiritEmpressGroundAttackEntity(self.hit_damage, self.position, self.target)
+
+class SpiritEmpress(Troop):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 1068 * pow(1.1, level - 9),         # Hit points (Example value)
+            h_d= 249 * pow(1.1, level - 9),          # Hit damage (Example value)
+            h_s=1.4,          # Hit speed (Seconds per hit)
+            l_t=1,            # First hit cooldown
+            h_r=5,            # Hit range
+            s_r=5.5,            # Sight Range
+            g=False,           # Ground troop
+            t_g_o=False,       # Targets ground-only
+            t_o=False,        # Not tower-only
+            m_s=60*TILES_PER_MIN,          # Movement speed 
+            d_t=1,            # Deploy time
+            m=6,            #mass
+            c_r=0.6,        #collision radius
+            p=position               # Position (vector.Vector object)
+        )
+        self.level = level
+
+    def attack(self):
+        return SpiritEmpressAttackEntity(self.hit_damage, self.position, self.target)

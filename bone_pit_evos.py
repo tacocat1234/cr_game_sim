@@ -151,3 +151,45 @@ class EvolutionValkyrie(bone_pit_cards.Valkyrie):
 
     def attack(self):
         return [super().attack(), EvolutionValkyrieSpecialAttackEntity(self.side, self.special_damage, self.special_ctd, self.position)]
+    
+class EvolutionSkeletonArmyGeneral(bone_pit_cards.Skeleton):
+    def __init__(self, side, position, level, cloned=False):
+        super().__init__(side, position, level, cloned)
+        self.evo = True
+        self.has_shield = True
+        self.shield_max_hp = 81 * pow(1.1, level - 11)
+        self.shield_hp = self.shield_max_hp
+        self.evo = True
+    
+    def level_up(self):
+        self.shield_max_hp *= 1.1
+        self.shield_hp *= 1.1
+        return super().level_up()
+    
+    def damage(self, amount):
+        if self.shield_hp > 0:
+            self.shield_hp -= amount * self.damage_amplification
+        else:
+            self.cur_hp -= amount * self.damage_amplification
+
+
+class EvolutionSkeletonArmy(bone_pit_cards.Skeleton):
+    def __init__(self, side, position, level, cloned=False, general=None):
+        super().__init__(side, position, level, cloned)
+        self.evo = True
+        self.general = None
+        if not cloned:
+            self.general = general
+
+    def tick_func(self, arena):
+        if self.cur_hp == float('inf') and self.general is None or self.general.cur_hp <= 0:
+            super().die(arena)
+
+    def die(self, arena):
+        if self.general is not None and self.general.cur_hp > 0:
+            self.cur_hp = float('inf')
+            self.invulnerable = True
+            self.targetable = False
+            self.mass = 1
+        else:
+            super().die(arena)

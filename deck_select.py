@@ -124,7 +124,7 @@ class SubmitBox(SelectionBox):
 def run_loop(screen, evo_enabled = True, side = True, against_bot=True, decks=None):
     lev = SelectionBox(100, 100, 50, 50)
     lev.font_size = 24
-    lev.value = "11" if side or not against_bot else "13"
+    lev.value = "11" if side or not against_bot else "12"
     load_deck = SubmitBox(WIDTH - 100, 160, 50, 50) #change position later
     load_deck.value = "Load"
     load_deck_text_input = SelectionBox(WIDTH - 100, 100, 150, 50)

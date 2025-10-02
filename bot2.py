@@ -513,6 +513,7 @@ spell_damage = {
     "barbarianbarrel":241,
     "earthquake":246,
     "log":290,
+    "vines":330,
     "void":366,
     "arrows":366,
     "royaldelivery":437,
@@ -611,6 +612,8 @@ class Bot:
                         if vector.distance(average_position, vector.Vector(0, -13)) <= each[1] + 2:
                             valid = False
                         else:
+                            if len(enemies) < 2 and True in [troop.cur_hp < troop.hit_points * 0.1 for troop in enemies]:
+                                valid = False
                             median_hp = statistics.median([troop.cur_hp for troop in enemies])
                             e_total = sum([get_elixir(enem.__class__.__name__.lower()) for enem in enemies])
                             
@@ -730,7 +733,7 @@ class Bot:
                     for each in things:
                         if each.side and (main is None or ((each.position.x < 0 and main.position.x > 0) or (each.position.x > 0 and main.position.x < 0))):
                             counter += get_elixir(each.__class__.__name__.lower())
-                    if counter <= 5:
+                    if counter <= 7: #tune val for aggresivness, greater val is greater agressiveness
                         goal = "attack"
                 else: #push is strong enough, dont worry about defense
                     goal = "attack"

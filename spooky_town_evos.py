@@ -413,3 +413,53 @@ class EvolutionWallBreaker(spooky_town_cards.WallBreaker):
         arena.active_attacks.append(EvolutionWallBreakerDeathAttackEntity(self.side, self.hit_damage, self.death_ctd, self.position, self.target))
         arena.troops.append(EvolutionWallBreakerRunner(self.side, self.position, self.level))
         return super().die(arena)
+    
+class Souldier(spooky_town_cards.RoyalGhost):
+    def __init__(self, side, position, level):
+        super().__init__(side, position, level)
+        self.cur_hp = 81 * pow(1.1, level - 11)
+        self.hit_points = 81 * pow(1.1, level - 11)
+        self.invisbility_timer = spooky_town_cards.RoyalGhost.INVISIBLE_COOLDOWN
+        self.targetable = True
+
+class EvolutionRoyalGhostAttackEntity(spooky_town_cards.RoyalGhostAttackEntity):
+    def __init__(self, side, damage, position, target, level):
+        super().__init__(side, damage, position, target)
+        self.parent_pos = position
+        self.level = level
+
+    def summon_souldiers(self, arena):
+        direction = self.position.subtracted(self.parent_pos)
+        dir_norm = direction.normalized()
+        perp1 = dir_norm.rotated(90)
+        perp2 = dir_norm.rotated(-90)
+        pos1 = self.position.added(perp1)
+        pos2 = self.position.added(perp2)
+        arena.troops.append(Souldier(self.side, pos1, self.level))
+        arena.troops.append(Souldier(self.side, pos2, self.level))
+        arena.active_attacks.append(spooky_town_cards.RoyalGhostAttackEntity(self.side, self.damage, self.position, self.target)) #spawn damage
+
+    def tick(self, arena):
+        hits = self.detect_hits(arena)
+        if len(hits) > 0:
+            for each in hits:
+                each.damage(self.damage)
+            self.summon_souldiers(arena)
+            self.should_delete = True
+
+class EvolutionRoyalGhost(spooky_town_cards.RoyalGhost):
+    def __init__(self, side, position, level):
+        super().__init__(side, position, level)
+        self.evo = True
+
+    def attack(self):
+        if not self.targetable:
+            self.targetable = True
+            self.invisbility_timer = spooky_town_cards.RoyalGhost.INVISIBLE_COOLDOWN
+            return EvolutionRoyalGhostAttackEntity(self.side, self.hit_damage, self.position, self.target, self.level)
+        else:
+            self.targetable = True
+            self.invisbility_timer = spooky_town_cards.RoyalGhost.INVISIBLE_COOLDOWN
+            return spooky_town_cards.RoyalGhostAttackEntity(self.side, self.hit_damage, self.position, self.target)
+        
+

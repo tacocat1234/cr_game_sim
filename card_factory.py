@@ -39,17 +39,17 @@ import random
 def can_evo(n):
     return (n == "knight" or n == "archers" or n == "musketeer" or 
             n == "goblincage" or 
-            n == "skeletons" or n == "bomber" or n == "valkyrie" or
+            n == "skeletons" or n == "bomber" or n == "valkyrie" or n == "skeletonarmy" or
             n == "barbarians" or n == "battleram" or n == "cannon" or
             n == "wizard" or
             n == "bats" or n == "zap" or n == "mortar" or
-            n == "pekka" or n == "goblinbarrel" or n == "witch" or
+            n == "pekka" or n == "goblinbarrel" or n == "witch" or n == "babydragon" or
             n == "royalgiant" or n == "royalrecruits" or
             n == "icespirit" or n == "giantsnowball" or
             n == "dartgoblin" or n == "goblingiant" or n == "skeletonbarrel" or
             n == "hunter" or n == "tesla" or n == "furnace" or 
             n == "infernodragon" or n == "megaknight" or 
-            n == "wallbreakers" or n == "firecracker" or n == "electrodragon" or
+            n == "wallbreakers" or n == "firecracker" or n == "electrodragon" or n == "royalghost" or
             n == "goblindrill" or n == "lumberjack" or n == "executioner")
 
 troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer", 
@@ -67,12 +67,12 @@ troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer",
           "wallbreakers", "icewizard", "royalghost", "firecracker", "phoenix", "electrodragon",
           "healspirit", "suspiciousbush", "bandit", "magicarcher", "rascals", "bowler", "electrogiant", "lavahound",
           "elixirgolem", "goblindrill", "lumberjack", "nightwitch", "executioner",
-          "fisherman", "motherwitch", "cannoncart", "goblinmachine"]
+          "fisherman", "motherwitch", "cannoncart", "goblinmachine", "spiritempress", "spiritempressground"]
 
 spells = ["fireball", "arrows",
           "zap", "rocket",
           "goblinbarrel",
-          "giantsnowball", "freeze", "lightning",
+          "giantsnowball", "freeze", "lightning", "vines",
           "poison",
           "earthquake", "graveyard",
           "rage", "goblincurse", "royaldelivery",
@@ -105,6 +105,7 @@ effect_radius = {
     "giantsnowball" : 2.5,
     "freeze" : 3,
     "lightning" : 3.5,
+    "vines" : 2.5,
     "poison" : 3.5,
     "goblinhut" : 7,
     "tesla" : 5.5,
@@ -211,6 +212,10 @@ def get_clone(obj):
             return bone_pit_cards.Bomber(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionValkyrie":
             return bone_pit_cards.Valkyrie(obj.side, copy.deepcopy(obj.position), obj.level)
+        elif n == "EvolutionSkeletonArmyGeneral":
+            return bone_pit_evos.EvolutionSkeletonArmyGeneral(obj.side, copy.deepcopy(obj.position), obj.level)
+        elif n == "EvolutionSkeletonArmy":
+            return bone_pit_cards.Skeleton(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionBarbarian":
             return barbarian_bowl_cards.Barbarian(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionBattleRam":
@@ -223,6 +228,8 @@ def get_clone(obj):
             return pekkas_playhouse_cards.Pekka(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionWitch":
             return pekkas_playhouse_cards.Witch(obj.side, copy.deepcopy(obj.position), obj.level)
+        elif n == "EvolutionBabyDragon":
+            return pekkas_playhouse_cards.BabyDragon(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionRoyalGiant":
             return royal_arena_cards.RoyalGiant(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionRoyalRecruit":
@@ -247,6 +254,8 @@ def get_clone(obj):
             return spooky_town_cards.ElectroDragon(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionWallBreaker":
             return spooky_town_cards.WallBreaker(obj.side, copy.deepcopy(obj.position), obj.level)
+        elif n == "EvolutionRoyalGhost":
+            return spooky_town_cards.RoyalGhost(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionLumberjack":
             return serenity_peak_cards.Lumberjack(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionExecutioner":
@@ -288,6 +297,12 @@ def evolution_troop_factory(side, position, name, level):
         return bone_pit_evos.EvolutionBomber(side, position, level)
     elif name == "valkyrie":
         return bone_pit_evos.EvolutionValkyrie(side, position, level)
+    elif name == "skeletonarmy":
+        g = bone_pit_evos.EvolutionSkeletonArmyGeneral(side, position.added(vector.Vector(0, -2 if side else 2)), level)
+        out = [g]
+        for _ in range(15):
+            out.append(bone_pit_evos.EvolutionSkeletonArmy(side, position.added(vector.Vector(random.uniform(-2, 2), random.uniform(-2, 2))), level, cloned=False, general=g))
+        return out
     elif name == "barbarians":
         flip = 1 if side else -1
         radius = 0.7
@@ -314,6 +329,8 @@ def evolution_troop_factory(side, position, name, level):
         return pekkas_playhouse_evos.EvolutionPekka(side, position, level)
     elif name == "witch":
         return pekkas_playhouse_evos.EvolutionWitch(side, position, level)
+    elif name == "babydragon":
+        return pekkas_playhouse_evos.EvolutionBabyDragon(side, position, level)
     elif name == "royalgiant":
         return royal_arena_evos.EvolutionRoyalGiant(side, position, level)
     elif name == "royalrecruits":
@@ -346,6 +363,8 @@ def evolution_troop_factory(side, position, name, level):
         pos2 = vector.Vector(-0.75, 0)
         return [spooky_town_evos.EvolutionWallBreaker(side, position.added(pos1), level),
                 spooky_town_evos.EvolutionWallBreaker(side, position.added(pos2), level)]
+    elif name == "royalghost":
+        return spooky_town_evos.EvolutionRoyalGhost(side, position, level)
     elif name == "lumberjack":
         return serenity_peak_evos.EvolutionLumberjack(side, position, level)
     elif name == "goblindrill":
@@ -654,6 +673,10 @@ def troop_factory(side, position, name, level):
         return miners_mine_cards.CannonCart(side, position, level)
     elif name == "goblinmachine":
         return miners_mine_cards.GoblinMachine(side, position, level)
+    elif name == "spiritempress":
+        return miners_mine_cards.SpiritEmpress(side, position, level)
+    elif name == "spiritempressground":
+        return miners_mine_cards.SpiritEmpressGround(side, position, level)
     else:
         raise Exception("Invalid troop name.")
 
@@ -674,6 +697,8 @@ def spell_factory(side, position, name, level):
         return frozen_peak_cards.Freeze(side, position, level)
     elif name == "lightning":
         return frozen_peak_cards.Lightning(side, position, level)
+    elif name == "vines":
+        return frozen_peak_cards.Vines(side, position, level)
     elif name == "poison":
         return jungle_arena_cards.Poison(side, position, level)
     elif name == "earthquake":
@@ -780,6 +805,7 @@ elixir_map = {
     "battlehealer" : 4,
     "giantskeleton" : 6,
     "lightning" : 6,
+    "vines" : 3,
     "barbarianbarrel" : 2,
     "beserker" : 2,
     "goblingang" : 3,
@@ -835,6 +861,7 @@ elixir_map = {
     "motherwitch" : 4,
     "cannoncart" : 5,
     "goblinmachine" : 5,
+    "spiritempress" : 6,
     "elixircollector" : 6,
     "mirror" : float('inf'),
     "littleprince" : 3,

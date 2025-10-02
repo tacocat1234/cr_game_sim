@@ -1,5 +1,6 @@
 import pekkas_playhouse_cards
 from abstract_classes import MeleeAttackEntity
+from abstract_classes import AttackEntity
 from abstract_classes import Troop
 from abstract_classes import TICK_TIME
 import vector
@@ -92,3 +93,56 @@ class EvolutionWitch(pekkas_playhouse_cards.Witch):
             n = each.__class__.__name__.lower()
             if not each.cloned and (each.side == self.side) and (n == "guard" or n == "skeleton" or n == "evolutionskeleton"):
                 self.heal_timers.append(1)
+
+class EvolutionBabyDragonWindEntity(AttackEntity):
+    def __init__(self, side, position, parent):
+        super().__init__(side, 0, 0, 1.5, position)
+        self.lifespan = 1.5
+        self.duration = 1.5
+        self.position = position
+        self.parent = parent
+        self.has_hit = []
+    
+    def detect_hits(self, arena):
+        out1 = []
+        out2 = []
+        for each in arena.troops:
+            if each.position.x < self.position.x + 4 and each.position.x > self.position.x - 4 and each.position.y < self.position.y + 4.5 and each.position.y > self.position.y - 4.5:
+                if each is self.parent:
+                    continue
+                elif each.side == self.side:
+                    out1.append(each)
+                else:
+                    out2.append(each)
+        return out1, out2
+    
+    def tick(self, arena):
+        f_h, e_h = self.detect_hits(arena)
+        for each in f_h:
+            if each not in self.has_hit:
+                each.move_speed *= 3/2
+                self.has_hit.append(each)
+        for each in e_h:
+            if each not in self.has_hit:
+                each.move_speed *= 0.7
+                self.has_hit.append(each)
+
+
+    def cleanup(self, arena):
+        if self.parent is None or self.parent.cur_hp <= 0:
+            self.duration = -1
+        if self.duration <= TICK_TIME:
+            for each in self.has_hit:
+                if each.side == self.side:
+                    each.move_speed *= 2/3
+                else:
+                    each.move_speed *= 1/0.7
+        return super().cleanup(arena)
+
+class EvolutionBabyDragon(pekkas_playhouse_cards.BabyDragon):
+    def __init__(self, side, position, level):
+        super().__init__(side, position, level)
+        self.evo = True
+
+    def attack(self):
+        return [super().attack(), EvolutionBabyDragonWindEntity(self.side, self.position, self)]

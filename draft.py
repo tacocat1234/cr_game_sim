@@ -216,7 +216,7 @@ def run_loop(screen, evo_enabled = False, side = True):
                 i += 1
 
                 out.append(Card(side, choose, 11, evo_enabled and can_evo(choose)))
-                out2.append(Card(side, not_choose, 13, evo_enabled and can_evo(not_choose))) #temp
+                out2.append(Card(side, not_choose, 12, evo_enabled and can_evo(not_choose))) #temp
 
                 if i < 4:
                     n1 = random_with_param(*option_types[i], used)
@@ -238,7 +238,7 @@ def run_loop(screen, evo_enabled = False, side = True):
 
     for each in other_types:
         n = random_with_param(*each, used)
-        out2.append(Card(side, n, 13, evo_enabled and can_evo(n)))
+        out2.append(Card(side, n, 12, evo_enabled and can_evo(n)))
         used.append(n)
         
     return out, "princesstower", out2, "princesstower"

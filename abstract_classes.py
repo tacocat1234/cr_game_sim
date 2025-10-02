@@ -831,7 +831,7 @@ class Spell:
             self.sprite_path = f"sprites/{self.class_name}/{self.class_name}_hit.png"
             hits = self.detect_hits(arena)
             for each in hits:
-                is_tesla = self.__class__.__name__ == "Earthquake" and (each.__class__.__name__ == "Tesla" or each.__class__.__name__ == "EvolutionTesla")
+                is_tesla = (self.__class__.__name__ == "Earthquake" or self.__class__.__name__ == "Vines") and (each.__class__.__name__ == "Tesla" or each.__class__.__name__ == "EvolutionTesla")
                 
                 if not each.invulnerable or is_tesla:
                     if (isinstance(each, Tower)):

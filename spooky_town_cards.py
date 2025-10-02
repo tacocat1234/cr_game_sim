@@ -418,7 +418,7 @@ class RoyalGhost(Troop):
         self.targetable = False
     
     def cleanup_func(self, arena):
-        if self.invisbility_timer > 0 :
+        if self.invisbility_timer > 0:
             self.invisbility_timer -= TICK_TIME
         else:
             self.targetable = False

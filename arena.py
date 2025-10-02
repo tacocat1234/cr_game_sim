@@ -35,7 +35,13 @@ class Arena:
             if evo:
                 card_type, card = card_factory.evolution_factory(side, position, name, level)
             else:
-                card_type, card = card_factory.card_factory(side, position, name, level)
+                if name == "spiritempress":
+                    if side and self.p1_elixir > 6 or not side and self.p2_elixir > 6:
+                        card_type, card = card_factory.card_factory(side, position, name, level)
+                    else:
+                        card_type, card = card_factory.card_factory(side, position, "spiritempressground", level)
+                else:
+                    card_type, card = card_factory.card_factory(side, position, name, level)
 
             self.elixir_trackers.append(ElixirLossTracker(position.x, position.y + (1 if side else -1), e, side, self))
 

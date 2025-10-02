@@ -309,7 +309,7 @@ def run_loop(screen, evo_enabled = False, side = True):
             all[selected].side = False
             bot_deck[b_i].value = choose
             b_i += 1
-            out2.append(Card(side, choose, 13, evo_enabled and can_evo(choose)))
+            out2.append(Card(side, choose, 12, evo_enabled and can_evo(choose)))
 
             temp = not next_turn if next_turn == turn else next_turn
             turn = next_turn
