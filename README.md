@@ -44,7 +44,7 @@ spell all things without spaces, but the game can infer if you cant spell
 
   
 
-recommended bot_deck.txt levels is 13 comapred to your 11, becuase bot is stupid.
+recommended bot_deck.txt levels is 12 comapred to your 11, becuase bot is stupid.
 
   
 
@@ -91,7 +91,7 @@ healspirit, suspiciousbush, bandit, magicarcher, bowler, rascals, electrogiant, 
 
 elixirgolem, lumberjack, nightwitch, executioner,
 
-fisherman, motherwitch, cannoncart
+fisherman, motherwitch, cannoncart, goblinmachine, spiritempress
 
 ## Spells
 
@@ -105,7 +105,7 @@ zap, rocket,
 
 goblinbarrel,
 
-giantsnowball, freeze, lightning,
+giantsnowball, freeze, lightning, vines
 
 poison, barbarianbarrel,
 
@@ -123,7 +123,7 @@ Implemented buildings include:
 
   
 
-goblinhut, goblincage, #special note, old goblin hut with fixed spawning is still accessible named as "oldgoblinhut" but will never show up otherwise
+goblinhut, goblincage,
 
 tombstone,
 

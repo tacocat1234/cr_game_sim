@@ -9,12 +9,6 @@ from builders_workshop_cards import Mortar
 from hog_mountain_cards import XBow
 from card_factory import can_defend
 
-counters = {
-    "minipekka" : ["skeletons", vector.Vector(0, 0)],
-    "musketeer" : ["fireball", vector.Vector(0, -2)],
-    "valkyrie" : ["minipekka", vector.Vector(0, 0)]
-}
-
 class Bot:
     def __init__(self, cards, is_true=False):
         self.cards = cards
