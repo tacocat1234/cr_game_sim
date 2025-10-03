@@ -694,7 +694,7 @@ def draw(side):
             attack_surface = pygame.Surface((attack_size * 2, attack_size * 2), pygame.SRCALPHA)
             rect = pygame.Rect(0, 0, attack_size, attack_size)
             rect.center = (attack_size // 2, attack_size // 2)
-            pygame.draw.rect(attack_surface, (255, 255, 0, 128), rect)
+            pygame.draw.rect(attack_surface, (0, 200, 200, 60), rect)
             screen.blit(attack_surface, (attack_x - attack_size//2, attack_y - attack_size//2))    
         elif attack.display_size != 0.25 and attack.resize == False:
             # Create a transparent surface

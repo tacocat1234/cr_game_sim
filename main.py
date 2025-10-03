@@ -654,7 +654,7 @@ def draw():
             attack_surface = pygame.Surface((attack_size * 2, attack_size * 2), pygame.SRCALPHA)
             rect = pygame.Rect(0, 0, attack_size, attack_size)
             rect.center = (attack_size // 2, attack_size // 2)
-            pygame.draw.rect(attack_surface, (255, 255, 0, 128), rect)
+            pygame.draw.rect(attack_surface, (0, 200, 200, 60), rect)
             screen.blit(attack_surface, (attack_x - attack_size//2, attack_y - attack_size//2))
         elif attack.display_size != 0.25 and attack.resize == False:
             # Create a transparent surface
@@ -995,6 +995,8 @@ while True:
 
     paused = False
 
+    bot_init_delay = 1
+
     while running:
         clock.tick(60)  # 60 FPS
         s = 0
@@ -1007,33 +1009,37 @@ while True:
 
         s = "all" if s == 0 else ("none" if s == -1 else ("right" if s == 1 else "left"))
 
-        tup = bot.tick(game_arena.p2_elixir, game_arena.troops + game_arena.buildings, s)
-        bot.process_champion(game_arena.p2_champion, game_arena)
+        if bot_init_delay > 0: 
+            bot_init_delay -= TICK_TIME
+        else: 
+            tup = bot.tick(game_arena.p2_elixir, game_arena.p1_elixir, game_arena.troops + game_arena.buildings, s)
+            bot.process_champion(game_arena.p2_champion, game_arena)
 
-        bot_card = bot_pos = None
+            bot_card = bot_pos = None
         
-        if tup is not None:
-            bot_card, bot_pos = tup
-        
-        if not bot_card is None:
-            n = bot_card.name if bot_card.name != "mirror" else b_prev.name #actual card
-            if bot_pos:
-                if bot_card.name == "royalrecruits":
-                    if bot_pos.x < -1.5:
-                        bot_pos.x = -1.5
-                    elif bot_pos.x > 1.5:
-                        bot_pos.x = 1.5
+            if tup is not None:
+                bot_card, bot_pos = tup
+            
+            if not bot_card is None:
+                n = bot_card.name if bot_card.name != "mirror" else b_prev.name #actual card
+                if bot_pos:
+                    if bot_card.name == "royalrecruits":
+                        if bot_pos.x < -1.5:
+                            bot_pos.x = -1.5
+                        elif bot_pos.x > 1.5:
+                            bot_pos.x = 1.5
 
-                l = bot_card.level if bot_card.name != "mirror" else b_prev.level + 1
+                    l = bot_card.level if bot_card.name != "mirror" else b_prev.level + 1
 
-                game_arena.add(False, bot_pos, n, bot_card.elixir_cost, l, bot_card.cycles_left == 0 if bot_card.name != "mirror" else False, True)
-                
-                if bot_card.name not in champions:
-                    b_prev = bot_card
-                    if b_mirror is not None:
-                        b_mirror.elixir_cost = bot_card.elixir_cost + 1
-                
-                bot_card.cycle_evo()
+                    game_arena.add(False, bot_pos, n, bot_card.elixir_cost, l, bot_card.cycles_left == 0 if bot_card.name != "mirror" else False, True)
+                    
+                    if bot_card.name not in champions:
+                        b_prev = bot_card
+                        if b_mirror is not None:
+                            b_mirror.elixir_cost = bot_card.elixir_cost + 1
+                    
+                    bot_card.cycle_evo()
+                    game_arena.p2_elixir += 0.2 #bot cheats a bit, since its kinda dumb
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 game_type = "quit"

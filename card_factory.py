@@ -200,7 +200,9 @@ def get_clone(obj):
         return type(obj)(obj.side, copy.deepcopy(obj.position), obj.level)
     else:
         n = obj.__class__.__name__
-        if n == "EvolutionKnight":
+        if n == "EvolutionGoblinBrawler":
+            return goblin_stadium_cards.GoblinBrawler(obj.side, copy.deepcopy(obj.position), obj.level)
+        elif n == "EvolutionKnight":
             return training_camp_cards.Knight(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionArcher":
             return training_camp_cards.Archer(obj.side, copy.deepcopy(obj.position), obj.level)

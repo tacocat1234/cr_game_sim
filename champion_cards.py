@@ -938,6 +938,7 @@ class GoblinsteinAbilityAttackEntity(AttackEntity):
     def tick(self, arena):
         if self.parent is None or self.parent.cur_hp <= 0:
             self.should_delete = True
+            self.duration = -1
         hits = self.detect_hits(arena)
         for each in hits:
             new = not any(each is h for h in self.has_hit)

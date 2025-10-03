@@ -488,6 +488,11 @@ single_elixir_map = {
     "goblinsteinmonster" : 3
 }
 
+def is_bridgespam(name): #offensively
+    return name in ["bandit", "bossbandit", "elitebarbarians", "royalhogs", "suspiciousbush", 
+                    "goblingiant", "ramrider", "hogrider", "wallbreakers", "battleram",
+                    "royalgiant", "lumberjack", "electrogiant"]
+
 def can_attack(name):
     return not (name in ["icegolem", "icewizard", "guards", "electrowizard", "skeletons"])
 
@@ -573,7 +578,7 @@ class Bot:
             elif n == "goblinstein" and ("swarm" in troop_types.get(champion.target.__class__.__name__.lower(), [])) or isinstance(champion.target, Tower):
                 champion.activate_ability(arena)
 
-    def tick(self, elixir, things = None, pocket = "none"):
+    def tick(self, elixir, player_elixir, things = None, pocket = "none"):
         s = []
         for each in self.hand:
             n = self.cards[each].name
@@ -648,6 +653,11 @@ class Bot:
                     pos = target.added(vector.Vector(0, 2.0))
                     if pos.y <= 0:
                         return None
+                elif card.name == "tornado": #tornado away from tower
+                    pos = target.added(vector.Vector(-4, 1)) if target.x > 0 else target.added(vector.Vector(4, 1))
+                    if target.x < 5 and target.x > -5:
+                        pos.x = 0
+                    return card, pos
                 else:
                     pos = target.added(vector.Vector(0, 1.5))
                 cycle(self.hand, self.hand.index(ind), self.queue, self.champion_index)
@@ -678,10 +688,10 @@ class Bot:
                             defense_investment_left += e
                     else: #attacking
                         if pocket == "all" or pocket == "none" or ("pocket" == "left" and each.position.x > -1) or ("pocket" == "right" and each.position.x < 1):
-                            attack_investment += e
+                            attack_investment += (e if each.cur_hp > each.hit_points / 3 else e/2) #half value if close to dead
                             if e > main_threat_level:
                                 main_threat_level = e
-                                main = each
+                                main = each #store biggest threat
                 else:
                     if each.position.y > -3 and (isinstance(each, XBow) or isinstance(each, Mortar)):
                         threat_level = 99
@@ -731,6 +741,12 @@ class Bot:
                     threat = value[0]
                     threat_level = value[1] * s_mult
 
+            if player_elixir < 2:
+                attack_investment *= 1.3 #cant defend at all
+            elif player_elixir < 4:
+                attack_investment *= 1.1 #cant defend well
+            
+
             if defense_investment_left < -2 or defense_investment_right < -2: #3+ more elixir of attackers than defenders
                 goal = "defend"
             elif attack_investment >= 0: # if you have greater or equal amounts of offensive troop
@@ -743,6 +759,8 @@ class Bot:
                         goal = "attack"
                 else: #push is strong enough, dont worry about defense
                     goal = "attack"
+            elif main_threat_level >= threat_level * 1.5 and main is not None: #if your biggest threat is way bigger than theirs
+                goal = "attack"
         
         if goal == "attack" and elixir > 9: #if attackign and a lot of elixir
             valid_attack = False
@@ -761,7 +779,19 @@ class Bot:
                 for index in self.hand:
                     if self.cards[index].name == "goblinbarrel" or self.cards[index].name == "goblindrill" or self.cards[index].name == "miner":
                         pos = None
-                        if pocket == "none":
+                        if is_bridgespam(self.cards[index].name): #if bridgespam, always go pocket or bridge
+                            if pocket == "none":
+                                pos = vector.Vector(-5.5 if random.random() > 0.5 else 5.5, 1.5)
+                            else:
+                                if random.random() < 0.5: #50% chance to go to pocket
+                                    pos = vector.Vector(0, -5) #pocket
+                                elif pocket == "left":
+                                    pos = vector.Vector(5.5, 1.5)
+                                elif pocket == "right":
+                                    pos = vector.Vector(-5.5, 1.5)
+                                elif pocket == "all":
+                                    pos = vector.Vector(-5.5 if random.random() > 0.5 else 5.5, 1.5)
+                        elif pocket == "none":
                             pos = vector.Vector((-5.5 if random.random() > 0.5 else 5.5) + random.random() - 0.5, -9.5 + random.random() - 0.5)
                         elif pocket == "left":
                             pos = vector.Vector(5.5 + random.random() - 0.5, -9.5 + random.random() - 0.5)
@@ -815,16 +845,16 @@ class Bot:
                        i = ind
 
             if i > -1:
-                if card.name == "mortar" or card.name == "xbow":
+                if card.name == "mortar" or card.name == "xbow": #offensive placement
                     pos = vector.Vector(5.5 if random.random() < 0.5 else -5.5, 2)
                     cycle(self.hand, self.hand.index(i), self.queue, self.champion_index)
                     return card, pos
-                elif card.type == "building":
+                elif card.type == "building": #defensive placement
                     pos = vector.Vector(random.randint(-3, 3), random.randint(2, 7))
                     cycle(self.hand, self.hand.index(i), self.queue, self.champion_index)
                     return card, pos
                 
-                elif card.name == "goblinbarrel" or card.name == "goblindrill":
+                elif card.name == "goblinbarrel" or card.name == "goblindrill": #direct on tower
                     pos = None
                     if pocket == "none":
                         pos = vector.Vector((-5.5 if random.random() > 0.5 else 5.5) + random.random() - 0.5, -9.5 + random.random() - 0.5)
@@ -837,8 +867,23 @@ class Bot:
 
                     cycle(self.hand, self.hand.index(i), self.queue, self.champion_index)
                     return card, pos
+                
+                if is_bridgespam(card.name): #if bridgespam, always go pocket or bridge
+                    if pocket == "none":
+                        pos = vector.Vector(-5.5 if random.random() > 0.5 else 5.5, 1.5)
+                    else:
+                        if random.random() < 0.5: #50% chance to go to pocket
+                            pos = vector.Vector(0, -5) #pocket
+                        elif pocket == "left":
+                            pos = vector.Vector(5.5, 1.5)
+                        elif pocket == "right":
+                            pos = vector.Vector(-5.5, 1.5)
+                        elif pocket == "all":
+                            pos = vector.Vector(-5.5 if random.random() > 0.5 else 5.5, 1.5)
+                    cycle(self.hand, self.hand.index(i), self.queue, self.champion_index)
+                    return card, pos
 
-                if card.elixir_cost > 7 or card.elixir_cost <= 5:
+                elif card.elixir_cost > 7 or card.elixir_cost <= 5:
                     cycle(self.hand, self.hand.index(i), self.queue, self.champion_index)
                     return card, vector.Vector(-0.5 + random.random(), 15.5) #place in back
                 else:
@@ -950,7 +995,7 @@ class Bot:
                 else:
                     return None
             elif card.name == "suspiciousbush":
-                return None
+                return None #cant defend
             elif card.name == "tornado":
                 cycle(self.hand, i, self.queue, self.champion_index)
                 pos = threat.position.added(vector.Vector(-5, 1)) if threat.position.x > 0 else threat.position.added(vector.Vector(5, 1))
@@ -983,7 +1028,7 @@ class Bot:
                 if not l: #if all spells or buildings or too expesnive
                     card = None
                     return None
-                i = random.choice(l)
+                i = random.choice(l) #maybe code here in the future to compute components of current push and derive best attack from there
                 card = self.cards[self.hand[i]]
 
             if card is not None:
@@ -991,14 +1036,27 @@ class Bot:
 
                 base_pos = None
                 if main is None:
-                    if pocket == "none":
-                        base_pos = vector.Vector(random.randint(-9, 8) + 0.5, random.randint(1, 9) + 0.5)
-                    elif pocket == "all":
-                        base_pos = vector.Vector(random.randint(-9, 8) + 0.5, random.randint(-5, 9) + 0.5)
-                    elif pocket == "left":
-                        base_pos = vector.Vector(random.randint(0, 8) + 0.5, random.randint(1, 9) + 0.5)
+                    if is_bridgespam(card.name):
+                        if pocket == "none":
+                            base_pos = vector.Vector(-5.5 if random.random() > 0.5 else 5.5, 1.5)
+                        else:
+                            if random.random() < 0.5: #50% chance to go to pocket
+                                base_pos = vector.Vector(0, -5) #pocket
+                            elif pocket == "left":
+                                base_pos = vector.Vector(5.5, 1.5)
+                            elif pocket == "right":
+                                base_pos = vector.Vector(-5.5, 1.5)
+                            elif pocket == "all":
+                                base_pos = vector.Vector(-5.5 if random.random() > 0.5 else 5.5, 1.5)
                     else:
-                        base_pos = vector.Vector(random.randint(-9, -1) + 0.5, random.randint(1, 9) + 0.5)
+                        if pocket == "none":
+                            base_pos = vector.Vector(random.randint(-9, 8) + 0.5, random.randint(1, 9) + 0.5) #center
+                        elif pocket == "all":
+                            base_pos = vector.Vector(random.randint(-9, 8) + 0.5, random.randint(-5, 9) + 0.5)
+                        elif pocket == "left":
+                            base_pos = vector.Vector(random.randint(0, 8) + 0.5, random.randint(1, 9) + 0.5) #right side
+                        else:
+                            base_pos = vector.Vector(random.randint(-9, -1) + 0.5, random.randint(1, 9) + 0.5) #left side
                 else:
                     base_pos = main.position
 
@@ -1057,7 +1115,10 @@ class Bot:
                         pos.y = 15.5
                 else:
                     cycle(self.hand, i, self.queue, self.champion_index)
-                    pos = base_pos.added(vector.Vector(0, -3))
+                    if is_bridgespam(card.name):
+                        pos = base_pos.added(random.random(), random.random()) #directly on main, more spammy style
+                    else:
+                        pos = base_pos.added(vector.Vector(0, -3))
 
                 return card, pos
             else:
