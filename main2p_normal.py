@@ -1247,7 +1247,7 @@ while True:
                     else:
                         deck[card_i].elixir_cost = 3
             for card_i in hand2:
-                if deck[card_i].name == "spiritempress":
+                if bot_deck[card_i].name == "spiritempress":
                     if game_arena.p2_elixir >= 6:
                         bot_deck[card_i].elixir_cost = 6
                     else:
