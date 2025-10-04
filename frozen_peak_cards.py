@@ -486,14 +486,15 @@ class Vines(Spell):
     def apply_effect(self, each):
         self.did_ground.append(each.ground)
         each.ground = True
-        each.stun_timer = self.time_between*self.waves
-        each.stun(0) #just to reset attacks and charges and whatnot
+        each.stun() #stun effects
+        each.stun_timer = self.waves * self.time_between #real timer
 
     def tick(self, arena):
         if len(self.has_hit) == 0:
             self.detect_initial_hits(arena)
             for each in self.has_hit:
                 arena.active_attacks.append(VinesDisplayEntity(self.side, each))
+                self.apply_effect(each) #stun all hits
             self.damage_cd = 0
         elif self.waves > 0 and self.damage_cd <= 0:
             for each in self.has_hit:
@@ -502,7 +503,6 @@ class Vines(Spell):
                         each.damage(self.crown_tower_damage)
                     else:
                         each.damage(self.damage); #end damage, start kb
-                self.apply_effect(each)
             self.waves -= 1 #decrease waves
             if self.waves > 0:
                 self.damage_cd = self.time_between #reset cooldown

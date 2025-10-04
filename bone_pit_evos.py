@@ -182,7 +182,7 @@ class EvolutionSkeletonArmy(bone_pit_cards.Skeleton):
             self.general = general
 
     def tick_func(self, arena):
-        if self.cur_hp == float('inf') and self.general is None or self.general.cur_hp <= 0:
+        if self.cur_hp == float('inf') and (self.general is None or self.general.cur_hp <= 0):
             super().die(arena)
 
     def die(self, arena):
