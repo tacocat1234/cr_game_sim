@@ -934,7 +934,6 @@ class RamRiderRiderAttackEntity(RangedAttackEntity):
             position=position,
             target=target,
         )
-        self.cross_river = True
 
     def apply_effect(self, target):
         target.move_slow(0.7, 2, "ramriderrider")
@@ -959,6 +958,8 @@ class RamRiderRider(Troop):
             p=position               # Position (vector.Vector object)
         ) 
         self.level = level
+        self.cross_river = True
+        self.jump_speed = 0
         self.snared = []
         self.snared_snare_time = []
 

@@ -487,6 +487,7 @@ class Vines(Spell):
         self.did_ground.append(each.ground)
         each.ground = True
         each.stun_timer = self.time_between*self.waves
+        each.stun(0) #just to reset attacks and charges and whatnot
 
     def tick(self, arena):
         if len(self.has_hit) == 0:
