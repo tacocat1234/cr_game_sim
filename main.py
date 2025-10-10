@@ -12,6 +12,7 @@ from card_factory import can_evo
 from card_factory import champions
 import arena
 import deck_select
+import deck_select_4c
 import deck_save
 import triple_draft
 import draft
@@ -225,6 +226,18 @@ def cycle(hand, index, queue):
         queue.append(hand[index])
 
     hand[index] = queue.pop(0)
+
+def four_card_cycle(hand, index, hand_delay):
+    i = hand[index]
+    hand[index] = -1
+    hand_delay[i] = 0.3
+
+def process_hand_delay(hand, hand_delay):
+    for i in range(4):
+        hand_delay[i] -= TICK_TIME
+        if hand_delay[i] < 0 and hand_delay[i] != -1:
+            hand_delay[i] = -1
+            hand[i] = i
 
 def display_evo_cannon(pos, side):
     all = [
@@ -733,6 +746,8 @@ def draw():
     card_name_font = pygame.font.Font(None, 24)  # Use a larger font for card names
 
     for i, hand_i in enumerate(hand):
+        if hand_i == -1:
+            continue
         card = deck[hand_i]
         card_name_text = card_name_font.render(card.name, True, BLACK)
         card_name_x = (WIDTH * (i + 1)) // 5  # Positions: WIDTH/5, WIDTH*2/5, WIDTH*3/5, WIDTH*4/5
@@ -820,6 +835,7 @@ def draw():
 saved_decks = None
 while True:
     game_type = None
+    four_card = False
     TOWER_TYPE = None
     BOT_TOWER_TYPE = None
     while game_type != "quit":
@@ -869,6 +885,16 @@ while True:
                 if tup is not None:
                     game_arena.elixir_rate = 3
                     bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = tup
+                    break
+        elif game_type == "fourcard":
+            tup = deck_select_4c.run_loop(screen, evo_enabled, True, True, saved_decks)
+            if tup is not None:
+                player_random_deck, KING_LEVEL, deck, TOWER_TYPE = tup
+                tup = deck_select_4c.run_loop(screen, evo_enabled, False, True, saved_decks)
+                if tup is not None:
+                    four_card = True
+                    bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = tup
+                    bot_deck.extend(bot_deck)
                     break
         elif game_type == "septuple":
             tup = deck_select.run_loop(screen, evo_enabled, True, True, saved_decks)
@@ -974,6 +1000,8 @@ while True:
 
     hand = [0, 1, 2, 3]
     cycler = [4, 5, 6, 7]
+
+    hand_delay = [-1, -1, -1, -1]
 
     # Main Loop
     running = game_type != "quit"
@@ -1130,12 +1158,17 @@ while True:
                                 if p_mirror is not None:
                                     p_mirror.elixir_cost = cur_card.elixir_cost + 1
                             
-                            cycle(hand, click_quarter - 1, cycler)
+                            if four_card:
+                                four_card_cycle(hand, click_quarter - 1, hand_delay)
+                            else:
+                                cycle(hand, click_quarter - 1, cycler)
                             cur_card.cycle_evo()
 
                     # Reset drag start position after the release
                     drag_start_pos = None
 
+        if four_card:
+            process_hand_delay(hand, hand_delay)
         enemy_left = False
         enemy_right = False
         for each in game_arena.towers:

@@ -581,7 +581,15 @@ class Troop:
                         arena.active_attacks.append(atk)
                     self.attack_cooldown = self.hit_speed
                 if not (self.cross_river or not self.ground or self.dash_river) and self.position.y > -1 and self.position.y < 1 and not (on_bridge(self.position.x + 0.1) or on_bridge(self.position.x - 0.1)): #some leeway for bridge
-                    if self.position.y < 0:
+                    if (self.position.x > 4 and self.position.x < 4.5):
+                        self.position.x = 4.55
+                    elif (self.position.x > 6.5 and self.position.x < 7):
+                        self.position.x = 6.45
+                    elif (self.position.x < -4 and self.position.x > -4.5):
+                        self.position.x = -4.55
+                    elif (self.position.x < -6.5 and self.position.x > -7):
+                        self.position.x = -6.45
+                    elif self.position.y < 0:
                         self.position.y = -1.05
                     else:
                         self.position.y = 1.05

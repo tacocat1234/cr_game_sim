@@ -9,6 +9,7 @@ from card_factory import can_evo
 from card_factory import champions
 import arena
 import deck_select
+import deck_select_4c
 import triple_draft_2p
 import draft_2p
 import megadraft_2p
@@ -231,6 +232,18 @@ def cycle(hand, index, queue, side):
             queue.append(hand[index])
 
     hand[index] = queue.pop(0)
+
+def four_card_cycle(hand, index, hand_delay):
+    i = hand[index]
+    hand[index] = -1
+    hand_delay[i] = 0.3
+
+def process_hand_delay(hand, hand_delay):
+    for i in range(4):
+        hand_delay[i] -= TICK_TIME
+        if hand_delay[i] < 0 and hand_delay[i] != -1:
+            hand_delay[i] = -1
+            hand[i] = i
 
 def display_evo_cannon(pos, side): #pos is accurate
     all = [
@@ -774,6 +787,8 @@ def draw(side):
     
     h = hand if side else hand2
     for i, hand_i in enumerate(h):
+        if hand_i == -1:
+            continue
         card = deck[hand_i] if side else bot_deck[hand_i]
         card_name_text = card_name_font.render(card.name, True, BLACK)
         card_name_x = (WIDTH * (i + 1)) // 5  + offset# Positions: WIDTH/5, WIDTH*2/5, WIDTH*3/5, WIDTH*4/5
@@ -865,6 +880,7 @@ running = True
 saved_decks = None
 while True:
     game_type = None
+    four_card = False
     while game_type != "quit":
         game_type, evo_enabled = lobby.run_loop(screen)
         if game_type == "edit":
@@ -921,6 +937,15 @@ while True:
                 if tup is not None:
                     bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = tup
                     game_arena.elixir_rate = 7
+                    break
+        elif game_type == "fourcard":
+            tup = deck_select_4c.run_loop(screen, evo_enabled, True, True, saved_decks)
+            if tup is not None:
+                player_random_deck, KING_LEVEL, deck, TOWER_TYPE = tup
+                tup = deck_select_4c.run_loop(screen, evo_enabled, False, True, saved_decks)
+                if tup is not None:
+                    four_card = True
+                    bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = tup
                     break
         elif game_type == "megadraft":
             player_random_deck = False
@@ -1015,9 +1040,11 @@ while True:
 
     hand = [0, 1, 2, 3]
     cycler = [4, 5, 6, 7]
+    hand_delay = [-1, -1, -1, -1]
 
     hand2 = [0, 1, 2, 3]
     cycler2 = [4, 5, 6, 7]
+    hand2_delay = [-1, -1, -1, -1]
 
     # Main Loop
     running = game_type != "quit"
@@ -1177,7 +1204,10 @@ while True:
                                     if p_mirror is not None:
                                         p_mirror.elixir_cost = cur_card.elixir_cost + 1
                                 
-                                cycle(hand, click_quarter - 1, cycler, True)
+                                if four_card:
+                                    four_card_cycle(hand, click_quarter - 1, hand_delay)
+                                else:
+                                    cycle(hand, click_quarter - 1, cycler, True)
                                 cur_card.cycle_evo()
 
                         # Reset drag start position after the release
@@ -1218,11 +1248,19 @@ while True:
                                     if b_mirror is not None:
                                         b_mirror.elixir_cost = cur_card.elixir_cost + 1
                                 
-                                cycle(hand2, click_quarter2 - 1, cycler2, False)
+                                if four_card:
+                                    four_card_cycle(hand2, click_quarter2 - 1, hand2_delay)
+                                else:
+                                    cycle(hand2, click_quarter2 - 1, cycler2, False)
                                 cur_card.cycle_evo()
 
                         # Reset drag start position after the release
                         drag_start_pos2 = None
+
+        if four_card:
+            process_hand_delay(hand, hand_delay)
+            process_hand_delay(hand2, hand2_delay)
+            
         false_has_left = False
         false_has_right = False
         true_has_left = False

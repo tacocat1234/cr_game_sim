@@ -66,6 +66,7 @@ def run_loop(screen):
     triple_e = SelectionBox(WIDTH/2, HEIGHT/2 + 60, 100, 50, "3x Elxiir")
     septuple = SelectionBox(WIDTH - 100, HEIGHT/2 + 60, 100, 50, "7x Elxiir")
     mega = SelectionBox(WIDTH/2, HEIGHT/2 + 120, 100, 50, "Mega-Draft")
+    fourcard = SelectionBox(100, HEIGHT/2 + 120, 100, 50, "Four Card")
     feedback = SelectionBox(50, HEIGHT - 50, 60, 60, "Feedback")
     deck_select = SelectionBox(WIDTH - 50, HEIGHT - 50, 60, 60, "Decks")
 
@@ -84,6 +85,7 @@ def run_loop(screen):
         triple_e.draw(screen)
         septuple.draw(screen)
         mega.draw(screen)
+        fourcard.draw(screen)
         feedback.draw(screen)
         deck_select.draw(screen)
 
@@ -123,6 +125,9 @@ def run_loop(screen):
                 running = False
             if mega.handle_event(event) is not None:
                 out = "megadraft"
+                running = False
+            if fourcard.handle_event(event) is not None:
+                out = "fourcard"
                 running = False
             if quit.handle_event(event) is not None:
                 out = "quit"

@@ -622,7 +622,7 @@ class LittlePrince(Champion):
     def kb(self, vector, kb_time=None):
         self.stage = 1
         self.stage_duration = 2
-        self.attack_cooldown = self.load_time - self.hit_speed
+        self.attack_cooldown = self.hit_speed
         self.hit_speed = 1.2
         self.load_time = 0.8
         return super().kb(vector, kb_time) 
