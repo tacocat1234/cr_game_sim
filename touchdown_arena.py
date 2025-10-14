@@ -7,7 +7,7 @@ import vector
 import itertools
 import random
 
-class Arena:
+class TouchdownArena:
     def __init__(self):
         self.troops = []
         self.active_attacks = []
@@ -76,10 +76,6 @@ class Arena:
                     # push into pending queue with 1s delay
                     self.pending_preplacements.append([cards, card_type, 0.0 if zero_delay else 1.0])  # delay in seconds
                 else:
-                    if side:
-                        self.p1_elixir -= e
-                    else:
-                        self.p2_elixir -= e
                     self.troops.extend(cards)
                     return True
             else:

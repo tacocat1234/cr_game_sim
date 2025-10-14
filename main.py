@@ -894,6 +894,7 @@ while True:
                 if tup is not None:
                     four_card = True
                     bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = tup
+                    bot_random_deck = False
                     bot_deck.extend(bot_deck)
                     break
         elif game_type == "septuple":
