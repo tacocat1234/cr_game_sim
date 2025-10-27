@@ -1,0 +1,9 @@
+goblinbarrel
+rocket
+knight
+princess
+goblingang
+icespirit
+log
+infernotower
+princesstower

@@ -279,8 +279,8 @@ def evolution_troop_factory(side, position, name, level):
     if name == "knight":
         return training_camp_evos.EvolutionKnight(side, position, level)
     elif name == "archers":
-        pos1 = vector.Vector(1/2, 0)
-        pos2 = vector.Vector(-1/2, 0)
+        pos1 = vector.Vector(0.51, 0)
+        pos2 = vector.Vector(-0.51, 0)
         return [training_camp_evos.EvolutionArcher(side, position.added(pos1), level),
                 training_camp_evos.EvolutionArcher(side, position.added(pos2), level)]
     elif name == "musketeer":
@@ -426,8 +426,8 @@ def troop_factory(side, position, name, level):
                 training_camp_cards.Minion(side, position.added(pos2), level),
                 training_camp_cards.Minion(side, position.added(pos3), level)]
     elif name == "archers":
-        pos1 = vector.Vector(1/2, 0)
-        pos2 = vector.Vector(-1/2, 0)
+        pos1 = vector.Vector(0.51, 0)
+        pos2 = vector.Vector(-0.51, 0)
         return [training_camp_cards.Archer(side, position.added(pos1), level),
                 training_camp_cards.Archer(side, position.added(pos2), level)]
     elif name == "musketeer":

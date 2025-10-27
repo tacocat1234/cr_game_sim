@@ -1,0 +1,9 @@
+hogrider
+musketeer
+fireball
+icegolem
+skeletons
+icespirit
+log
+cannon
+princesstower

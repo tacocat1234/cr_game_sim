@@ -46,7 +46,8 @@ spell all things without spaces, but the game can infer if you cant spell
 
 recommended bot_deck.txt levels is 12 comapred to your 11, becuase bot is stupid.
 
-  
+5 sample decks have been included for each of the main archetypes
+you can manually save decks by creating a txt file in the "decks" folder. The formating is 9 lines, one troop per line, and the 9th line is the towertroop name. (look at sample decks for example)
 
 bugs/suggestions/feedback form
 

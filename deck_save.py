@@ -4,6 +4,7 @@ from card_factory import generate_random_remaining
 from card_factory import get_type
 from card_factory import elixir_map
 from cards import Card
+from pathlib import Path
 import random
 import pygame
 
@@ -37,7 +38,7 @@ def word_dist(s1, s2):
     return d[lenstr1 - 1, lenstr2 - 1]
 
 def fuzzy_match(string, list):
-
+    string = string.lower()
     if string in list:
         return string
 
@@ -201,6 +202,16 @@ class DeckListBox(SelectionBox):
         for each in self.deck_boxes:
             each.draw(screen)
 
+def load_from_txt():
+    out = {}
+    folder = Path("decks")
+    for file in folder.iterdir():
+        if file.is_file():
+            with file.open("r", encoding="utf-8") as f:
+                lines = [line.strip() for line in f if line.strip()]  # remove empty lines and strip whitespace
+                out[file.name[:len(file.name)-4]] = lines
+    return out
+
 def deck_list_loop(screen, evo_enabled = True, decks=None):
     deck_list = DeckListBox(WIDTH/2, HEIGHT/2, 300, 640)
 
@@ -209,6 +220,22 @@ def deck_list_loop(screen, evo_enabled = True, decks=None):
             deck_list.deck_boxes.append(DeckBox(deck_list.x, deck_list.y - deck_list.height/2 + 35 + len(deck_list.deck_boxes) * 60, deck_list.width - 20, 50))
             deck_list.deck_boxes[-1].value = name
             deck_list.decks.append((name, cards, tower_type, level))
+
+    preloaded = load_from_txt()
+
+    if len(preloaded) > 0:
+        for name, each in preloaded.items():
+            if all(box.value != name for box in deck_list.deck_boxes):
+                deck_list.deck_boxes.append(DeckBox(deck_list.x, deck_list.y - deck_list.height/2 + 35 + len(deck_list.deck_boxes) * 60, deck_list.width - 20, 50))
+                deck_list.deck_boxes[-1].value = name
+                cards = []
+                tower_type = ""
+                if len(each) > 8:
+                    cards = [Card(True, fuzzy_match(c, troops + buildings + spells + champions + ["mirror"]), 11, can_evo(fuzzy_match(c, troops + buildings + spells + champions + ["mirror"]))) for c in each[:8]]
+                    tower_type = fuzzy_match(each[8], ["princesstower", "cannoneer", "daggerduchess", "royalchef"])
+                else:
+                    cards = [Card(True, fuzzy_match(c, troops + buildings + spells + champions + ["mirror"]), 11, can_evo(fuzzy_match(c, troops + buildings + spells + champions + ["mirror"]))) for c in each]
+                deck_list.decks.append((name, cards, tower_type, 11))
 
     return_box = SubmitBox(WIDTH/2, HEIGHT - 60, 100, 50)
     new_deck_button = SubmitBox(WIDTH/2, 50, 50, 50) #modify position later

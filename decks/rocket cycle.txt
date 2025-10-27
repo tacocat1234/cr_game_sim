@@ -1,0 +1,9 @@
+executioner
+tornado
+arrows
+cannon
+rocket
+icespirit
+skeletons
+tesla
+daggerduchess

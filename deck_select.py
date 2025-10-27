@@ -37,7 +37,7 @@ def word_dist(s1, s2):
     return d[lenstr1 - 1, lenstr2 - 1]
 
 def fuzzy_match(string, list):
-
+    string = string.lower()
     if string in list:
         return string
 

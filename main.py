@@ -10,6 +10,7 @@ from card_factory import generate_random_deck
 from card_factory import parse_input
 from card_factory import can_evo
 from card_factory import champions
+from pathlib import Path
 import arena
 import deck_select
 import deck_select_4c
@@ -831,8 +832,25 @@ def draw():
 
     pygame.display.flip()
 
+from deck_save import load_from_txt
 
-saved_decks = None
+saved_decks = []
+
+preloaded = load_from_txt()
+
+from deck_save import fuzzy_match
+from card_factory import troops, buildings, spells
+if len(preloaded) > 0:
+    for name, each in preloaded.items():
+        cards = []
+        tower_type = ""
+        if len(each) > 8:
+            cards = [Card(True, fuzzy_match(c, troops + buildings + spells + champions + ["mirror"]), 11, can_evo(fuzzy_match(c, troops + buildings + spells + champions + ["mirror"]))) for c in each[:8]]
+            tower_type = fuzzy_match(each[8], ["princesstower", "cannoneer", "daggerduchess", "royalchef"])
+        else:
+            cards = [Card(True, fuzzy_match(c, troops + buildings + spells + champions + ["mirror"]), 11, can_evo(fuzzy_match(c, troops + buildings + spells + champions + ["mirror"]))) for c in each]
+        saved_decks.append((name, cards, tower_type, 11))
+
 while True:
     game_type = None
     four_card = False

@@ -657,7 +657,6 @@ class Bot:
                     pos = target.added(vector.Vector(-4, 1)) if target.x > 0 else target.added(vector.Vector(4, 1))
                     if target.x < 5 and target.x > -5:
                         pos.x = 0
-                    return card, pos
                 else:
                     pos = target.added(vector.Vector(0, 1.5))
                 cycle(self.hand, self.hand.index(ind), self.queue, self.champion_index)
@@ -693,7 +692,7 @@ class Bot:
                                 main_threat_level = e
                                 main = each #store biggest threat
                 else:
-                    if each.position.y > -3 and (isinstance(each, XBow) or isinstance(each, Mortar)):
+                    if each.position.y >= -3 and (isinstance(each, XBow) or isinstance(each, Mortar)):
                         threat_level = 99
                         if each.position.x > 0:
                             defense_investment_right -= 99
