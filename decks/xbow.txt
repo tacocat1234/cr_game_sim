@@ -3,6 +3,6 @@ tesla
 knight
 icewizard
 skeletons
-log
+giantsnowball
 tornado
 rocket

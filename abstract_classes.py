@@ -740,7 +740,7 @@ class Tower:
         self.tick_func(arena)
 
         if self.stun_timer <= 0:
-            if self.target is None or self.target.cur_hp <= 0 or (not self.target.targetable) or (vector.distance(self.target.position, self.position) > self.hit_range + self.target.collision_radius + self.collision_radius + 3):
+            if self.target is None or self.target.cur_hp <= 0 or (not self.target.targetable) or (vector.distance(self.target.position, self.position) > self.hit_range + self.target.collision_radius + self.collision_radius):
                 self.update_target(arena)
             if not self.target is None and self.attack_cooldown <= 0:
                 atk = self.attack()
