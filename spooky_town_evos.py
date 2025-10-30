@@ -417,6 +417,7 @@ class EvolutionWallBreaker(spooky_town_cards.WallBreaker):
 class Souldier(spooky_town_cards.RoyalGhost):
     def __init__(self, side, position, level):
         super().__init__(side, position, level)
+        self.hit_damage /= 2 #nerf
         self.cur_hp = 81 * pow(1.1, level - 11)
         self.hit_points = 81 * pow(1.1, level - 11)
         self.invisbility_timer = spooky_town_cards.RoyalGhost.INVISIBLE_COOLDOWN

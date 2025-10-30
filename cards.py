@@ -22,6 +22,7 @@ evo_cycles = {
     "goblinbarrel" : 2,
     "royalgiant" : 1,
     "royalrecruits" : 1,
+    "royalhogs" : 2,
     "icespirit" : 2,
     "giantsnowball" : 2,
     "goblingiant" : 1,
@@ -69,3 +70,9 @@ class Card:
                 self.cycles_left = self.cycles
             else:
                 self.cycles_left -= 1
+
+    def __str__(self):
+        return "Side: " + str(self.side) + " Name: " + str(self.name) + " Level: " + str(self.level) + " Evo: " + str(self.is_evo)
+    
+    def __repr__(self) -> str:
+        return "Card(side = " + str(self.side) + ", name = " + str(self.name) + ", level = " + str(self.level) + ", is_evo = " + str(self.is_evo) + ")"

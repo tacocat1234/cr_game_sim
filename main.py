@@ -1014,7 +1014,6 @@ while True:
 
     bot = Bot(bot_deck, BOT_TOWER_TYPE.lower())
 
-
     random.shuffle(deck)
 
     hand = [0, 1, 2, 3]

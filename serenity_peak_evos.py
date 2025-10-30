@@ -109,6 +109,7 @@ class EvolutionGoblinDrill(serenity_peak_cards.GoblinDrill):
 
         trigger = False
         if self.last_down == 1 and self.cur_hp <= 0.66 * self.hit_points:
+            arena.troops.append(Goblin(self.side, copy.deepcopy(self.position), self.level)) #extra goblin on the first one
             self.last_down = 0.66
             trigger = True
         if self.last_down == 0.66 and self.cur_hp <= 0.33 * self.hit_points:

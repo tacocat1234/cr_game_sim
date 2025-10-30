@@ -1,6 +1,6 @@
 from card_factory import troops, buildings, spells, champions
 from card_factory import can_evo
-from card_factory import generate_random_remaining
+from card_factory import generate_random_remaining_4c
 from card_factory import get_type
 from card_factory import elixir_map
 from cards import Card
@@ -251,7 +251,7 @@ def run_loop(screen, evo_enabled = True, side = True, against_bot=True, decks=No
     temp = []
 
     if len(rand_input) != 4:
-        temp = generate_random_remaining(rand_input, evo_enabled)
+        temp = generate_random_remaining_4c(rand_input, evo_enabled)
     else:
         temp = [[each[2], each[3]] for each in rand_input]
 
@@ -259,5 +259,4 @@ def run_loop(screen, evo_enabled = True, side = True, against_bot=True, decks=No
         out.append(Card(side, each[0], int(lev.value), each[1]))
 
     t = random.choice(["princesstower", "cannoneer", "daggerduchess", "royalchef"]) if tower.value == "" else fuzzy_match(tower.value, ["princesstower", "cannoneer", "daggerduchess", "royalchef"])
-
     return len(rand_input) == 0, int(lev.value), out, t

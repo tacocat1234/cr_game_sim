@@ -357,8 +357,8 @@ class Musketeer(Troop):
     def __init__(self, side, position, level):
         super().__init__(
             s=side,              # Side (True for one player, False for the other)
-            h_p= 340 * pow(1.1, level - 1),         # Hit points (Example value)
-            h_d= 103 * pow(1.1, level - 1),          # Hit damage (Example value)
+            h_p= 340 * pow(1.1, level - 3),         # Hit points (Example value)
+            h_d= 103 * pow(1.1, level - 3),          # Hit damage (Example value)
             h_s=1,          # Hit speed (Seconds per hit)
             l_t=0.2,            # First hit cooldown
             h_r=6,            # Hit range

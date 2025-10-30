@@ -44,7 +44,7 @@ def can_evo(n):
             n == "wizard" or
             n == "bats" or n == "zap" or n == "mortar" or
             n == "pekka" or n == "goblinbarrel" or n == "witch" or n == "babydragon" or
-            n == "royalgiant" or n == "royalrecruits" or
+            n == "royalgiant" or n == "royalrecruits" or n == "royalhogs" or
             n == "icespirit" or n == "giantsnowball" or
             n == "dartgoblin" or n == "goblingiant" or n == "skeletonbarrel" or
             n == "hunter" or n == "tesla" or n == "furnace" or 
@@ -236,6 +236,8 @@ def get_clone(obj):
             return royal_arena_cards.RoyalGiant(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionRoyalRecruit":
             return royal_arena_cards.RoyalRecruit(obj.side, copy.deepcopy(obj.position), obj.level)
+        elif n == "EvolutionRoyalHog":
+            return royal_arena_cards.RoyalHog(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionIceSpirit":
             return frozen_peak_cards.IceSpirit(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionDartGoblin":
@@ -339,6 +341,11 @@ def evolution_troop_factory(side, position, name, level):
         out = []
         for i in range(6):
             out.append(royal_arena_evos.EvolutionRoyalRecruit(side, position.added(vector.Vector(-7 + (14/5 * i), 0)), level))
+        return out
+    elif name == "royalhogs":
+        out = []
+        for i in range(4):
+            out.append(royal_arena_evos.EvolutionRoyalHog(side, position.added(vector.Vector(-3.5/2 + (3.5/3 * i), 0)), level))
         return out
     elif name == "icespirit":
         return frozen_peak_evos.EvolutionIceSpirit(side, position, level)
@@ -540,9 +547,9 @@ def troop_factory(side, position, name, level):
         pos1 = vector.Vector(0, 1/2 * flip)
         pos2 = vector.Vector(-math.sqrt(3)/4, -1/4 * flip)
         pos3 = vector.Vector(math.sqrt(3)/4, -1/4 * flip)
-        return [training_camp_cards.Musketeer(side, position.added(pos1), level), 
-                training_camp_cards.Musketeer(side, position.added(pos2), level),
-                training_camp_cards.Musketeer(side, position.added(pos3), level)]
+        return [royal_arena_cards.EliteMusketeer(side, position.added(pos1), level), 
+                royal_arena_cards.EliteMusketeer(side, position.added(pos2), level),
+                royal_arena_cards.EliteMusketeer(side, position.added(pos3), level)]
     elif name == "icespirit":
         return frozen_peak_cards.IceSpirit(side, position, level)
     elif name == "icegolem":
@@ -1045,6 +1052,67 @@ def generate_random_remaining(filled, evo_enabled = True):
             elif i == 3 and random.randint(1, 5) == 1:
                 n = random_with_param("spell", 5, 9, used)
             elif i == 4 and random.randint(1, 5) == 1:
+                n = "mirror"
+            else:
+                n = random_with_param(each[0], each[1][0], each[1][1], used)
+            out[i] = [n, evo_enabled and can_evo(n)]
+            used.append(n)
+        i += 1
+
+    return out
+
+def generate_random_remaining_4c(filled, evo_enabled = True):
+    used = []
+    out = [None, None, None, None]
+    missing = [["troop", [1, 4]], ["troop", [2,  5]], ["troop", [5, 10]], ["spell", [1, 10]]]
+    
+    priority = [3, 1, 0, 2]
+
+    fill = []
+
+    for each in filled:
+        has_spot = False
+        if each[0] == "troop":
+            e = each[1]
+            if e >= 1 and e <= 4 and missing[0] is not None:
+                out[0] = [each[2], each[3]]
+                priority.remove(0)
+                missing[0] = None
+                has_spot = True
+            elif e >= 2 and e <= 5 and missing[1] is not None:
+                out[1] = [each[2], each[3]]
+                priority.remove(1)
+                missing[1] = None
+                has_spot = True
+            elif e >= 5 and e <= 10 and missing[2] is not None:
+                out[2] = [each[2], each[3]]
+                priority.remove(2)
+                missing[2] = None
+                has_spot = True
+        elif each[0] == "spell":
+            if missing[3] is not None:
+                out[3] = [each[2], each[3]]
+                priority.remove(3)
+                missing[3] = None
+                has_spot = True
+        
+        if not has_spot:
+            fill.append(each)
+        else:
+            used.append(each[2])
+    
+    for each in fill:
+        i = priority.pop(0)
+        out[i] = [each[2], each[3]]
+        missing[i] = None
+
+    i = 0
+    for each in missing:
+        if each is not None:
+            n = None
+            if i == 2 and random.randint(1, 5) == 1:
+                n = random.choice(buildings)
+            elif i == 3 and random.randint(1, 7) == 1:
                 n = "mirror"
             else:
                 n = random_with_param(each[0], each[1][0], each[1][1], used)

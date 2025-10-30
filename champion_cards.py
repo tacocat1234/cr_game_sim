@@ -753,8 +753,8 @@ class BossBandit(Champion):
     def __init__(self, side, position, level):
         super().__init__(
             s=side,              # Side (True for one player, False for the other)
-            h_p= 2721 * pow(1.1, level - 11),         # Hit points (Example value)
-            h_d= 268 * pow(1.1, level - 11),          # Hit damage (Example value)
+            h_p= 2621 * pow(1.1, level - 11),         # Hit points (Example value)
+            h_d= 238 * pow(1.1, level - 11),          # Hit damage (Example value)
             h_s=1.2,          # Hit speed (Seconds per hit)
             l_t=0.8,            # First hit cooldown
             h_r=0.8,            # Hit range

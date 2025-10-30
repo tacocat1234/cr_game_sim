@@ -133,6 +133,7 @@ class RoyalHog(Troop):
         self.sprite_path = f"sprites/{class_name}/{class_name}_0.png"
         self.cross_river = True
         self.jump_speed = 160 * TILES_PER_MIN
+
     def attack(self):
         return RoyalHogAttackEntity(self.side, self.hit_damage, self.position, self.target)
 
@@ -422,3 +423,54 @@ class DarkPrince(Troop):
             return DarkPrinceAttackEntity(self.side, self.charge_damage, self.position, self.target.position) 
         else:
             return DarkPrinceAttackEntity(self.side, self.hit_damage, self.position, self.target.position)
+
+class EliteMusketeerRangedAttackEntity(RangedAttackEntity):
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            side=side,
+            damage=damage,
+            velocity=1000*TILES_PER_MIN,
+            position=position,
+            target=target,
+        )
+
+class EliteMusketeerMeleeAttackEntity(MeleeAttackEntity):
+    HIT_RANGE = 1.6
+    COLLISION_RADIUS = 0.5
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            side=side,
+            damage=damage,
+            position=position,
+            target=target
+            )
+
+
+class EliteMusketeer(Troop):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 340 * pow(1.1, level - 1),         # Hit points (Example value)
+            h_d= 78 * pow(1.1, level - 1),          # Hit damage (Example value)
+            h_s=1.2,          # Hit speed (Seconds per hit)
+            l_t=0.2,            # First hit cooldown
+            h_r=6,            # Hit range
+            s_r=6,            # Sight Range
+            g=True,           # Ground troop
+            t_g_o=False,       # Targets ground-only
+            t_o=False,        # Not tower-only
+            m_s=60*TILES_PER_MIN,          # Movement speed 
+            d_t=1,            # Deploy time
+            m=5,            #mass
+            c_r=0.5,        #collision radius
+            p=position               # Position (vector.Vector object)
+        ) 
+        self.level = level
+        self.melee_range = 1.6
+        self.melee_damage = 121 * pow(1.1, level - 1)
+
+    def attack(self):
+        if vector.distance(self.target.position, self.position) < self.melee_range + self.collision_radius + self.target.collision_radius and self.target.ground:
+            return EliteMusketeerMeleeAttackEntity(self.side, self.melee_damage, self.position, self.target)
+        else:
+            return EliteMusketeerRangedAttackEntity(self.side, self.hit_damage, self.position, self.target)

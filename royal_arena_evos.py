@@ -89,3 +89,53 @@ class EvolutionRoyalRecruit(royal_arena_cards.RoyalRecruit):
         else:
             return super().attack()
         
+class EvolutionRoyalHogDropAttackEntity(AttackEntity):
+    SPLASH_RADIUS = 1.4
+    def __init__(self, side, damage, position):
+        super().__init__(
+            s=side,
+            d=damage,
+            v=0,
+            l=0.2,
+            i_p=position
+        )
+        self.display_size = self.SPLASH_RADIUS
+
+
+    def detect_hits(self, arena):
+        hits = []
+        for each in arena.towers + arena.buildings + arena.troops:
+            if each.side != self.side and not each.invulnerable and (not isinstance(each, Troop) or each.ground): # if different side
+                if vector.distance(self.position, each.position) < self.SPLASH_RADIUS + each.collision_radius:
+                    hits.append(each)
+        return hits
+        
+class EvolutionRoyalHog(royal_arena_cards.RoyalHog):
+    def __init__(self, side, position, level):
+        super().__init__(side, position, level)
+        self.evo = True
+        self.drop_damage = 115 * pow(1.1, level - 11)
+        self.ground = False
+        self.dropped = False
+
+    def level_up(self):
+        self.drop_damage *= 1.1
+        return super().level_up()
+
+    def tick_func(self, arena):
+        if self.dropped:
+            self.dropped = False
+            arena.active_attacks.append(EvolutionRoyalHogDropAttackEntity(self.side, self.drop_damage, self.position))
+            self.ground = True #fall
+
+    def attack(self):
+        if not self.ground:
+            self.dropped = True #drop
+        return super().attack()
+
+    def damage(self, amount):
+        if not self.ground:
+            self.dropped = True
+        return super().damage(amount)
+
+    
