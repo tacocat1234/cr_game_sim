@@ -18,65 +18,18 @@ WIDTH, HEIGHT = 360 + 128, 640 + 128
 OFFSET = WIDTH + BUFFER
 FULL_WIDTH = 2 * WIDTH + BUFFER
 
-def draw_tower(screen, tower_x, tower_y):
-    tower_rect_width = 40
-    tower_rect_height = tower_rect_width
-    tower_x -= tower_rect_width / 2
-    tower_y -= tower_rect_height / 2
-
-    tower_color = GRAY
-    
-    pygame.draw.rect(screen, (90, 100, 90), (tower_x - 10, tower_y - 10, tower_rect_width + 20, tower_rect_height + 20))  # Tower base
-    pygame.draw.rect(screen, tower_color, (tower_x, tower_y, tower_rect_width, tower_rect_height))  # Tower square
-    hpfont = pygame.font.Font(None, 16)
-    hp_text = hpfont.render("3631" if tower_y < HEIGHT/2 - 64 else "4393", True, WHITE)  # Convert HP to int and render in white
-    text_rect = hp_text.get_rect(center=(tower_x + tower_rect_width / 2, tower_y - 10))
-    screen.blit(hp_text, text_rect)
-
-    # Health bar
-    pygame.draw.rect(screen, GREEN, (tower_x - 5, tower_y - 5, ((tower_rect_width + 10)), 3))
-
-def draw_towers(screen, is_offset=False):
-    extra = OFFSET if is_offset else 0
-    draw_tower(screen, WIDTH/2 + 110 + extra, HEIGHT/2 - 64 + 190)
-    draw_tower(screen, WIDTH/2 + 110 + extra, HEIGHT/2 - 64 - 190)
-    draw_tower(screen, WIDTH/2 - 110 + extra, HEIGHT/2 - 64 + 190)
-    draw_tower(screen, WIDTH/2 - 110 + extra, HEIGHT/2 - 64 - 190)
-
-    tower_x = WIDTH/2 + extra
-    tower_y = HEIGHT/2 - 64 - 260
-
-    tower_rect_width = 56
-    tower_rect_height = tower_rect_width
-    tower_x -= tower_rect_width / 2
-    tower_y -= tower_rect_height / 2
-
-    tower_color = GRAY
-    
-    pygame.draw.rect(screen, (90, 100, 90), (tower_x - 10, tower_y - 10, tower_rect_width + 20, tower_rect_height + 20))  # Tower base
-    pygame.draw.rect(screen, tower_color, (tower_x, tower_y, tower_rect_width, tower_rect_height))  # Tower square
-
-    tower_x = WIDTH/2 + extra
-    tower_y = HEIGHT/2 - 64 + 260
-
-    tower_x -= tower_rect_width / 2
-    tower_y -= tower_rect_height / 2
-    
-    pygame.draw.rect(screen, (90, 100, 90), (tower_x - 10, tower_y - 10, tower_rect_width + 20, tower_rect_height + 20))  # Tower base
-    pygame.draw.rect(screen, tower_color, (tower_x, tower_y, tower_rect_width, tower_rect_height))  # Tower square
-
 
 option_types = [
-    ["troop", 3, 6],
-    ["troop", 1, 2],
+    ["troop", 3, 9],
+    ["troop", 1, 3],
     ["spell", 1, 3],
     ["any", 1, 9]
 ]
 
 other_types = [
-    ["troop", 5, 9],
-    ["troop", 2, 4],
-    ["building", 1, 9],
+    ["troop", 3, 9],
+    ["troop", 1, 3],
+    ["building", 1, 4],
     ["spell", 4, 6],
 ]
 
@@ -218,7 +171,7 @@ def run_loop(screen, evo_enabled = False, side = True):
     
 
     i = 0
-    used = []
+    used = ["miner", "goblindrill", "graveyard", "goblinbarrel"] #exclude those 4 (op)
     n1 = random_with_param(*option_types[i], used)
     used.append(n1)
     n2 = random_with_param(*option_types[i], used)
@@ -242,28 +195,15 @@ def run_loop(screen, evo_enabled = False, side = True):
 
     running = True
 
-    background_img = pygame.image.load("sprites/background.png").convert_alpha()
+    background_img = pygame.image.load("sprites/td_background.png").convert_alpha()
     while running:
         screen.fill((100, 100, 100))
         bg_rect = background_img.get_rect(center=(WIDTH / 2, (HEIGHT - 128) / 2))
         screen.blit(background_img, bg_rect)
         SCALE = 20
-        pygame.draw.rect(screen, RIVER_TEMP, (0, HEIGHT/2 - 64 - SCALE, WIDTH, SCALE * 2)) 
-
-        #Draw bridges
-        pygame.draw.rect(screen, BRIDGE_TEMP, (64 + 2.5 * SCALE, HEIGHT/2 - 64 - 1.5 * SCALE, SCALE * 2, SCALE * 3)) 
-        pygame.draw.rect(screen, BRIDGE_TEMP, (WIDTH - (64 + 4.5 * SCALE), HEIGHT/2 - 64 - 1.5 *SCALE, SCALE * 2, SCALE * 3)) 
-        draw_towers(screen)
 
         bg_rect = background_img.get_rect(center=(WIDTH / 2 + OFFSET, (HEIGHT - 128) / 2))
         screen.blit(background_img, bg_rect)
-        SCALE = 20
-        pygame.draw.rect(screen, RIVER_TEMP, (OFFSET, HEIGHT/2 - 64 - SCALE, WIDTH, SCALE * 2)) 
-
-        #Draw bridges
-        pygame.draw.rect(screen, BRIDGE_TEMP, (64 + 2.5 * SCALE + OFFSET, HEIGHT/2 - 64 - 1.5 * SCALE, SCALE * 2, SCALE * 3)) 
-        pygame.draw.rect(screen, BRIDGE_TEMP, (WIDTH - (64 + 4.5 * SCALE) + OFFSET, HEIGHT/2 - 64 - 1.5 *SCALE, SCALE * 2, SCALE * 3)) 
-        draw_towers(screen, True)
         
         for each in all:
             each.draw(screen)

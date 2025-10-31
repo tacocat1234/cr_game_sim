@@ -195,7 +195,7 @@ class Witch(Troop):
             if self.deploy_time <= 0:
                 if self.target is None or self.target.targetable == False or self.target.cur_hp <= 0:
                     self.update_target(arena)
-                if self.move(arena) and self.attack_cooldown <= 0: #move, then if within range, attack
+                if (self.move_touchdown(arena) if arena.type == "td" else self.move(arena)) and self.attack_cooldown <= 0: #move, then if within range, attack
                     atk = self.attack()
                     if isinstance(atk, list) and len(atk) > 0:
                         arena.active_attacks.extend(atk)

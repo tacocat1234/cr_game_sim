@@ -20,6 +20,7 @@ class Arena:
         self.timer = 0
         self.state = ""
         self.elixir_trackers = []
+        self.type = "normal"
 
         self.p1_champion = None
         self.p2_champion = None
@@ -31,7 +32,21 @@ class Arena:
 
     def add(self, side, position, name, cost, level, evo=False, zero_delay=False):
         e = cost
-        if (side and e <= self.p1_elixir) or (not side and e <= self.p2_elixir):  # must fully afford
+        if (side and e <= self.p1_elixir + 0.2) or (not side and e <= self.p2_elixir + 0.2):  # some leneincy
+            e_rate = self.elixir_rate / 2.8
+            if self.timer >= 240:
+                e_rate = 3 * self.elixir_rate / 2.8
+            elif self.timer >= 120:
+                e_rate = 2 * self.elixir_rate / 2.8
+
+            delay = 0 
+            if side:
+                if not e <= self.p1_elixir:
+                    delay = (e - self.p1_elixir)/e_rate
+            else:
+                if not e <= self.p2_elixir:
+                    delay = (e - self.p2_elixir)/e_rate
+
             if evo:
                 card_type, card = card_factory.evolution_factory(side, position, name, level)
             else:
@@ -43,7 +58,9 @@ class Arena:
                 else:
                     card_type, card = card_factory.card_factory(side, position, name, level)
 
-            self.elixir_trackers.append(ElixirLossTracker(position.x, position.y + (1 if side else -1), e, side, self))
+            e_t = ElixirLossTracker(position.x, position.y + (1 if side else -1), e, side, self)
+            e_t.timer += delay
+            self.elixir_trackers.append(e_t)
 
             # normalize to list
             cards = card if isinstance(card, list) else [card]
@@ -74,13 +91,28 @@ class Arena:
                         self.p2_elixir -= e
 
                     # push into pending queue with 1s delay
-                    self.pending_preplacements.append([cards, card_type, 0.0 if zero_delay else 1.0])  # delay in seconds
+                    self.pending_preplacements.append([cards, card_type, delay if zero_delay else 1.0 + delay])  # delay in seconds
                 else:
                     if side:
                         self.p1_elixir -= e
                     else:
                         self.p2_elixir -= e
-                    self.troops.extend(cards)
+
+                    if delay > 0:
+                        for c in cards:
+                            c.preplace = True
+                            c.invulnerable = True
+                            c.collideable = False
+                            c.targetable = False
+                            if card_type == "troop":
+                                self.troops.append(c)
+                            else:
+                                self.buildings.append(c)
+
+                        # push into pending queue with 1s delay
+                        self.pending_preplacements.append([cards, card_type, delay])
+                    else:
+                        self.troops.extend(cards)
                     return True
             else:
                 # spells deploy instantly
@@ -88,7 +120,16 @@ class Arena:
                     self.p1_elixir -= e
                 else:
                     self.p2_elixir -= e
-                self.spells.extend(cards)
+
+                if delay > 0:
+                    for c in cards:
+                        c.preplace = True
+                        self.spells.append(c)
+
+                    # push into pending queue with 1s delay
+                    self.pending_preplacements.append([cards, card_type, delay])
+                else:
+                    self.spells.extend(cards)
 
             return True
             
@@ -123,13 +164,14 @@ class Arena:
             if delay <= 0:
                 for c in cards:
                     c.preplace = False
-                    c.invulnerable = False
-                    c.collideable = True
-                    c.targetable = True
-                    c.on_preplace()
+                    
                     if not isinstance(c, Spell):
+                        c.invulnerable = False
+                        c.collideable = True
+                        c.targetable = True
+                        c.on_preplace()
                         c.on_deploy(self)
-
+                        
             else:
                 still_pending.append([cards, card_type, delay])
         self.pending_preplacements = still_pending
@@ -168,7 +210,7 @@ class Arena:
         if self.timer >= 180:  # overtime
             for tower in self.towers:
                 p1_side += (1 if tower.side else -1)
-            if p1_side > 0:
+            if p1_side > 0: #p1 side
                 return True
             elif p1_side < 0:
                 return False

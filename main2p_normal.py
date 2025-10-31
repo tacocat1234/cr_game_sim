@@ -9,10 +9,12 @@ from card_factory import can_evo
 from card_factory import champions
 from pathlib import Path
 import arena
+import touchdown_arena
 import deck_select
 import deck_select_4c
 import triple_draft_2p
 import draft_2p
+import td_draft_2p
 import megadraft_2p
 import lobby
 import towers
@@ -187,10 +189,13 @@ screen = pygame.display.set_mode((FULL_WIDTH, HEIGHT))
 pygame.display.set_caption("Crash Royale Arena")    
 font = pygame.font.Font(None, 12) 
 background_img = pygame.image.load("sprites/background.png").convert_alpha()
+td_bg_img = pygame.image.load("sprites/td_background.png") #no transparent so no need to convertalpha
 select_img = pygame.image.load("sprites/tileselect.png").convert_alpha()
 dd_symbol_img = pygame.image.load("sprites/daggerduchess/duchess_symbol.png").convert_alpha()
 rc_symbol_img = pygame.image.load("sprites/royalchefkingtower/royalchef_symbol.png").convert_alpha()
 elixir_int_img = pygame.image.load("sprites/elixir_bar.png").convert_alpha()
+blue_scores = [pygame.image.load(f"sprites/blue_score/{i}.png").convert_alpha() for i in range(4)]
+red_scores = [pygame.image.load(f"sprites/red_score/{i}.png").convert_alpha() for i in range(4)]
 timer_images = []
 for i in range(9):
     img = pygame.image.load(f"sprites/timer/timer_{i}.png").convert_alpha()
@@ -262,24 +267,29 @@ def display_evo_cannon(pos, side): #pos is accurate
     for each in all:
         pygame.draw.circle(screen, (224, 255, 232), convert_to_pygame(each, side), 1.5 * SCALE, width=1)
 
-def draw(side):
+def draw(side, mode = "normal"):
 
     offset = BUFFER + WIDTH if not side else 0
 
     if side:
         screen.fill(BG_TEMP)
         pygame.draw.rect(screen, (0, 0, 0), (WIDTH, 0, BUFFER, HEIGHT))
-    bg_rect = background_img.get_rect(center=(WIDTH / 2 + offset, (HEIGHT - 128) / 2))
-    screen.blit(background_img, bg_rect)
-    # Draw river
-    pygame.draw.rect(screen, RIVER_TEMP, (offset, HEIGHT/2 - 64 - SCALE, WIDTH, SCALE * 2)) 
-   
-    #draw card area
-    pygame.draw.rect(screen, GRAY, (offset, HEIGHT - 128, WIDTH, 128))
 
-    #Draw bridges
-    pygame.draw.rect(screen, BRIDGE_TEMP, (64 + 2.5 * SCALE + offset, HEIGHT/2 - 64 - 1.5 * SCALE, SCALE * 2, SCALE * 3)) 
-    pygame.draw.rect(screen, BRIDGE_TEMP, (WIDTH - (64 + 4.5 * SCALE) + offset, HEIGHT/2 - 64 - 1.5 *SCALE, SCALE * 2, SCALE * 3)) 
+    if mode == "td":
+        bg_rect = td_bg_img.get_rect(center=(WIDTH / 2 + offset, (HEIGHT - 128) / 2))
+        screen.blit(td_bg_img, bg_rect)
+    else:
+        bg_rect = background_img.get_rect(center=(WIDTH / 2 + offset, (HEIGHT - 128) / 2))
+        screen.blit(background_img, bg_rect)
+        # Draw river
+        pygame.draw.rect(screen, RIVER_TEMP, (offset, HEIGHT/2 - 64 - SCALE, WIDTH, SCALE * 2)) 
+    
+        #draw card area
+        pygame.draw.rect(screen, GRAY, (offset, HEIGHT - 128, WIDTH, 128))
+
+        #Draw bridges
+        pygame.draw.rect(screen, BRIDGE_TEMP, (64 + 2.5 * SCALE + offset, HEIGHT/2 - 64 - 1.5 * SCALE, SCALE * 2, SCALE * 3)) 
+        pygame.draw.rect(screen, BRIDGE_TEMP, (WIDTH - (64 + 4.5 * SCALE) + offset, HEIGHT/2 - 64 - 1.5 *SCALE, SCALE * 2, SCALE * 3)) 
 
     #Time Left:
     #format_time(game_arena.timer)
@@ -333,14 +343,17 @@ def draw(side):
                 cur_name = p_prev.name
 
             if not can_anywhere(cur_name):
-                place_surface = pygame.Surface((488, 340), pygame.SRCALPHA)
-
-                pygame.draw.rect(place_surface, (238, 75, 43, 128), pygame.Rect(64, 0, 360, 220))
-                if false_has_right:
-                    pygame.draw.rect(place_surface, (238, 75, 43, 128), pygame.Rect(244, 220, 180, 120))
-                if false_has_left:
-                    pygame.draw.rect(place_surface, (238, 75, 43, 128), pygame.Rect(64, 220, 180, 120))
-                screen.blit(place_surface, (0,0))
+                place_surface = pygame.Surface((488, HEIGHT), pygame.SRCALPHA)
+                if mode == "td":
+                    pygame.draw.rect(place_surface, (238, 75, 43, 128), pygame.Rect(64, 0, 360, 440))
+                    screen.blit(place_surface, (0,0))
+                else:
+                    pygame.draw.rect(place_surface, (238, 75, 43, 128), pygame.Rect(64, 0, 360, 220))
+                    if false_has_right:
+                        pygame.draw.rect(place_surface, (238, 75, 43, 128), pygame.Rect(244, 220, 180, 120))
+                    if false_has_left:
+                        pygame.draw.rect(place_surface, (238, 75, 43, 128), pygame.Rect(64, 220, 180, 120))
+                    screen.blit(place_surface, (0,0))
     else:
         if not drag_start_pos2 is None:
             cur_name = bot_deck[hand2[click_quarter2 - 1]].name
@@ -349,14 +362,17 @@ def draw(side):
                 cur_name = b_prev.name
 
             if not can_anywhere(cur_name):
-                place_surface = pygame.Surface((488, 340), pygame.SRCALPHA)
-
-                pygame.draw.rect(place_surface, (238, 75, 43, 128), pygame.Rect(64, 0, 360, 220))
-                if true_has_right:
-                    pygame.draw.rect(place_surface, (238, 75, 43, 128), pygame.Rect(244, 220, 180, 120))
-                if true_has_left:
-                    pygame.draw.rect(place_surface, (238, 75, 43, 128), pygame.Rect(64, 220, 180, 120))
-                screen.blit(place_surface, (offset,0))
+                place_surface = pygame.Surface((488, HEIGHT), pygame.SRCALPHA)
+                if mode == "td":
+                    pygame.draw.rect(place_surface, (238, 75, 43, 128), pygame.Rect(64, 0, 360, 440))
+                    screen.blit(place_surface, (offset,0))
+                else:
+                    pygame.draw.rect(place_surface, (238, 75, 43, 128), pygame.Rect(64, 0, 360, 220))
+                    if true_has_right:
+                        pygame.draw.rect(place_surface, (238, 75, 43, 128), pygame.Rect(244, 220, 180, 120))
+                    if true_has_left:
+                        pygame.draw.rect(place_surface, (238, 75, 43, 128), pygame.Rect(64, 220, 180, 120))
+                    screen.blit(place_surface, (offset,0))
     #draw time
     nfont = pygame.font.Font(None, 24)
 
@@ -382,6 +398,9 @@ def draw(side):
     elif game_arena.timer >= 300:
         center_text = "Tiebreaker"
     
+    if game_arena.state == "Touchdown!!!":
+        center_text = "Touchdown!!!"
+    
     center_surface = cfont.render(center_text, True, (255, 255, 255))
     center_rect = center_surface.get_rect(center=(WIDTH/2 + offset, HEIGHT/2 - 64))
 
@@ -399,45 +418,46 @@ def draw(side):
             screen.blit(ab_img, ab_rect)
 
     # Draw Towers
-    for tower in game_arena.towers:
-        tower_x, tower_y = convert_to_pygame(tower.position, side)
-        
-        # Adjust position so that the rectangle is centered at the tower's coordinates
-        tower_rect_width = tower.collision_radius * SCALE * 2
-        tower_rect_height = tower_rect_width
-        tower_x -= tower_rect_width / 2
-        tower_y -= tower_rect_height / 2
+    if mode != "td":
+        for tower in game_arena.towers:
+            tower_x, tower_y = convert_to_pygame(tower.position, side)
+            
+            # Adjust position so that the rectangle is centered at the tower's coordinates
+            tower_rect_width = tower.collision_radius * SCALE * 2
+            tower_rect_height = tower_rect_width
+            tower_x -= tower_rect_width / 2
+            tower_y -= tower_rect_height / 2
 
-        tower_color = GRAY
+            tower_color = GRAY
 
-        if tower.rage_timer > 0:
-            tower_color = raged_color(tower_color)
-        
-        pygame.draw.rect(screen, (90, 100, 90), (tower_x - 10, tower_y - 10, tower_rect_width + 20, tower_rect_height + 20))  # Tower base
-        pygame.draw.rect(screen, tower_color, (tower_x, tower_y, tower_rect_width, tower_rect_height))  # Tower square
+            if tower.rage_timer > 0:
+                tower_color = raged_color(tower_color)
+            
+            pygame.draw.rect(screen, (90, 100, 90), (tower_x - 10, tower_y - 10, tower_rect_width + 20, tower_rect_height + 20))  # Tower base
+            pygame.draw.rect(screen, tower_color, (tower_x, tower_y, tower_rect_width, tower_rect_height))  # Tower square
 
-        if tower.activated:
-            #health text
-            hpfont = pygame.font.Font(None, 16)
-            hp_text = hpfont.render(str(int(tower.cur_hp)), True, WHITE)  # Convert HP to int and render in white
-            text_rect = hp_text.get_rect(center=(tower_x + tower_rect_width / 2, tower_y - 10))
-            screen.blit(hp_text, text_rect)
+            if tower.activated:
+                #health text
+                hpfont = pygame.font.Font(None, 16)
+                hp_text = hpfont.render(str(int(tower.cur_hp)), True, WHITE)  # Convert HP to int and render in white
+                text_rect = hp_text.get_rect(center=(tower_x + tower_rect_width / 2, tower_y - 10))
+                screen.blit(hp_text, text_rect)
 
-            # Health bar
-            pygame.draw.rect(screen, BLACK, (tower_x - 5, tower_y - 5, tower_rect_width + 10, 3))
-            pygame.draw.rect(screen, GREEN, (tower_x - 5, tower_y - 5, ((tower_rect_width + 10) * (tower.cur_hp / tower.hit_points)), 3))
+                # Health bar
+                pygame.draw.rect(screen, BLACK, (tower_x - 5, tower_y - 5, tower_rect_width + 10, 3))
+                pygame.draw.rect(screen, GREEN, (tower_x - 5, tower_y - 5, ((tower_rect_width + 10) * (tower.cur_hp / tower.hit_points)), 3))
 
-        if tower.type == "dd":
-            ammo_ratio = tower.ammo / 8
-            pygame.draw.rect(screen, BLACK, (tower_x + 4, tower_y + 5, tower_rect_width - 2, 4))  # Background
-            pygame.draw.rect(screen, YELLOW, (tower_x + 4, tower_y + 5, ((tower_rect_width - 2) * ammo_ratio), 4))  # Ammo bar
-            screen.blit(dd_symbol_img, (tower_x - 7, tower_y))
-        elif tower.type == "rckt":
-            cooking_ratio = 1 - (tower.cooking_timer / 21)
-            off = 50 if tower.side == side else 5
-            pygame.draw.rect(screen, BLACK, (tower_x + 9, tower_y + off, tower_rect_width - 12, 4))  # Background
-            pygame.draw.rect(screen, YELLOW, (tower_x + 9, tower_y + off, ((tower_rect_width - 12) * cooking_ratio), 4))  # Ammo bar
-            screen.blit(rc_symbol_img, (tower_x - 3, tower_y + off - 8))
+            if tower.type == "dd":
+                ammo_ratio = tower.ammo / 8
+                pygame.draw.rect(screen, BLACK, (tower_x + 4, tower_y + 5, tower_rect_width - 2, 4))  # Background
+                pygame.draw.rect(screen, YELLOW, (tower_x + 4, tower_y + 5, ((tower_rect_width - 2) * ammo_ratio), 4))  # Ammo bar
+                screen.blit(dd_symbol_img, (tower_x - 7, tower_y))
+            elif tower.type == "rckt":
+                cooking_ratio = 1 - (tower.cooking_timer / 21)
+                off = 50 if tower.side == side else 5
+                pygame.draw.rect(screen, BLACK, (tower_x + 9, tower_y + off, tower_rect_width - 12, 4))  # Background
+                pygame.draw.rect(screen, YELLOW, (tower_x + 9, tower_y + off, ((tower_rect_width - 12) * cooking_ratio), 4))  # Ammo bar
+                screen.blit(rc_symbol_img, (tower_x - 3, tower_y + off - 8))
     
     for building in game_arena.buildings:
         if not (building.preplace and building.side != side):
@@ -765,7 +785,7 @@ def draw(side):
             # scale factor based on tracker.timer (0 → shrink, 1 → grow)
             # at 0.5 → normal size (1.0 scale)
             a = 1.7
-            scale = -(a*(tracker.timer - (1 - 1/a)))**4 + 1
+            scale = max(0, -(a*(tracker.timer - (1 - 1/a)))**4 + 1)
             off = (scale - 1) * (1 if side else -1)
 
             # calculate new size
@@ -783,6 +803,21 @@ def draw(side):
             )
 
             screen.blit(scaled_img, timer_rect)
+
+    if mode == "td":
+        if side:
+            blue_img = blue_scores[game_arena.p1_crowns]
+            red_img = red_scores[game_arena.p2_crowns]
+
+            screen.blit(blue_img, (WIDTH + 10 - 64, HEIGHT / 2 - 64 + 50))
+            screen.blit(red_img, (WIDTH + 10 - 64, HEIGHT / 2 - 64 - 80))
+
+        else:
+            blue_img = blue_scores[game_arena.p2_crowns]
+            red_img = red_scores[game_arena.p1_crowns]
+
+            screen.blit(blue_img, (WIDTH + 10 - 64 + OFFSET, HEIGHT / 2 - 64 + 50))
+            screen.blit(red_img, (WIDTH + 10 - 64 + OFFSET, HEIGHT / 2 - 64 - 80))
         
     card_name_font = pygame.font.Font(None, 24)  # Use a larger font for card names
     
@@ -900,6 +935,7 @@ if len(preloaded) > 0:
 while True:
     game_type = None
     four_card = False
+    touchdown = False
     while game_type != "quit":
         game_type, evo_enabled = lobby.run_loop(screen)
         if game_type == "edit":
@@ -975,6 +1011,15 @@ while True:
             if tup is not None:
                 deck, TOWER_TYPE, bot_deck, BOT_TOWER_TYPE = tup
                 break
+        elif game_type == "touchdowndraft":
+            player_random_deck = False
+            bot_random_deck = False
+            KING_LEVEL = 11
+            BOT_K_L = 11
+            deck, TOWER_TYPE, bot_deck, BOT_TOWER_TYPE = td_draft_2p.run_loop(screen, evo_enabled)
+            touchdown = True
+            game_arena = touchdown_arena.TouchdownArena()
+            break
         else:
             TOWER_TYPE = "randomtower"
             BOT_TOWER_TYPE = "randomtower"
@@ -1000,57 +1045,58 @@ while True:
     b_champion = next((each for each in bot_deck if each.name in champions), None)
     
     # Initialize Player Towers
-    p_k = towers.KingTower(True, KING_LEVEL)
+    if not touchdown:
+        p_k = towers.KingTower(True, KING_LEVEL)
 
-    if TOWER_TYPE.lower() == "randomtower":
-        TOWER_TYPE = random.choice(["princesstower", "cannoneer", "daggerduchess", "royalchef"])
+        if TOWER_TYPE.lower() == "randomtower":
+            TOWER_TYPE = random.choice(["princesstower", "cannoneer", "daggerduchess", "royalchef"])
 
-    if TOWER_TYPE.lower() == "princesstower":
-        player_tower_a = towers.PrincessTower(True, PRINCESS_LEVEL, True)
-        player_tower_b = towers.PrincessTower(True, PRINCESS_LEVEL, False)
-    elif TOWER_TYPE.lower() == "cannoneer":
-        player_tower_a = towers.Cannoneer(True, PRINCESS_LEVEL, True)
-        player_tower_b = towers.Cannoneer(True, PRINCESS_LEVEL, False)
-    elif TOWER_TYPE.lower() == "daggerduchess":
-        player_tower_a = towers.DaggerDuchess(True, PRINCESS_LEVEL, True)
-        player_tower_b = towers.DaggerDuchess(True, PRINCESS_LEVEL, False)
-    elif TOWER_TYPE.lower() == "royalchef":
-        player_tower_a = towers.RoyalChef(True, PRINCESS_LEVEL, True)
-        player_tower_b = towers.RoyalChef(True, PRINCESS_LEVEL, False)
-        p_k = towers.RoyalChefKingTower(True, KING_LEVEL)
+        if TOWER_TYPE.lower() == "princesstower":
+            player_tower_a = towers.PrincessTower(True, PRINCESS_LEVEL, True)
+            player_tower_b = towers.PrincessTower(True, PRINCESS_LEVEL, False)
+        elif TOWER_TYPE.lower() == "cannoneer":
+            player_tower_a = towers.Cannoneer(True, PRINCESS_LEVEL, True)
+            player_tower_b = towers.Cannoneer(True, PRINCESS_LEVEL, False)
+        elif TOWER_TYPE.lower() == "daggerduchess":
+            player_tower_a = towers.DaggerDuchess(True, PRINCESS_LEVEL, True)
+            player_tower_b = towers.DaggerDuchess(True, PRINCESS_LEVEL, False)
+        elif TOWER_TYPE.lower() == "royalchef":
+            player_tower_a = towers.RoyalChef(True, PRINCESS_LEVEL, True)
+            player_tower_b = towers.RoyalChef(True, PRINCESS_LEVEL, False)
+            p_k = towers.RoyalChefKingTower(True, KING_LEVEL)
 
-    # Initialize Bot Towers
-    b_k = towers.KingTower(False, BOT_K_L)
+        # Initialize Bot Towers
+        b_k = towers.KingTower(False, BOT_K_L)
 
-    if BOT_TOWER_TYPE.lower() == "randomtower":
-        BOT_TOWER_TYPE = random.choice(["princesstower", "cannoneer", "daggerduchess", "royalchef"])
+        if BOT_TOWER_TYPE.lower() == "randomtower":
+            BOT_TOWER_TYPE = random.choice(["princesstower", "cannoneer", "daggerduchess", "royalchef"])
 
-    if BOT_TOWER_TYPE.lower() == "princesstower":
-        bot_tower_a = towers.PrincessTower(False, BOT_P_L, True)
-        bot_tower_b = towers.PrincessTower(False, BOT_P_L, False)
-    elif BOT_TOWER_TYPE.lower() == "cannoneer":
-        bot_tower_a = towers.Cannoneer(False, BOT_P_L, True)
-        bot_tower_b = towers.Cannoneer(False, BOT_P_L, False)
-    elif BOT_TOWER_TYPE.lower() == "daggerduchess":
-        bot_tower_a = towers.DaggerDuchess(False, BOT_P_L, True)
-        bot_tower_b = towers.DaggerDuchess(False, BOT_P_L, False)
-    elif BOT_TOWER_TYPE.lower() == "royalchef":
-        bot_tower_a = towers.RoyalChef(False, PRINCESS_LEVEL, True)
-        bot_tower_b = towers.RoyalChef(False, PRINCESS_LEVEL, False)
-        b_k = towers.RoyalChefKingTower(False, BOT_K_L)
+        if BOT_TOWER_TYPE.lower() == "princesstower":
+            bot_tower_a = towers.PrincessTower(False, BOT_P_L, True)
+            bot_tower_b = towers.PrincessTower(False, BOT_P_L, False)
+        elif BOT_TOWER_TYPE.lower() == "cannoneer":
+            bot_tower_a = towers.Cannoneer(False, BOT_P_L, True)
+            bot_tower_b = towers.Cannoneer(False, BOT_P_L, False)
+        elif BOT_TOWER_TYPE.lower() == "daggerduchess":
+            bot_tower_a = towers.DaggerDuchess(False, BOT_P_L, True)
+            bot_tower_b = towers.DaggerDuchess(False, BOT_P_L, False)
+        elif BOT_TOWER_TYPE.lower() == "royalchef":
+            bot_tower_a = towers.RoyalChef(False, PRINCESS_LEVEL, True)
+            bot_tower_b = towers.RoyalChef(False, PRINCESS_LEVEL, False)
+            b_k = towers.RoyalChefKingTower(False, BOT_K_L)
 
-    err = False
+        err = False
 
-    game_arena.towers = [p_k, 
-                            player_tower_a,  # a
-                            player_tower_b,  # b
-                            b_k, 
-                            bot_tower_a,
-                            bot_tower_b
-                        ]
+        game_arena.towers = [p_k, 
+                                player_tower_a,  # a
+                                player_tower_b,  # b
+                                b_k, 
+                                bot_tower_a,
+                                bot_tower_b
+                            ]
 
-    if err:
-        raise Exception("you either typed too many cards (8 only + 1 kingtower + 1 towertroop) or misspelled a tower type")
+        if err:
+            raise Exception("you done goofed up")
 
     #player deck
 
@@ -1133,7 +1179,6 @@ while True:
                             click_quarter = 3  # Third quarter
                         else:
                             click_quarter = 4  # Fourth quarter
-                        #print(f"Clicked in quarter {click_quarter}")
 
                         # Store the starting position of the drag
                         drag_start_pos = (finger_x, finger_y)
@@ -1149,7 +1194,6 @@ while True:
                             click_quarter2 = 3  # Third quarter
                         else:
                             click_quarter2 = 4  # Fourth quarter
-                        #print(f"Clicked in quarter {click_quarter}")
 
                         # Store the starting position of the drag
                         drag_start_pos2 = (finger_x, finger_y)
@@ -1166,7 +1210,14 @@ while True:
                         if cur_name == "mirror" and p_prev is not None:
                             cur_name = p_prev.name
 
-                        if finger_x > 64 and finger_x < WIDTH - 64 and finger_y < HEIGHT - 128 and (can_anywhere(cur_name) or finger_y > 340) or (not false_has_right and in_pocket(finger_x, finger_y, True)) or (not false_has_left and in_pocket(finger_x, finger_y, False)):
+                        if touchdown:
+                            if (can_anywhere(cur_name) or finger_y >= 440) and finger_y < HEIGHT - 128 and finger_x > 64 and finger_x < WIDTH - 64:
+                                hovered = (((finger_x - 64)// SCALE) * SCALE + 64, (finger_y // SCALE) * SCALE)
+                                select_radius = get_radius(cur_name)
+                            else:
+                                hovered = None
+
+                        elif finger_x > 64 and finger_x < WIDTH - 64 and finger_y < HEIGHT - 128 and (can_anywhere(cur_name) or finger_y > 340) or (not false_has_right and in_pocket(finger_x, finger_y, True)) or (not false_has_left and in_pocket(finger_x, finger_y, False)):
                             hovered = (((finger_x - 64)// SCALE) * SCALE + 64, (finger_y // SCALE) * SCALE)
                             select_radius = get_radius(cur_name)
                         else:
@@ -1177,7 +1228,14 @@ while True:
                         if cur_name == "mirror" and b_prev is not None:
                             cur_name = b_prev.name
 
-                        if finger_x > 64 + OFFSET and finger_x < WIDTH - 64 + OFFSET and finger_y < HEIGHT - 128 and (can_anywhere(cur_name) or finger_y > 340) or (not true_has_right and in_pocket(finger_x - OFFSET, finger_y, True)) or (not true_has_left and in_pocket(finger_x - OFFSET, finger_y, False)):
+                        if touchdown:
+                            if (can_anywhere(cur_name) or finger_y >= 440) and finger_y < HEIGHT - 128 and finger_x > 64 + OFFSET and finger_x < WIDTH - 64 + OFFSET:
+                                hovered2 = (((finger_x - 64)// SCALE) * SCALE + 64, (finger_y // SCALE) * SCALE)
+                                select_radius2 = get_radius(cur_name)
+                            else:
+                                hovered2 = None
+                        
+                        elif finger_x > 64 + OFFSET and finger_x < WIDTH - 64 + OFFSET and finger_y < HEIGHT - 128 and (can_anywhere(cur_name) or finger_y > 340) or (not true_has_right and in_pocket(finger_x - OFFSET, finger_y, True)) or (not true_has_left and in_pocket(finger_x - OFFSET, finger_y, False)):
                             hovered2 = (((finger_x - 64)// SCALE) * SCALE + 64, (finger_y // SCALE) * SCALE)
                             select_radius2 = get_radius(cur_name)
                         else:
@@ -1194,7 +1252,15 @@ while True:
                         cur_card = deck[hand[click_quarter - 1]]
                         legal_place = False
                         c = can_anywhere(cur_card.name) if cur_card.name != "mirror" or p_prev is None else can_anywhere(p_prev.name)
-                        if (c or finger_y > 340) or (not false_has_right and in_pocket(finger_x, finger_y, True)) or (not false_has_left and in_pocket(finger_x, finger_y, False)):
+                        
+                        if touchdown:
+                            if c or finger_y >= 450:
+                                legal_place = True
+                            elif finger_y > 420:
+                                legal_place = True
+                                finger_y = 450
+                        
+                        elif (c or finger_y > 340) or (not false_has_right and in_pocket(finger_x, finger_y, True)) or (not false_has_left and in_pocket(finger_x, finger_y, False)):
                             legal_place = True
                         elif not c and finger_y > 280 and finger_y <= 340:
                             legal_place = True
@@ -1238,7 +1304,15 @@ while True:
                         cur_card = bot_deck[hand2[click_quarter2 - 1]]
                         legal_place = False
                         c = can_anywhere(cur_card.name) if cur_card.name != "mirror" or b_prev is None else can_anywhere(b_prev.name)
-                        if (c or finger_y > 340) or (not true_has_right and in_pocket(finger_x - OFFSET, finger_y, True)) or (not true_has_left and in_pocket(finger_x - OFFSET, finger_y, False)):
+                        
+                        if touchdown:
+                            if c or finger_y >= 450:
+                                legal_place = True
+                            elif finger_y > 420:
+                                legal_place = True
+                                finger_y = 450
+
+                        elif (c or finger_y > 340) or (not true_has_right and in_pocket(finger_x - OFFSET, finger_y, True)) or (not true_has_left and in_pocket(finger_x - OFFSET, finger_y, False)):
                             legal_place = True
                         elif not c and finger_y > 280 and finger_y <= 340:
                             legal_place = True
@@ -1284,17 +1358,19 @@ while True:
         false_has_right = False
         true_has_left = False
         true_has_right = False
-        for each in game_arena.towers:
-            if not each.side:
-                if each.position.x > 0: #is positive
-                    false_has_right = True
-                elif each.position.x < 0: #is negative
-                    false_has_left = True
-            else:
-                if each.position.x > 0: #is positive
-                    true_has_right = True
-                elif each.position.x < 0: #is negative
-                    true_has_left = True
+
+        if not touchdown:
+            for each in game_arena.towers:
+                if not each.side:
+                    if each.position.x > 0: #is positive
+                        false_has_right = True
+                    elif each.position.x < 0: #is negative
+                        false_has_left = True
+                else:
+                    if each.position.x > 0: #is positive
+                        true_has_right = True
+                    elif each.position.x < 0: #is negative
+                        true_has_left = True
 
         if not paused:
             for card_i in hand:
@@ -1324,14 +1400,16 @@ while True:
                 win = fin
                 break
             
-            draw(True)  # Redraw screen
-            draw(False)
+            draw(True, "td" if touchdown else "normal")  # Redraw screen
+            draw(False, "td" if touchdown else "normal")
             pygame.display.flip()
 
     winfont = pygame.font.Font(None, 100)  # Adjust font size as needed
     text = None
     if win is None:
         text = winfont.render("quit_screen_text", True, WHITE)
+    elif win == 0:
+        text = winfont.render("Tie", True, WHITE)
     elif win:
         text = winfont.render("Player 1 Win", True, WHITE)
     else:

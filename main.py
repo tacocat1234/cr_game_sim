@@ -18,6 +18,7 @@ import deck_save
 import triple_draft
 import draft
 import megadraft
+import td_draft
 import lobby
 import towers
 import vector
@@ -184,6 +185,7 @@ screen = pygame.display.set_mode((WIDTH, HEIGHT))
 pygame.display.set_caption("Crash Royale Arena")    
 font = pygame.font.Font(None, 12) 
 background_img = pygame.image.load("sprites/background.png").convert_alpha()
+td_bg_img = pygame.image.load("sprites/td_background.png") #no transparent so no need to convertalpha
 select_img = pygame.image.load("sprites/tileselect.png").convert_alpha()
 dd_symbol_img = pygame.image.load("sprites/daggerduchess/duchess_symbol.png").convert_alpha()
 rc_symbol_img = pygame.image.load("sprites/royalchefkingtower/royalchef_symbol.png").convert_alpha()
@@ -256,19 +258,24 @@ def display_evo_cannon(pos, side):
     for each in all:
         pygame.draw.circle(screen, (224, 255, 232), convert_to_pygame(each), 1.5 * SCALE, width=1)
 
-def draw():
+def draw(mode="normal"):
     screen.fill(BG_TEMP)
-    bg_rect = background_img.get_rect(center=(WIDTH / 2, (HEIGHT - 128) / 2))
-    screen.blit(background_img, bg_rect)
-    # Draw river
-    pygame.draw.rect(screen, RIVER_TEMP, (0, HEIGHT/2 - 64 - SCALE, WIDTH, SCALE * 2)) 
-   
-    #draw card area
-    pygame.draw.rect(screen, GRAY, (0, HEIGHT - 128, WIDTH, 128))
 
-    #Draw bridges
-    pygame.draw.rect(screen, BRIDGE_TEMP, (64 + 2.5 * SCALE, HEIGHT/2 - 64 - 1.5 * SCALE, SCALE * 2, SCALE * 3)) 
-    pygame.draw.rect(screen, BRIDGE_TEMP, (WIDTH - (64 + 4.5 * SCALE), HEIGHT/2 - 64 - 1.5 *SCALE, SCALE * 2, SCALE * 3)) 
+    if mode == "td":
+        bg_rect = td_bg_img.get_rect(center=(WIDTH / 2, (HEIGHT - 128) / 2))
+        screen.blit(td_bg_img, bg_rect)
+    else:
+        bg_rect = background_img.get_rect(center=(WIDTH / 2, (HEIGHT - 128) / 2))
+        screen.blit(background_img, bg_rect)
+        # Draw river
+        pygame.draw.rect(screen, RIVER_TEMP, (0, HEIGHT/2 - 64 - SCALE, WIDTH, SCALE * 2)) 
+    
+        #draw card area
+        pygame.draw.rect(screen, GRAY, (0, HEIGHT - 128, WIDTH, 128))
+
+        #Draw bridges
+        pygame.draw.rect(screen, BRIDGE_TEMP, (64 + 2.5 * SCALE, HEIGHT/2 - 64 - 1.5 * SCALE, SCALE * 2, SCALE * 3)) 
+        pygame.draw.rect(screen, BRIDGE_TEMP, (WIDTH - (64 + 4.5 * SCALE), HEIGHT/2 - 64 - 1.5 *SCALE, SCALE * 2, SCALE * 3)) 
 
     #Time Left:
     #format_time(game_arena.timer)
@@ -724,7 +731,7 @@ def draw():
             # scale factor based on tracker.timer (0 → shrink, 1 → grow)
             # at 0.5 → normal size (1.0 scale)
             a = 1.7
-            scale = -(a*(tracker.timer - (1 - 1/a)))**4 + 1
+            scale = max(0, -(a*(tracker.timer - (1 - 1/a)))**4 + 1)
             off = (scale - 1)
 
             # calculate new size
@@ -854,6 +861,7 @@ if len(preloaded) > 0:
 while True:
     game_type = None
     four_card = False
+    touchdown = False
     TOWER_TYPE = None
     BOT_TOWER_TYPE = None
     while game_type != "quit":
@@ -933,6 +941,25 @@ while True:
             if tup is not None:
                 deck, TOWER_TYPE, bot_deck, BOT_TOWER_TYPE = tup
                 break
+        elif game_type == "touchdowndraft":
+            tup = deck_select.run_loop(screen, evo_enabled, True, True, saved_decks)
+            if tup is not None:
+                player_random_deck, KING_LEVEL, deck, TOWER_TYPE = tup
+                tup = deck_select.run_loop(screen, evo_enabled, False, True, saved_decks)
+                if tup is not None:
+                    bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = tup
+                    break
+            '''
+            player_random_deck = False
+            bot_random_deck = False
+            KING_LEVEL = 11
+            BOT_K_L = 13
+            touchdown = True
+            tup = td_draft.run_loop(screen, evo_enabled)
+            if tup is not None:
+                deck, TOWER_TYPE, bot_deck, BOT_TOWER_TYPE = tup
+                break
+            '''
         else:
             TOWER_TYPE = "randomtower"
             BOT_TOWER_TYPE = "randomtower"

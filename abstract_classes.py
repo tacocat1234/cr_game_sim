@@ -534,8 +534,8 @@ class Troop:
 
         d = vector.distance(self.target.position, self.position)
         if d >= self.hit_range + self.collision_radius + self.target.collision_radius - 0.1: #within hit range, then dont move just attack
-            direction_x /= distance_to_target
-            direction_y /= distance_to_target
+            direction_x /= d
+            direction_y /= d
             # Move in the direction of the target
 
             if d >= self.hit_range + self.collision_radius + self.target.collision_radius or isinstance(self.target, Troop):
@@ -552,7 +552,35 @@ class Troop:
             self.facing_dir = math.degrees(math.atan2(direction_y, direction_x))  # Get angle in degrees
             return True
         return False
-            
+    
+    def move_touchdown(self, arena):
+        if self.target is None:
+            self.move_vector = vector.Vector(0, (1 if self.side else -1) * self.move_speed)
+            self.position.y += self.move_speed * (1 if self.side else -1)
+        else:
+            d = vector.distance(self.target.position, self.position)
+            m_s = self.move_speed
+            direction_x = self.target.position.x - self.position.x
+            direction_y = self.target.position.y - self.position.y
+            if d >= self.hit_range + self.collision_radius + self.target.collision_radius - 0.1: #within hit range, then dont move just attack
+                direction_x /= d
+                direction_y /= d
+                # Move in the direction of the target
+
+                if d >= self.hit_range + self.collision_radius + self.target.collision_radius or isinstance(self.target, Troop):
+                    self.position.x += direction_x  * m_s
+                    self.position.y += direction_y * m_s
+                angle = math.degrees(math.atan2(direction_y, direction_x))  # Get angle in degrees
+                self.facing_dir = angle
+                self.move_vector = vector.Vector(direction_x * m_s, direction_y * m_s)
+
+            if vector.distance(self.target.position, self.position) < self.hit_range + self.collision_radius + self.target.collision_radius:
+                self.move_vector = vector.Vector(0, 0)
+                direction_x = self.target.position.x - self.position.x #set to directly move to tower
+                direction_y = self.target.position.y - self.position.y
+                self.facing_dir = math.degrees(math.atan2(direction_y, direction_x))  # Get angle in degrees
+                return True
+        return False
         
     def tick(self, arena):
         if self.preplace or self.cur_hp <= 0:
@@ -573,14 +601,14 @@ class Troop:
                     self.update_target(arena)
                 elif vector.distance(self.position, self.target.position) > self.sight_range + self.collision_radius + self.target.collision_radius: #add 0.2 so there is tiny buffer for ranged troops
                     self.update_target(arena)
-                if self.move(arena) and self.attack_cooldown <= 0: #move, then if within range, attack
+                if (self.move(arena) if arena.type != "td" else self.move_touchdown(arena)) and self.attack_cooldown <= 0: #move, then if within range, attack
                     atk = self.attack()
                     if isinstance(atk, list) and len(atk) > 0:
                         arena.active_attacks.extend(atk)
                     elif not atk is None:
                         arena.active_attacks.append(atk)
                     self.attack_cooldown = self.hit_speed
-                if not (self.cross_river or not self.ground or self.dash_river) and self.position.y > -1 and self.position.y < 1 and not (on_bridge(self.position.x + 0.1) or on_bridge(self.position.x - 0.1)): #some leeway for bridge
+                if arena.type != "td" and not (self.cross_river or not self.ground or self.dash_river) and self.position.y > -1 and self.position.y < 1 and not (on_bridge(self.position.x + 0.1) or on_bridge(self.position.x - 0.1)): #some leeway for bridge
                     if (self.position.x > 4 and self.position.x < 4.5):
                         self.position.x = 4.55
                     elif (self.position.x > 6.5 and self.position.x < 7):
