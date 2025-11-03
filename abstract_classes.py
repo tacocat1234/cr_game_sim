@@ -87,6 +87,13 @@ def get_true_target(position, target_position):
 
     return vector.Vector(t_x, t_y)
 
+def true_distance(position1, position2):
+    b1 = vector.Vector(5.5, 0)
+    b2 = vector.Vector(5.5, 0)
+    d1 = vector.distance(position1, b1) + vector.distance(b1, position2)
+    d2 = vector.distance(position1, b2) + vector.distance(b2, position2)
+    return min(d1, d2)
+
 class AttackEntity:
     def __init__(self, s, d, v, l, i_p):
         self.side = s
@@ -463,16 +470,16 @@ class Troop:
         approx_l_bridge = vector.distance(self.position, vector.Vector(-5.5, 0)) - 1.4
         approx_r_bridge = vector.distance(self.position, vector.Vector(5.5, 0)) - 1.4
         should_jump = min(approx_l_bridge, approx_r_bridge) > 2 and abs(self.position.y) < 3
-        if self.ground and not (self.cross_river or self.dash_river and (should_jump or on_river(self.position.y))):
+        if self.ground and not ((self.cross_river or self.dash_river) and (should_jump or on_river(self.position.y))):
             move_target = None
             if self.target is None:
                 min_dist = float('inf')
                 tower_target = None
                 for tower in arena.towers:
                     if tower.side != self.side:
-                        if vector.distance(tower.position, self.position) < min_dist:
+                        if true_distance(tower.position, self.position) < min_dist:
                             tower_target = tower
-                            min_dist = vector.distance(tower.position, self.position)
+                            min_dist = true_distance(tower.position, self.position)
                 move_target = tower_target.position #set target    
             else:
                 move_target = self.target.position #set target
@@ -480,7 +487,6 @@ class Troop:
             move_vector = true_target.subtracted(self.position)
             move_vector.normalize()
             move_vector.scale(self.move_speed)
-
         else:
             m_s = self.move_speed 
             if (self.cross_river and not on_bridge(self.position.x) and on_river(self.position.y)):

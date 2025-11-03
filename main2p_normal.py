@@ -1081,8 +1081,8 @@ while True:
             bot_tower_a = towers.DaggerDuchess(False, BOT_P_L, True)
             bot_tower_b = towers.DaggerDuchess(False, BOT_P_L, False)
         elif BOT_TOWER_TYPE.lower() == "royalchef":
-            bot_tower_a = towers.RoyalChef(False, PRINCESS_LEVEL, True)
-            bot_tower_b = towers.RoyalChef(False, PRINCESS_LEVEL, False)
+            bot_tower_a = towers.RoyalChef(False, BOT_P_L, True)
+            bot_tower_b = towers.RoyalChef(False, BOT_P_L, False)
             b_k = towers.RoyalChefKingTower(False, BOT_K_L)
 
         err = False
