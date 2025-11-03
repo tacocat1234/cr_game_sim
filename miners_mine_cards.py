@@ -304,8 +304,10 @@ class Fisherman(Troop):
                         self.reeling = False #end reeling
                         self.casting = False
                         self.target.move_speed = self.target_ms
+                        self.target.dash_river = False
                     else:
                         self.target.move_speed = 0 #immobilize
+                        self.target.dash_river = True
                         self.target.position.add(self.position.subtracted(self.target.position).scaled(850*TILES_PER_MIN)) #reel to fisherman
                     
                 else:

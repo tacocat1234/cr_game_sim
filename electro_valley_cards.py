@@ -264,6 +264,7 @@ class Miner(Troop):
         self.targetable = False
         self.collideable = False
         self.preplace = False
+        self.dash_river = True
         self.normal_move_speed = 90*TILES_PER_MIN
 
         if self.cloned:
@@ -276,6 +277,7 @@ class Miner(Troop):
             self.targetable = True
             self.collideable = True
             self.target = None
+            self.dash_river = False
         elif self.invulnerable and vector.distance(self.position, self.target) < 1:
             self.move_speed = 300 * TILES_PER_MIN #halve the speed
         elif self.invulnerable and vector.distance(self.position, self.target) < 0.5:

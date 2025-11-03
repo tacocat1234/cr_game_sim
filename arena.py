@@ -2,6 +2,7 @@ from abstract_classes import TICK_TIME
 from abstract_classes import Troop
 from abstract_classes import Spell
 from abstract_classes import ElixirLossTracker
+from abstract_classes import on_bridge, on_river
 import card_factory
 import vector
 import itertools
@@ -263,6 +264,23 @@ class Arena:
                         vec.x == -0.01
 
                     applyVelocity[troop] = applyVelocity.get(troop, vector.Vector(0, 0)).added(vec)
+
+        #push out of river
+        for troop in self.troops:
+            if troop.ground and not (troop.dash_river or troop.cross_river):
+                x = troop.position.x
+                y = troop.position.y
+                if not on_bridge(x) and on_river(y):
+                    if x > 6.5 and x < 6.6:
+                        troop.position.x = 6.45
+                    elif x < -6.5 and x > -6.6:
+                        troop.position.x = -6.45
+                    elif x > 4.4 and x < 4.5:
+                        troop.position.x = 4.55
+                    elif x < -4.4 and x > -4.5:
+                        troop.position.x = -4.55
+                    else:
+                        troop.position.y = 1 if troop.position.y > 0 else -1
 
         # apply velocities
         for troop, vel in applyVelocity.items():

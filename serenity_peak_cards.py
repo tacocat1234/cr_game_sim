@@ -488,6 +488,7 @@ class GoblinDrillMineTroop(Troop):
         self.targetable = False
         self.collideable = False
         self.preplace = False
+        self.dash_river = True
 
     def tick_func(self, arena):
         if self.invulnerable and vector.distance(self.position, self.target) < 0.25:

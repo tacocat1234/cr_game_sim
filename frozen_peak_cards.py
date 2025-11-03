@@ -379,6 +379,7 @@ class GiantSkeleton(Troop):
             p=position               # Position (vector.Vector object)
         )
         self.level = level
+        self.can_kb = False
         self.ticks_per_frame = 6
         self.walk_cycle_frames = 6
         class_name = self.__class__.__name__.lower()

@@ -13,6 +13,80 @@ def same_sign(x, y):
 def on_bridge(x):
     return (x > 4.5 and x < 6.5) or (x > -6.5 and x < -4.5)
 
+def get_bridge(x):
+    l = (x > 4.5 and x < 6.5)
+    r = (x > -6.5 and x < -4.5)
+    return -1 if l else (1 if r else 0)
+
+def on_river(y):
+    return y >= -1 and y <= 1
+
+def get_true_target(position, target_position):
+    if same_sign(position.y, target_position.y) and not on_river(target_position.y) and not on_river(position.y): #saem side
+        return target_position
+    elif on_bridge(target_position.x) and on_bridge(position.x) and on_river(target_position.y) and on_river(position.y): #both on bridge
+        if same_sign(target_position.x, position.x): #same bridge
+            return target_position
+        else: #two opposite bridges
+            return vector.Vector(4.5 if position.x > 0 else -4.5, -1 if position.y < 0 else 1)
+    
+    corners = [-6.5, -4.5, 4.5, 6.5]
+    min_dist = float('inf')
+    t_x = position.x
+    t_y = 0
+
+    corner = None
+    to_corner = None
+    if on_river(target_position.y) and on_bridge(target_position.x): #tar on bridge self not on bridge
+        x = (6.5 if position.x > 5.5 else 4.5) if position.x > 0 else (-6.5 if position.x < -5.5 else -4.5)
+        corner = vector.Vector(x, -1 if position.y < 0 else 1) #corner that might be touched
+        to_corner = corner.subtracted(position)
+    elif on_bridge(position.x) and on_river(position.y): #only you on bridge
+        x = (6.5 if target_position.x > 5.5 else 4.5) if target_position.x > 0 else (-6.5 if target_position.x < -5.5 else -4.5)
+        corner = vector.Vector(x, -1 if target_position.y < 0 else 1) #corner that might be touched
+        to_corner = corner.subtracted(position)
+
+    if to_corner is not None:
+        delta_y = target_position.y - position.y
+        corner_extended_x = to_corner.x * (delta_y/to_corner.y) if to_corner.y != 0 else to_corner.x#how much further to the right/left
+        if (target_position.x == 5.5 or target_position.x == -5.5):
+            return target_position
+        elif (position.x > 0 and target_position.x > 5.5) or (position.x < 0 and target_position.x > -5.5): #if to the right
+            if target_position.x > position.x + corner_extended_x: #if further than corner extension
+                return corner #goes through the corner so instead go to corner first
+            else:
+                return target_position
+        else:
+            if target_position.x < position.x + corner_extended_x: #if further than corner extension
+                return corner #goes through the corner so instead go to corner first
+            else:
+                return target_position
+            
+    to_target = target_position.subtracted(position)
+    delta_y = target_position.y - position.y
+    point_1 = to_target.scaled((1 - position.y)/delta_y) if delta_y != 0 else to_target #point at y = 1 (top of bridge)
+    point_2 = to_target.scaled((-1 - position.y)/delta_y) if delta_y != 0 else to_target #point at y = -1 (bottom of bridge)
+
+    if on_bridge(position.x + point_1.x) and on_bridge(position.x + point_2.x): #if both points lie on bridge, the straight line to target lies entirely on bridge so does not need to bend
+        return target_position
+
+    for i in range(4):
+        dist = vector.distance( #distance between corners to target
+            vector.Vector(corners[i], 1 if target_position.y > 0 else -1),
+            target_position
+        ) + vector.distance( #distance between corners to self
+            vector.Vector(corners[i], 1 if position.y > 0 else -1),
+            position
+        )
+        if dist < min_dist:
+            min_dist = dist
+            t_x = corners[i]
+
+    t_y = 0.95 if position.y > 0 else -0.95
+    t_x += 0.05 if t_x == 4.5 or t_x == -6.5 else -0.05
+
+    return vector.Vector(t_x, t_y)
+
 class AttackEntity:
     def __init__(self, s, d, v, l, i_p):
         self.side = s
@@ -382,8 +456,65 @@ class Troop:
                 if dist < self.hit_range + self.collision_radius + tower.collision_radius and dist < min_dist: #iff can hit tower, then it locks on.
                     self.target = tower #ensures only locks when activel attacking tower, so giant at bridge doesnt immediatly lock onto tower and ruin everyones day
                     min_dist = vector.distance(tower.position, self.position)
-    
+            
     def move(self, arena):
+        move_vector = None
+        #generate move vector
+        approx_l_bridge = vector.distance(self.position, vector.Vector(-5.5, 0)) - 1.4
+        approx_r_bridge = vector.distance(self.position, vector.Vector(5.5, 0)) - 1.4
+        should_jump = min(approx_l_bridge, approx_r_bridge) > 2 and abs(self.position.y) < 3
+        if self.ground and not (self.cross_river or self.dash_river and (should_jump or on_river(self.position.y))):
+            move_target = None
+            if self.target is None:
+                min_dist = float('inf')
+                tower_target = None
+                for tower in arena.towers:
+                    if tower.side != self.side:
+                        if vector.distance(tower.position, self.position) < min_dist:
+                            tower_target = tower
+                            min_dist = vector.distance(tower.position, self.position)
+                move_target = tower_target.position #set target    
+            else:
+                move_target = self.target.position #set target
+            true_target = get_true_target(self.position, move_target)
+            move_vector = true_target.subtracted(self.position)
+            move_vector.normalize()
+            move_vector.scale(self.move_speed)
+
+        else:
+            m_s = self.move_speed 
+            if (self.cross_river and not on_bridge(self.position.x) and on_river(self.position.y)):
+                m_s = self.jump_speed
+            print(m_s)
+            if self.target is None: #if no target
+                min_dist = float('inf')
+                tower_target = None
+                for tower in arena.towers:
+                    if tower.side != self.side:
+                        if vector.distance(tower.position, self.position) < min_dist:
+                            tower_target = tower
+                            min_dist = vector.distance(tower.position, self.position)
+                to_tower = tower_target.position.subtracted(self.position) #target tower
+                to_tower.normalize()
+                move_vector = to_tower.scaled(m_s)
+            else:
+                to_target = self.target.position.subtracted(self.position)
+                move_vector = to_target.normalized().scaled(m_s)
+        
+        #actual move
+        self.move_vector = move_vector
+        self.facing_dir = math.degrees(math.atan2(move_vector.y, move_vector.x))
+
+        tar_d = vector.distance(self.position, self.target.position) if self.target else float('inf')
+        attack_d = self.hit_range + self.collision_radius + self.target.collision_radius if self.target else -1
+        if not self.target or tar_d > attack_d - 0.1: #if no target or far enough from target
+            self.position.add(self.move_vector)
+        else:
+            self.move_vector = vector.Vector(0, 0)
+        
+        return tar_d < attack_d
+
+    def old_move(self, arena):
         direction_x = 0
         direction_y = 0
         m_s = self.move_speed
@@ -464,7 +595,7 @@ class Troop:
             return False
         #and (not same side) while also (not at bridge) 
         if ((self.ground and not self.dash_river) and not self.cross_river) and (not same_sign(self.target.position.y, self.position.y) and (self.position.y < -1 or self.position.y > 1)):
-
+            #if not on bridge
             tar_bridge = None
             
             x = self.position.x
@@ -608,6 +739,7 @@ class Troop:
                     elif not atk is None:
                         arena.active_attacks.append(atk)
                     self.attack_cooldown = self.hit_speed
+                '''
                 if arena.type != "td" and not (self.cross_river or not self.ground or self.dash_river) and self.position.y > -1 and self.position.y < 1 and not (on_bridge(self.position.x + 0.1) or on_bridge(self.position.x - 0.1)): #some leeway for bridge
                     if (self.position.x > 4 and self.position.x < 4.5):
                         self.position.x = 4.55
@@ -621,7 +753,7 @@ class Troop:
                         self.position.y = -1.05
                     else:
                         self.position.y = 1.05
-            
+                '''
     
     def cleanup(self, arena): # each troop runs this after ALL ticks are finished
         if self.preplace:

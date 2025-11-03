@@ -607,14 +607,13 @@ class LittlePrince(Champion):
         if self.move_vector.magnitude() > 0: #if move
             self.stage = 1
             self.stage_duration = 2
-            self.attack_cooldown = self.load_time - self.hit_speed
             self.hit_speed = 1.2
             self.load_time = 0.8
 
     def freeze(self, duration):
         self.stage = 1
         self.stage_duration = 2
-        self.attack_cooldown = self.load_time - self.hit_speed
+        self.attack_cooldown = 1.2
         self.hit_speed = 1.2
         self.load_time = 0.8
         return super().freeze(duration)
@@ -622,7 +621,7 @@ class LittlePrince(Champion):
     def kb(self, vector, kb_time=None):
         self.stage = 1
         self.stage_duration = 2
-        self.attack_cooldown = self.hit_speed
+        self.attack_cooldown = 1.2
         self.hit_speed = 1.2
         self.load_time = 0.8
         return super().kb(vector, kb_time) 
@@ -630,7 +629,7 @@ class LittlePrince(Champion):
     def stun(self):
         self.stage = 1
         self.stage_duration = 2
-        self.attack_cooldown = self.load_time - self.hit_speed
+        self.attack_cooldown = 1.2
         self.hit_speed = 1.2
         self.load_time = 0.8
         super().stun()
