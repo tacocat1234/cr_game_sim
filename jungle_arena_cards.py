@@ -449,6 +449,7 @@ class BarbarianBarrel(Troop):
         self.invulnerable = True
         self.moveable = False
         self.timer = 1.35
+        self.cross_river = True
 
         self.collideable = False
 

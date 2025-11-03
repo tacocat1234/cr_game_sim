@@ -69,6 +69,7 @@ class Log(Troop):
         self.level = level
         self.targetable = False
         self.invulnerable = True
+        self.cross_river = True
         self.collideable = False
         self.timer = 3.12
         self.crown_tower_damage = 48 * pow(1.1, level - 9)

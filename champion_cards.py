@@ -728,10 +728,12 @@ class Guardienne(Troop):
         )
         self.level = level
         self.collideable = False
+        self.dash_river = True
 
     def tick_func(self, arena):
         if self.deploy_time < 1 and self.deploy_time > 0:
             self.collideable = True
+            self.dash_river = False
 
     def attack(self):
         return GuardienneAttackEntity(self.side, self.hit_damage, self.position, self.target)

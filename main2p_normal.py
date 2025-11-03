@@ -994,10 +994,10 @@ while True:
                     game_arena.elixir_rate = 7
                     break
         elif game_type == "fourcard":
-            tup = deck_select_4c.run_loop(screen, evo_enabled, True, True, saved_decks)
+            tup = deck_select_4c.run_loop(screen, evo_enabled, True, False, saved_decks)
             if tup is not None:
                 player_random_deck, KING_LEVEL, deck, TOWER_TYPE = tup
-                tup = deck_select_4c.run_loop(screen, evo_enabled, False, True, saved_decks)
+                tup = deck_select_4c.run_loop(screen, evo_enabled, False, False, saved_decks)
                 if tup is not None:
                     four_card = True
                     bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = tup

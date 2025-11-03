@@ -485,7 +485,6 @@ class Troop:
             m_s = self.move_speed 
             if (self.cross_river and not on_bridge(self.position.x) and on_river(self.position.y)):
                 m_s = self.jump_speed
-            print(m_s)
             if self.target is None: #if no target
                 min_dist = float('inf')
                 tower_target = None
