@@ -320,6 +320,15 @@ class GoblinGiant(Troop):
         self.backpack_goblins = [BackpackSpearGoblin(self.side, self.position.added(v1), self.level),
                                  BackpackSpearGoblin(self.side, self.position.added(v2), self.level)]
         
+    def rage(self):
+        self.backpack_goblins[0].rage()
+        self.backpack_goblins[1].rage()
+        return super().rage()
+    
+    def unrage(self):
+        self.backpack_goblins[0].unrage()
+        self.backpack_goblins[1].unrage()
+        return super().unrage()
 
     def tick_func(self, arena):
         v1 = vector.Vector(-0.2, 0.45).rotated(self.facing_dir)

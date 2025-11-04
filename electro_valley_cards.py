@@ -545,7 +545,7 @@ class SparkyAttackEntity(RangedAttackEntity):
         hits = []
         if self.exploded:
             for each in arena.towers + arena.buildings + arena.troops:
-                if each.side != self.side and (isinstance(each, Tower) or (not each.invulnerable)): # if different side
+                if each.side != self.side and (isinstance(each, Tower) or (not each.invulnerable and each.ground)): # if different side
                     if vector.distance(self.position, each.position) < self.SPLASH_RADIUS + each.collision_radius:
                         hits.append(each)
         return hits
@@ -883,6 +883,14 @@ class RamRider(Troop):
     def level_up(self):
         super().level_up()
         self.rider.level_up()
+
+    def rage(self):
+        self.rider.rage()
+        return super().rage()
+    
+    def unrage(self):
+        self.rider.unrage()
+        return super().unrage()
 
     def kb(self, vec, t=None):
         if vec.magnitude() > 0:

@@ -156,7 +156,7 @@ class Balloon(Troop):
             h_d = 400 * pow(1.1, level - 6),
             h_s=2,
             l_t=1.8,
-            h_r=0.1,
+            h_r=0.2,
             s_r=7.7,
             g=False,
             t_g_o=True,
