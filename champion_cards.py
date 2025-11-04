@@ -874,7 +874,7 @@ class BossBandit(Champion):
             self.dash_river = False
             self.move_speed = self.normal_move_speed
 
-    def ability(self, arena):
+    def ability(self, arena): 
         if self.dashing or self.should_dash:
             self.ability_duration_timer_timer = 0 #end
             self.ability_cooldown_timer = 3
@@ -882,6 +882,7 @@ class BossBandit(Champion):
             return
         self.targetable = False
         self.invulnerable = True
+        self.dash_river = True
         self.stun_timer = 1 #completely disable
 
     def ability_tick(self, arena):
@@ -892,6 +893,7 @@ class BossBandit(Champion):
         if not self.dashing:
             self.stun_timer = 0
             self.targetable = True
+            self.dash_river = False
             self.invulnerable = False
 
 def distance_to_segment(p, a, b):

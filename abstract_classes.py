@@ -10,8 +10,8 @@ TILES_PER_MIN = 1/3600
 def same_sign(x, y):
     return (x >= 0 and y >= 0) or (x < 0 and y < 0)
 
-def on_bridge(x):
-    return (x > 4.5 and x < 6.5) or (x > -6.5 and x < -4.5)
+def on_bridge(x, tolerance=0):
+    return (x > 4.5 - tolerance and x < 6.5 + tolerance) or (x > -6.5 - tolerance and x < -4.5 + tolerance)
 
 def get_bridge(x):
     l = (x > 4.5 and x < 6.5)
@@ -42,13 +42,13 @@ def get_true_target(position, target_position):
         corner = vector.Vector(x, -1 if position.y < 0 else 1) #corner that might be touched
         to_corner = corner.subtracted(position)
     elif on_bridge(position.x) and on_river(position.y): #only you on bridge
-        x = (6.5 if target_position.x > 5.5 else 4.5) if target_position.x > 0 else (-6.5 if target_position.x < -5.5 else -4.5)
+        x = (6.5 if target_position.x > 5.5 else 4.5) if position.x > 0 else (-6.5 if target_position.x < -5.5 else -4.5)
         corner = vector.Vector(x, -1 if target_position.y < 0 else 1) #corner that might be touched
         to_corner = corner.subtracted(position)
 
     if to_corner is not None:
         delta_y = target_position.y - position.y
-        corner_extended_x = to_corner.x * (delta_y/to_corner.y) if to_corner.y != 0 else to_corner.x#how much further to the right/left
+        corner_extended_x = to_corner.x * abs(delta_y/to_corner.y) if to_corner.y != 0 else to_corner.x#how much further to the right/left
         if (target_position.x == 5.5 or target_position.x == -5.5):
             return target_position
         elif (position.x > 0 and target_position.x > 5.5) or (position.x < 0 and target_position.x > -5.5): #if to the right
@@ -87,11 +87,13 @@ def get_true_target(position, target_position):
 
     return vector.Vector(t_x, t_y)
 
-def true_distance(position1, position2):
+def true_distance(position1, position2): #only for towers
+    if same_sign(position1.y, position2.y):
+        return vector.distance(position1, position2)
     b1 = vector.Vector(5.5, 0)
-    b2 = vector.Vector(5.5, 0)
-    d1 = vector.distance(position1, b1) + vector.distance(b1, position2)
-    d2 = vector.distance(position1, b2) + vector.distance(b2, position2)
+    b2 = vector.Vector(-5.5, 0)
+    d1 = vector.distance(position1, b1) + vector.distance(b1, position2) + 1.5
+    d2 = vector.distance(position1, b2) + vector.distance(b2, position2) + 1.5
     return min(d1, d2)
 
 class AttackEntity:
@@ -480,7 +482,7 @@ class Troop:
                         if true_distance(tower.position, self.position) < min_dist:
                             tower_target = tower
                             min_dist = true_distance(tower.position, self.position)
-                move_target = tower_target.position #set target    
+                move_target = tower_target.position #set target
             else:
                 move_target = self.target.position #set target
             true_target = get_true_target(self.position, move_target)
