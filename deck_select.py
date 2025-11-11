@@ -1,4 +1,4 @@
-from card_factory import troops, buildings, spells, champions
+from card_factory import troops, buildings, spells, champions, all_supers
 from card_factory import can_evo
 from card_factory import generate_random_remaining
 from card_factory import get_type
@@ -257,7 +257,7 @@ def run_loop(screen, evo_enabled = True, side = True, against_bot=True, decks=No
     rand_input = []
     for i in range(8):
         if all[i].value != "":
-            n = fuzzy_match(all[i].value, troops + buildings + spells + champions + ["mirror", "oldgoblinhut"])
+            n = fuzzy_match(all[i].value, troops + buildings + spells + champions + ["mirror"])
             rand_input.append([get_type(n), elixir_map[n], n, bool(evo[i].value)])
 
     temp = []

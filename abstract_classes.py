@@ -478,7 +478,8 @@ class Troop:
                 min_dist = float('inf')
                 tower_target = None
                 for tower in arena.towers:
-                    if tower.side != self.side and (same_sign(tower.position.x, self.position.x) or tower.position.x == 0):
+                    should_see = same_sign(tower.position.y, self.position.y) or same_sign(tower.position.x, self.position.x) or tower.position.x == 0
+                    if tower.side != self.side and should_see:
                         if true_distance(tower.position, self.position) < min_dist:
                             tower_target = tower
                             min_dist = true_distance(tower.position, self.position)
@@ -737,7 +738,7 @@ class Troop:
             if self.deploy_time <= 0:
                 if self.target is None or self.target.cur_hp <= 0 or not self.target.targetable or (self.ground_only and not self.target.ground):
                     self.update_target(arena)
-                elif vector.distance(self.position, self.target.position) > self.sight_range + self.collision_radius + self.target.collision_radius: #add 0.2 so there is tiny buffer for ranged troops
+                elif vector.distance(self.position, self.target.position) > self.hit_range + self.collision_radius + self.target.collision_radius: #add 0.2 so there is tiny buffer for ranged troops
                     self.update_target(arena)
                 if (self.move(arena) if arena.type != "td" else self.move_touchdown(arena)) and self.attack_cooldown <= 0: #move, then if within range, attack
                     atk = self.attack()

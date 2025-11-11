@@ -17,6 +17,7 @@ import spooky_town_cards
 import rascals_hideout_cards
 import serenity_peak_cards
 import miners_mine_cards
+import super_cards
 
 import training_camp_evos
 import goblin_stadium_evos
@@ -69,6 +70,10 @@ troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer",
           "elixirgolem", "goblindrill", "lumberjack", "nightwitch", "executioner",
           "fisherman", "motherwitch", "cannoncart", "goblinmachine", "spiritempress", "spiritempressground"]
 
+super_troops = [
+    "superminipekka"
+]
+
 spells = ["fireball", "arrows",
           "zap", "rocket",
           "goblinbarrel",
@@ -77,6 +82,10 @@ spells = ["fireball", "arrows",
           "earthquake", "graveyard",
           "rage", "goblincurse", "royaldelivery",
           "clone", "void", "tornado"]
+
+super_spells = [
+    "partyrocket"
+]
 
 buildings = ["goblinhut", "goblincage", 
              "tombstone",
@@ -87,7 +96,12 @@ buildings = ["goblinhut", "goblincage",
              "tesla", "xbow",
              "elixircollector"]
 
+super_buildings = [
+    
+]
+
 champions = ["littleprince", "archerqueen", "skeletonking", "goldenknight", "mightyminer", "goblinstein", "bossbandit"]
+all_supers = super_troops + super_spells + super_buildings
 
 #total 127
 #print(len(troops) + len(spells) + len(buildings))
@@ -686,6 +700,8 @@ def troop_factory(side, position, name, level):
         return miners_mine_cards.SpiritEmpress(side, position, level)
     elif name == "spiritempressground":
         return miners_mine_cards.SpiritEmpressGround(side, position, level)
+    elif name == "superminipekka":
+        return super_cards.SuperMiniPekka(side, position, level)
     else:
         raise Exception("Invalid troop name.")
 
@@ -726,6 +742,8 @@ def spell_factory(side, position, name, level):
         return miners_mine_cards.Void(side, position, level)
     elif name == "tornado":
         return miners_mine_cards.Tornado(side, position, level)
+    elif name == "partyrocket":
+        return super_cards.PartyRocket(side, position, level)
     else:
         raise Exception("Invalid spell name.")
 
@@ -879,7 +897,9 @@ elixir_map = {
     "mightyminer" : 4,
     "archerqueen" : 5,
     "goblinstein" : 5,
-    "bossbandit" : 6
+    "bossbandit" : 6,
+    "superminipekka" : 5,
+    "partyrocket" : 6
 }
 
 def filter_cards(card_list, min_elixir, max_elixir, used_cards):
