@@ -313,6 +313,7 @@ class Troop:
         self.goblin_cursed_level = None
         self.damage_amplification = 1
         self.hog_cursed_level = None
+        self.target_lock = False
 
         if cloned:
             self.cur_hp = 1
@@ -738,7 +739,7 @@ class Troop:
             if self.deploy_time <= 0:
                 if self.target is None or self.target.cur_hp <= 0 or not self.target.targetable or (self.ground_only and not self.target.ground):
                     self.update_target(arena)
-                elif vector.distance(self.position, self.target.position) > self.hit_range + self.collision_radius + self.target.collision_radius: #add 0.2 so there is tiny buffer for ranged troops
+                elif not self.target_lock and vector.distance(self.position, self.target.position) > self.hit_range + self.collision_radius + self.target.collision_radius: #add 0.2 so there is tiny buffer for ranged troops
                     self.update_target(arena)
                 if (self.move(arena) if arena.type != "td" else self.move_touchdown(arena)) and self.attack_cooldown <= 0: #move, then if within range, attack
                     atk = self.attack()

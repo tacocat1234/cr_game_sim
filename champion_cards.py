@@ -359,12 +359,14 @@ class GoldenKnight(Champion):
                     if self.target is None or self.dash_count >= 10 or vector.distance(self.position, self.target.position) > 5.5 + self.target.collision_radius:
                         self.ability_duration_timer = 0 #done
                         self.dashing = False
+                        self.target_lock = False
                         self.collideable = True
                         self.invulnerable = False
                         self.dash_river = False
                 elif vector.distance(self.position, self.dash_center) > 5.6:
                     self.ability_duration_timer = 0 #done
                     self.dashing = False
+                    self.target_lock = False
                     self.collideable = True
                     self.invulnerable = False
                     self.dash_river = False
@@ -373,6 +375,7 @@ class GoldenKnight(Champion):
                     self.update_target(arena)
                     self.dash_center = copy.deepcopy(self.position)
                     self.dashing = True
+                    self.target_lock = True
                     self.invulnerable = True
                     self.collideable = False
                     self.move_speed = 400 * TILES_PER_MIN * (1.35 if self.rage_timer > 0 else 1)
@@ -382,6 +385,7 @@ class GoldenKnight(Champion):
         if self.dashing and (self.target is None or self.target.cur_hp <= 0):
             self.ability_duration_timer = 0 #done
             self.dashing = False
+            self.target_lock = False
             self.invulnerable = False
             self.collideable = True
             self.dash_river = False
@@ -840,6 +844,7 @@ class BossBandit(Champion):
                     self.collideable = False
                     self.dash_river = True
                     self.dashing = True
+                    self.target_lock = True
                 else:
                     self.move_speed = self.normal_move_speed
                     return
@@ -856,12 +861,14 @@ class BossBandit(Champion):
                 if d < self.collision_radius + self.hit_range + self.target.collision_radius: #if hit
                     arena.active_attacks.append(BossBanditAttackEntity(self.side, self.hit_damage * 2, copy.deepcopy(self.position), self.target)) #attack
                     self.dashing = False
+                    self.target_lock = False
                     self.collideable = True
                     self.invulnerable = False
                     self.dash_river = False
                     self.move_speed = self.normal_move_speed
                 elif vector.distance(self.position, self.dash_center) > 6.1:
                     self.dashing = False
+                    self.target_lock = False
                     self.collideable = True
                     self.invulnerable = False
                     self.dash_river = False
@@ -869,6 +876,7 @@ class BossBandit(Champion):
             
         if self.dashing and (self.target is None or self.target.cur_hp <= 0):
             self.dashing = False
+            self.target_lock = False
             self.invulnerable = False
             self.collideable = True
             self.dash_river = False
