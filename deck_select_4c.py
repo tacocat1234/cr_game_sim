@@ -259,4 +259,4 @@ def run_loop(screen, evo_enabled = True, side = True, against_bot=True, decks=No
         out.append(Card(side, each[0], int(lev.value), each[1]))
 
     t = random.choice(["princesstower", "cannoneer", "daggerduchess", "royalchef"]) if tower.value == "" else fuzzy_match(tower.value, ["princesstower", "cannoneer", "daggerduchess", "royalchef"])
-    return len(rand_input) == 0, int(lev.value), out, t
+    return int(lev.value), out, t

@@ -520,6 +520,10 @@ class Troop:
             self.position.add(self.move_vector)
         else:
             self.move_vector = vector.Vector(0, 0)
+
+        if tar_d < attack_d:
+            v = self.target.position.subtracted(self.position)
+            self.facing_dir = math.degrees(math.atan2(v.y, v.x))
         
         return tar_d < attack_d
 

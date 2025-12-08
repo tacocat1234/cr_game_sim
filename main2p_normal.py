@@ -7,8 +7,9 @@ from card_factory import can_anywhere
 from card_factory import generate_random_deck
 from card_factory import can_evo
 from card_factory import champions
-from pathlib import Path
+from bot2 import Bot
 import arena
+import twovtwo_arena
 import touchdown_arena
 import deck_select
 import deck_select_4c
@@ -961,46 +962,46 @@ while True:
         elif game_type == "normal":
             tup = deck_select.run_loop(screen, evo_enabled, True, False, saved_decks)
             if tup is not None:
-                player_random_deck, KING_LEVEL, deck, TOWER_TYPE = tup
+                KING_LEVEL, deck, TOWER_TYPE = tup
                 tup = deck_select.run_loop(screen, evo_enabled, False, False, saved_decks)
                 if tup is not None:
-                    bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = tup
+                    BOT_K_L, bot_deck, BOT_TOWER_TYPE = tup
                     break
         elif game_type == "double":
             tup = deck_select.run_loop(screen, evo_enabled, True, False, saved_decks)
             if tup is not None:
-                player_random_deck, KING_LEVEL, deck, TOWER_TYPE = tup
+                KING_LEVEL, deck, TOWER_TYPE = tup
                 tup = deck_select.run_loop(screen, evo_enabled, False, False, saved_decks)
                 if tup is not None:
                     game_arena.elixir_rate = 2
-                    bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = tup
+                    BOT_K_L, bot_deck, BOT_TOWER_TYPE = tup
                     break
         elif game_type == "triple":
             tup = deck_select.run_loop(screen, evo_enabled, True, False, saved_decks)
             if tup is not None:
-                player_random_deck, KING_LEVEL, deck, TOWER_TYPE = tup
+                KING_LEVEL, deck, TOWER_TYPE = tup
                 tup = deck_select.run_loop(screen, evo_enabled, False, False, saved_decks)
                 if tup is not None:
                     game_arena.elixir_rate = 3
-                    bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = tup
+                    BOT_K_L, bot_deck, BOT_TOWER_TYPE = tup
                     break
         elif game_type == "septuple":
             tup = deck_select.run_loop(screen, evo_enabled, True, False, saved_decks)
             if tup is not None:
-                player_random_deck, KING_LEVEL, deck, TOWER_TYPE = tup
+                KING_LEVEL, deck, TOWER_TYPE = tup
                 tup = deck_select.run_loop(screen, evo_enabled, False, False, saved_decks)
                 if tup is not None:
-                    bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = tup
+                    BOT_K_L, bot_deck, BOT_TOWER_TYPE = tup
                     game_arena.elixir_rate = 7
                     break
         elif game_type == "fourcard":
             tup = deck_select_4c.run_loop(screen, evo_enabled, True, False, saved_decks)
             if tup is not None:
-                player_random_deck, KING_LEVEL, deck, TOWER_TYPE = tup
+                KING_LEVEL, deck, TOWER_TYPE = tup
                 tup = deck_select_4c.run_loop(screen, evo_enabled, False, False, saved_decks)
                 if tup is not None:
                     four_card = True
-                    bot_random_deck, BOT_K_L, bot_deck, BOT_TOWER_TYPE = tup
+                    BOT_K_L, bot_deck, BOT_TOWER_TYPE = tup
                     break
         elif game_type == "megadraft":
             player_random_deck = False
@@ -1020,6 +1021,20 @@ while True:
             touchdown = True
             game_arena = touchdown_arena.TouchdownArena()
             break
+        elif game_type == "2v2":
+            tup = deck_select.run_loop(screen, evo_enabled, True, True, saved_decks)
+            if tup is not None:
+                KING_LEVEL, deck, TOWER_TYPE = tup
+                tup = deck_select.run_loop(screen, evo_enabled, True, True, saved_decks)
+                if tup is not None:
+                    KING_LEVEL2, deck2, TOWER_TYPE2 = tup
+                    tup = deck_select.run_loop(screen, evo_enabled, False, True, saved_decks)
+                    if tup is not None:
+                        BOT_K_L, bot_deck, BOT_TOWER_TYPE = tup
+                        tup = deck_select.run_loop(screen, evo_enabled, False, True, saved_decks)
+                        if tup is not None:
+                            BOT_K_L2, bot_deck2, BOT_TOWER_TYPE2 = tup
+                            break
         else:
             TOWER_TYPE = "randomtower"
             BOT_TOWER_TYPE = "randomtower"
@@ -1047,45 +1062,96 @@ while True:
     # Initialize Player Towers
     if not touchdown:
         p_k = towers.KingTower(True, KING_LEVEL)
+        if game_type == "2v2":
+            p_k.position.x = 2
+            p2_k = towers.KingTower(True, KING_LEVEL2)
+            p2_k.position.x = -2
 
         if TOWER_TYPE.lower() == "randomtower":
             TOWER_TYPE = random.choice(["princesstower", "cannoneer", "daggerduchess", "royalchef"])
+            if game_type == "2v2":
+                TOWER_TYPE2 = random.choice(["princesstower", "cannoneer", "daggerduchess", "royalchef"])
 
         if TOWER_TYPE.lower() == "princesstower":
             player_tower_a = towers.PrincessTower(True, PRINCESS_LEVEL, True)
-            player_tower_b = towers.PrincessTower(True, PRINCESS_LEVEL, False)
+            if game_type != "2v2":
+                player_tower_b = towers.PrincessTower(True, PRINCESS_LEVEL, False)
         elif TOWER_TYPE.lower() == "cannoneer":
             player_tower_a = towers.Cannoneer(True, PRINCESS_LEVEL, True)
-            player_tower_b = towers.Cannoneer(True, PRINCESS_LEVEL, False)
+            if game_type != "2v2":
+                player_tower_b = towers.Cannoneer(True, PRINCESS_LEVEL, False)
         elif TOWER_TYPE.lower() == "daggerduchess":
             player_tower_a = towers.DaggerDuchess(True, PRINCESS_LEVEL, True)
-            player_tower_b = towers.DaggerDuchess(True, PRINCESS_LEVEL, False)
+            if game_type != "2v2":
+                player_tower_b = towers.DaggerDuchess(True, PRINCESS_LEVEL, False)
         elif TOWER_TYPE.lower() == "royalchef":
             player_tower_a = towers.RoyalChef(True, PRINCESS_LEVEL, True)
-            player_tower_b = towers.RoyalChef(True, PRINCESS_LEVEL, False)
+            if game_type != "2v2":
+                player_tower_b = towers.RoyalChef(True, PRINCESS_LEVEL, False)
             p_k = towers.RoyalChefKingTower(True, KING_LEVEL)
+            if game_type == "2v2":
+                p_k.position.x = 2
+
+        if game_type == "2v2":
+            if TOWER_TYPE2.lower() == "princesstower":
+                player_tower_b = towers.PrincessTower(True, PRINCESS_LEVEL, False)
+            elif TOWER_TYPE2.lower() == "cannoneer":
+                player_tower_b = towers.Cannoneer(True, PRINCESS_LEVEL, False)
+            elif TOWER_TYPE2.lower() == "daggerduchess":
+                player_tower_b = towers.DaggerDuchess(True, PRINCESS_LEVEL, False)
+            elif TOWER_TYPE2.lower() == "royalchef":
+                player_tower_b = towers.RoyalChef(True, PRINCESS_LEVEL, False)
+                p2_k = towers.RoyalChefKingTower(True, KING_LEVEL)
+                p2_k.position.x = -2
 
         # Initialize Bot Towers
         b_k = towers.KingTower(False, BOT_K_L)
+        if game_type == "2v2":
+            b_k.position.x = 2
+            b2_k = towers.KingTower(False, BOT_K_L2)
+            b2_k.position.x = -2
 
         if BOT_TOWER_TYPE.lower() == "randomtower":
             BOT_TOWER_TYPE = random.choice(["princesstower", "cannoneer", "daggerduchess", "royalchef"])
+            if game_type == "2v2":
+                BOT_TOWER_TYPE2 = random.choice(["princesstower", "cannoneer", "daggerduchess", "royalchef"])
 
         if BOT_TOWER_TYPE.lower() == "princesstower":
             bot_tower_a = towers.PrincessTower(False, BOT_P_L, True)
-            bot_tower_b = towers.PrincessTower(False, BOT_P_L, False)
+            if game_type != "2v2":
+                bot_tower_b = towers.PrincessTower(False, BOT_P_L, False)
         elif BOT_TOWER_TYPE.lower() == "cannoneer":
             bot_tower_a = towers.Cannoneer(False, BOT_P_L, True)
-            bot_tower_b = towers.Cannoneer(False, BOT_P_L, False)
+            if game_type != "2v2":
+                bot_tower_b = towers.Cannoneer(False, BOT_P_L, False)
         elif BOT_TOWER_TYPE.lower() == "daggerduchess":
             bot_tower_a = towers.DaggerDuchess(False, BOT_P_L, True)
-            bot_tower_b = towers.DaggerDuchess(False, BOT_P_L, False)
+            if game_type != "2v2":
+                bot_tower_b = towers.DaggerDuchess(False, BOT_P_L, False)
         elif BOT_TOWER_TYPE.lower() == "royalchef":
             bot_tower_a = towers.RoyalChef(False, BOT_P_L, True)
-            bot_tower_b = towers.RoyalChef(False, BOT_P_L, False)
             b_k = towers.RoyalChefKingTower(False, BOT_K_L)
+            if game_type != "2v2":
+                bot_tower_b = towers.RoyalChef(False, BOT_P_L, False)
+            else:
+                b_k.position.x = 2
 
         err = False
+
+        if game_type == "2v2":
+            if BOT_TOWER_TYPE2.lower() == "princesstower":
+                bot_tower_b = towers.PrincessTower(False, PRINCESS_LEVEL, False)
+            elif BOT_TOWER_TYPE2.lower() == "cannoneer":
+                bot_tower_b = towers.Cannoneer(False, PRINCESS_LEVEL, False)
+            elif BOT_TOWER_TYPE2.lower() == "daggerduchess":
+                bot_tower_b = towers.DaggerDuchess(False, PRINCESS_LEVEL, False)
+            elif BOT_TOWER_TYPE2.lower() == "royalchef":
+                bot_tower_b = towers.RoyalChef(False, PRINCESS_LEVEL, False)
+                b2_k = towers.RoyalChefKingTower(False, BOT_K_L)
+                b2_k.position.x = -2
+
+        if game_type == "2v2":
+            game_arena = twovtwo_arena.Arena()
 
         game_arena.towers = [p_k, 
                                 player_tower_a,  # a
@@ -1099,6 +1165,15 @@ while True:
             raise Exception("you done goofed up")
 
     #player deck
+
+    if game_type == "2v2":
+        game_arena.towers.append(b2_k)
+        game_arena.towers.append(p2_k)
+
+    if (game_type == "2v2"):
+        bot_tm = Bot(bot_deck2, BOT_TOWER_TYPE2.lower())
+        p_tm = Bot(deck2, TOWER_TYPE2.lower())
+        p_tm.side = True
 
 
     random.shuffle(deck)
@@ -1141,6 +1216,83 @@ while True:
     paused = False
     while running:
         clock.tick(60)  # 60 FPS
+
+        if game_type == "2v2":
+            s = 0
+            s2 = 0
+            for each in game_arena.towers:
+                if abs(each.position.x) <= 2: #if is not kingtower
+                    continue
+                if each.side:
+                    if each.position.x > 0: #exists right
+                        s -= 2
+                    elif each.position.x < 0: #exists left
+                        s += 1
+                else:
+                    if each.position.x > 0: #exists right
+                        s2 -= 2
+                    elif each.position.x < 0: #exists left
+                        s2 += 1
+
+            s = "all" if s == 0 else ("none" if s == -1 else ("right" if s == 1 else "left"))
+            s2 = "all" if s2 == 0 else ("none" if s2 == -1 else ("right" if s2 == 1 else "left"))
+
+            tup = bot_tm.tick(game_arena.p2_2_elixir, game_arena.p1_elixir, game_arena.troops + game_arena.buildings, s)
+            bot_tm.process_champion(game_arena.p2_2_champion, game_arena)
+
+            bot_card = bot_pos = None
+        
+            if tup is not None:
+                bot_card, bot_pos = tup
+            
+            if not bot_card is None:
+                n = bot_card.name if bot_card.name != "mirror" else b_prev.name #actual card
+                if bot_pos:
+                    if bot_card.name == "royalrecruits":
+                        if bot_pos.x < -1.5:
+                            bot_pos.x = -1.5
+                        elif bot_pos.x > 1.5:
+                            bot_pos.x = 1.5
+
+                    l = bot_card.level if bot_card.name != "mirror" else b_prev.level + 1
+
+                    game_arena.add(False, False, bot_pos, n, bot_card.elixir_cost, l, bot_card.cycles_left == 0 if bot_card.name != "mirror" else False, True)
+                    
+                    if bot_card.name not in champions:
+                        b_prev = bot_card
+                        if b_mirror is not None:
+                            b_mirror.elixir_cost = bot_card.elixir_cost + 1
+                    
+                    bot_card.cycle_evo()
+                    game_arena.p2_2_elixir += 0.2 #bot cheats a bit, since its kinda dumb
+
+            tup = p_tm.tick(game_arena.p1_2_elixir, game_arena.p2_elixir, game_arena.troops + game_arena.buildings, s2)
+            p_tm.process_champion(game_arena.p1_2_champion, game_arena)
+
+            bot_card = bot_pos = None
+        
+            if tup is not None:
+                bot_card, bot_pos = tup
+            
+            if not bot_card is None:
+                n = bot_card.name if bot_card.name != "mirror" else b_prev.name #actual card
+                if bot_pos:
+                    if bot_card.name == "royalrecruits":
+                        if bot_pos.x < -1.5:
+                            bot_pos.x = -1.5
+                        elif bot_pos.x > 1.5:
+                            bot_pos.x = 1.5
+
+                    l = bot_card.level if bot_card.name != "mirror" else p_prev.level + 1
+
+                    game_arena.add(True, False, bot_pos, n, bot_card.elixir_cost, l, bot_card.cycles_left == 0 if bot_card.name != "mirror" else False, True)
+                    
+                    if bot_card.name not in champions:
+                        b_prev = bot_card
+                        if b_mirror is not None:
+                            b_mirror.elixir_cost = bot_card.elixir_cost + 1
+                    
+                    bot_card.cycle_evo()
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -1282,7 +1434,11 @@ while True:
                             name = cur_card.name if cur_card.name != "mirror" or p_prev is None else p_prev.name
                             level = cur_card.level if cur_card.name != "mirror" or p_prev is None else p_prev.level + 1
                             
-                            succesful = game_arena.add(True, pos, name, cur_card.elixir_cost, level, cur_card.cycles_left == 0 if cur_card.name != "mirror" else False)
+                            succesful = None
+                            if game_type == "2v2":
+                                succesful = game_arena.add(True, True, pos, name, cur_card.elixir_cost, level, cur_card.cycles_left == 0 if cur_card.name != "mirror" else False)
+                            else:
+                                succesful = game_arena.add(True, pos, name, cur_card.elixir_cost, level, cur_card.cycles_left == 0 if cur_card.name != "mirror" else False)
                             if succesful:
                                 if cur_card.name not in champions:
                                     p_prev = cur_card
@@ -1334,7 +1490,11 @@ while True:
                             name = cur_card.name if cur_card.name != "mirror" or b_prev is None else b_prev.name
                             level = cur_card.level if cur_card.name != "mirror" or b_prev is None else b_prev.level + 1
                             
-                            succesful = game_arena.add(False, pos, name, cur_card.elixir_cost, level, cur_card.cycles_left == 0 if cur_card.name != "mirror" else False)
+                            succesful = None
+                            if game_type == "2v2":
+                                succesful = game_arena.add(False, True, pos, name, cur_card.elixir_cost, level, cur_card.cycles_left == 0 if cur_card.name != "mirror" else False)
+                            else:
+                                succesful = game_arena.add(False, pos, name, cur_card.elixir_cost, level, cur_card.cycles_left == 0 if cur_card.name != "mirror" else False)
                             if succesful:
                                 if cur_card.name not in champions:
                                     b_prev = cur_card

@@ -68,6 +68,7 @@ def run_loop(screen):
     mega = SelectionBox(WIDTH/2, HEIGHT/2 + 120, 100, 50, "Mega-Draft")
     fourcard = SelectionBox(100, HEIGHT/2 + 120, 100, 50, "Four Card")
     touchdowndraft = SelectionBox(WIDTH - 100, HEIGHT/2 + 120, 100, 50, "Touchdown Draft")
+    twovtwo = SelectionBox(WIDTH/2, HEIGHT/2 + 180, 100, 50, "2v2")
     feedback = SelectionBox(50, HEIGHT - 50, 60, 60, "Feedback")
     deck_select = SelectionBox(WIDTH - 50, HEIGHT - 50, 60, 60, "Decks")
 
@@ -88,6 +89,7 @@ def run_loop(screen):
         mega.draw(screen)
         fourcard.draw(screen)
         touchdowndraft.draw(screen)
+        twovtwo.draw(screen)
         feedback.draw(screen)
         deck_select.draw(screen)
 
@@ -133,6 +135,9 @@ def run_loop(screen):
                 running = False
             if touchdowndraft.handle_event(event) is not None:
                 out = "touchdowndraft"
+                running = False
+            if twovtwo.handle_event(event) is not None:
+                out = "2v2"
                 running = False
             if quit.handle_event(event) is not None:
                 out = "quit"

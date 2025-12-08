@@ -596,7 +596,7 @@ class PhoenixEgg(Troop):
             s=side,              # Side (True for one player, False for the other)
             h_p= 199 * pow(1.1, level - 9),         # Hit points (Example value)
             h_d= 0,          # Hit damage (Example value)
-            h_s=3.3,          # Hit speed (Seconds per hit)
+            h_s=3.9,          # Hit speed (Seconds per hit)
             l_t=0,            # First hit cooldown
             h_r=0,            # Hit range
             s_r=0,            # Sight Range
