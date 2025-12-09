@@ -228,7 +228,7 @@ class TouchdownArena:
         
         if self.timer >= 180:
             print("end")
-            return 0 if self.p1_crowns == self.p2_crowns else (self.p1_crowns > self.p2_crowns)
+            return "draw" if self.p1_crowns == self.p2_crowns else (self.p1_crowns > self.p2_crowns)
 
         # do collision checks
         applyVelocity = {}

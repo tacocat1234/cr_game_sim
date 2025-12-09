@@ -43,8 +43,6 @@ bot_deck = []
 
 KING_LEVEL = PRINCESS_LEVEL = BOT_K_L = BOT_P_L = 0
 TOWER_TYPE = BOT_TOWER_TYPE = ""
-player_random_deck = False
-bot_random_deck = False
     
 used = []
 '''
@@ -61,7 +59,7 @@ with open("decks/deck.txt", "r") as file:
             if err:
                 raise Exception("you typed \"" + line + "\" you forgot to type the level")
             if card == "allrandom":
-                player_random_deck = True
+                 = True
                 KING_LEVEL = PRINCESS_LEVEL = int(level)
                 TOWER_TYPE = random.choice(["princesstower", "cannoneer", "daggerduchess", "royalchef"])
                 break
@@ -69,7 +67,7 @@ with open("decks/deck.txt", "r") as file:
             used.append(actual)
             deck.append(Card(True, actual, int(level), is_evo))
 
-    if not player_random_deck:
+    if not :
         line = file.readline().strip()
         if line:
             _, KING_LEVEL = line.rsplit(" ", 1)
@@ -89,7 +87,6 @@ with open("decks/bot_deck.txt", "r") as file:
         if line:
             card, level = line.rsplit(" ", 1)
             if card == "allrandom":
-                bot_random_deck = True
                 BOT_K_L = BOT_P_L = int(level)
                 BOT_TOWER_TYPE = random.choice(["princesstower", "cannoneer", "daggerduchess", "royalchef"])
                 break
@@ -699,7 +696,7 @@ def draw(mode="normal"):
             spell_surface = pygame.Surface((size * 2, size * 2), pygame.SRCALPHA)  # Creating transparent surface
             
             # Fill the surface with the purple color and set transparency (alpha channel)
-            pygame.draw.circle(spell_surface, (128, 128, 128, 128), (size, size), size)
+            pygame.draw.circle(spell_surface, (108, 128, 148, 128) if spell.side else (148, 128, 108, 128), (size, size), size)
             # Draw the surface onto the screen at the correct position
             screen.blit(spell_surface, (spell_x - size, spell_y - size))  # Centering the spell's circle
         else:
@@ -714,7 +711,7 @@ def draw(mode="normal"):
                 spell_surface = pygame.Surface((size * 2, size * 2), pygame.SRCALPHA)  # Creating transparent surface
                 
                 # Fill the surface with the purple color and set transparency (alpha channel)
-                pygame.draw.circle(spell_surface, (128, 0, 128, 128), (size, size), size)
+                pygame.draw.circle(spell_surface, (88, 0, 168, 128) if spell.side else (168, 0, 88, 128), (size, size), size)
                 # Draw the surface onto the screen at the correct position
                 screen.blit(spell_surface, (spell_x - size, spell_y - size))  # Centering the spell's circle
             else:
@@ -751,8 +748,64 @@ def draw(mode="normal"):
 
             screen.blit(scaled_img, timer_rect)
             
-    
-    card_name_font = pygame.font.Font(None, 24)  # Use a larger font for card names
+    if game_type == "2v2":
+        card_name_font = pygame.font.Font(None, 12)  # Use a larger font for card names
+
+        for i, hand_i in enumerate(p_tm.hand):
+            if hand_i == -1:
+                continue
+            card = deck2[hand_i]
+            card_name_text = card_name_font.render(card.name, True, BLACK)
+            card_name_x = WIDTH//4 + (WIDTH * (i + 1)) // 10  # Positions: WIDTH/5, WIDTH*2/5, WIDTH*3/5, WIDTH*4/5
+            card_name_y = HEIGHT - 128  # Vertical position at the bottom
+            text_rect = card_name_text.get_rect(center=(card_name_x, card_name_y))
+            screen.blit(card_name_text, text_rect)
+
+            if (card.name == "mirror") and p_prev is not None:
+                mirror_text = card_name_font.render("(" + p_prev.name + ")", True, BLACK) #nono, accessing global in local function but easiest
+                text_rect = mirror_text.get_rect(center=(card_name_x, card_name_y + 15))
+                screen.blit(mirror_text, text_rect)
+
+            elixir_cost_circle_x = card_name_x + 15  # Position at the end of the elixir bar
+            elixir_cost_circle_y = card_name_y - 15  # Align with the bar
+            elixir_cost_circle_radius = 6  # Size of the circle
+
+            if card.is_evo:
+                all = card.cycles
+                full = all - card.cycles_left
+                radius = 3
+                color = (150, 0, 200)
+                background_color = (60, 60, 60)
+
+                # Circle layout setup
+                spacing = 2 * radius + 4  # Space between circles
+                total_width = (all - 1) * spacing
+                start_x = card_name_x - total_width // 2
+                y = card_name_y - 30  # 50 units above
+
+                # Calculate rectangle bounds
+                rect_padding = 2
+                rect_width = total_width + 2 * radius + rect_padding * 2
+                rect_height = 2 * radius + rect_padding * 2
+                rect_x = start_x - radius - rect_padding
+                rect_y = y - radius - rect_padding
+
+                # Draw rectangle background
+                pygame.draw.rect(screen, background_color, (rect_x, rect_y, rect_width, rect_height), border_radius=2)
+
+                # Draw evolution progress circles
+                for j in range(all):
+                    circle_color = color if j < full else BLACK
+                    x = start_x + j * spacing
+                    pygame.draw.circle(screen, circle_color, (x, y), radius)
+            pygame.draw.circle(screen, PURPLE, (elixir_cost_circle_x, elixir_cost_circle_y), elixir_cost_circle_radius)  # Draw elixir circle
+
+            # Render the elixir amount text
+            elixir_text = card_name_font.render(str(card.elixir_cost), True, WHITE)
+            text_rect = elixir_text.get_rect(center=(elixir_cost_circle_x, elixir_cost_circle_y))
+            screen.blit(elixir_text, text_rect)  # Display elixir text
+
+    card_name_font = pygame.font.Font(None, 24)
 
     for i, hand_i in enumerate(hand):
         if hand_i == -1:
@@ -874,15 +927,14 @@ while True:
                     saved_decks = None
                 saved_decks = decks
         if game_type == "triple_draft":
-            player_random_deck = False
-            bot_random_deck = True
             KING_LEVEL = 11
             BOT_K_L = 12
             deck, TOWER_TYPE = triple_draft.run_loop(screen, evo_enabled)
+            d = generate_random_deck()
+            bot_deck = [Card(False, each, 13, evo_enabled and can_evo(each)) for each in d]
+            BOT_TOWER_TYPE = "princesstower"
             break
         elif game_type == "draft":
-            player_random_deck = False
-            bot_random_deck = False
             KING_LEVEL = 11
             BOT_K_L = 13
             deck, TOWER_TYPE, bot_deck, BOT_TOWER_TYPE = draft.run_loop(screen, evo_enabled)
@@ -921,7 +973,7 @@ while True:
                 if tup is not None:
                     four_card = True
                     BOT_K_L, bot_deck, BOT_TOWER_TYPE = tup
-                    bot_random_deck = False
+                    
                     bot_deck.extend(bot_deck)
                     break
         elif game_type == "septuple":
@@ -934,8 +986,6 @@ while True:
                     game_arena.elixir_rate = 7
                     break
         elif game_type == "megadraft":
-            player_random_deck = False
-            bot_random_deck = False
             KING_LEVEL = 11
             BOT_K_L = 13
             tup = megadraft.run_loop(screen, evo_enabled)
@@ -951,8 +1001,7 @@ while True:
                     BOT_K_L, bot_deck, BOT_TOWER_TYPE = tup
                     break
             '''
-            player_random_deck = False
-            bot_random_deck = False
+             = False
             KING_LEVEL = 11
             BOT_K_L = 13
             touchdown = True
@@ -981,7 +1030,6 @@ while True:
 
     PRINCESS_LEVEL = KING_LEVEL
     BOT_P_L = BOT_K_L
-
     p_mirror = next((each for each in deck if each.name == "mirror"), None)
     b_mirror = next((each for each in bot_deck if each.name == "mirror"), None)
     

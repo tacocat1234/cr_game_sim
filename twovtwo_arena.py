@@ -20,6 +20,8 @@ class Arena:
         self.p1_2_elixir = 7
         self.p2_elixir = 7
         self.p2_2_elixir = 7
+        self.p1_t = 0
+        self.p2_t = 0
         self.timer = 0
         self.state = ""
         self.elixir_trackers = []
@@ -245,8 +247,18 @@ class Arena:
             building.cleanup(self)
         for tower in self.towers:
             winSide = tower.cleanup(self)
-            if not winSide is None:
-                return winSide
+            if winSide is not None:
+                if winSide:
+                    self.p1_t += 1
+                    print(self.p1_t)
+                else:
+                    self.p2_t += 1
+                    print(self.p2_t)
+
+        if self.p1_t >= 2:
+            return True
+        elif self.p2_t >= 2:
+            return False                
 
         p1_side = 0
         if self.timer >= 180:  # overtime

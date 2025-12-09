@@ -842,7 +842,7 @@ class Bot:
                         return card, pos
 
             if random.random() < 1/1600:
-                pos = vector.Vector(random.randint(-9, 8) + 0.5, random.randint(1, 15) + 0.5)
+                pos = vector.Vector(random.randint(-9, 8) + 0.5, (random.randint(-15, -1) -0.5) if self.side else (random.randint(1, 15) + 0.5))
                 l = [0, 1, 2, 3]
                 i = random.choice(l)
                 card = self.cards[self.hand[i]]
@@ -897,13 +897,13 @@ class Bot:
                 elif card.name == "goblinbarrel" or card.name == "goblindrill": #direct on tower
                     pos = None
                     if pocket == "none":
-                        pos = vector.Vector((-5.5 if random.random() > 0.5 else 5.5) + random.random() - 0.5, 9.5 + random.random() - 0.5 if self.side else (-9.5 + random.random() - 0.5))
+                        pos = vector.Vector((-5.5 if random.random() > 0.5 else 5.5) + random.random() - 0.5, (9.5 + random.random() - 0.5) if self.side else (-9.5 + random.random() - 0.5))
                     elif pocket == "left":
-                        pos = vector.Vector(5.5 + random.random() - 0.5, 9.5 + random.random() - 0.5 if self.side else (-9.5 + random.random() - 0.5))
+                        pos = vector.Vector(5.5 + random.random() - 0.5, (9.5 + random.random() - 0.5) if self.side else (-9.5 + random.random() - 0.5))
                     elif pocket == "right":
-                        pos = vector.Vector(-5.5 + random.random() - 0.5, 9.5 + random.random() - 0.5 if self.side else (-9.5 + random.random() - 0.5))
+                        pos = vector.Vector(-5.5 + random.random() - 0.5, (9.5 + random.random() - 0.5) if self.side else (-9.5 + random.random() - 0.5))
                     elif pocket == "all":
-                        pos = vector.Vector(random.random() - 0.5, 13 + random.random() - 0.5 if self.side else (-13 + random.random() - 0.5))
+                        pos = vector.Vector(random.random() - 0.5, (13 + random.random() - 0.5) if self.side else (-13 + random.random() - 0.5))
 
                     cycle(self.hand, self.hand.index(i), self.queue, self.champion_index)
                     return card, pos
@@ -1003,11 +1003,13 @@ class Bot:
             elif card.type == "building":
                 cycle(self.hand, i, self.queue, self.champion_index)
                 if compare(threat.position.y, -5, 'f', self.side) and compare(threat.position.y, -1, 'ce', self.side): #if 
-                    pos = vector.Vector(0.5 + random.randint(0, 1) if threat.position.x > 0 else -0.5 - random.randint(0, 1), round(threat.position.y - 3) - 0.5 if self.side else round(threat.position.y + 3) + 0.5)
+                    pos = vector.Vector(0.5 + random.randint(0, 1) if threat.position.x > 0 else -0.5 - random.randint(0, 1), (round(threat.position.y - 3) - 0.5) if self.side else (round(threat.position.y + 3) + 0.5))
                 elif compare(threat.position.y, -8, 'f', self.side):
-                    pos = vector.Vector(1.5 + random.randint(0, 2) if threat.position.x > 0 else -1.5 - random.randint(0, 2), round(threat.position.y - 2) - 0.5 if self.side else round(threat.position.y + 2) + 0.5)
+                    pos = vector.Vector(1.5 + random.randint(0, 2) if threat.position.x > 0 else -1.5 - random.randint(0, 2), (round(threat.position.y - 2) - 0.5) if self.side else (round(threat.position.y + 2) + 0.5))
+                elif compare(threat.position.y, -8, 'ce', self.side):
+                    pos = threat.position.added(vector.Vector(0, -0.1 if self.side else 0.1))
                 else:
-                    pos = threat.position.added(0, -0.1 if self.side else 0.1)
+                    return None
                 
                 make_legal_y(pocket, self.side, pos)
             elif card.name == "icegolem" or card.name == "wallbreakers":
@@ -1077,13 +1079,13 @@ class Bot:
                                 base_pos = vector.Vector(-5.5 if random.random() > 0.5 else 5.5, -1.5 if self.side else 1.5)
                     else:
                         if pocket == "none":
-                            base_pos = vector.Vector(random.randint(-9, 8) + 0.5, random.randint(-9, -1) - 0.5 if self.side else random.randint(1, 9) + 0.5) #center
+                            base_pos = vector.Vector(random.randint(-9, 8) + 0.5, (random.randint(-9, -1) - 0.5) if self.side else (random.randint(1, 9) + 0.5)) #center
                         elif pocket == "all":
-                            base_pos = vector.Vector(random.randint(-9, 8) + 0.5, random.randint(-9, 5) - 0.5 if self.side else random.randint(-5, 9) + 0.5)
+                            base_pos = vector.Vector(random.randint(-9, 8) + 0.5, (random.randint(-9, 5) - 0.5) if self.side else (random.randint(-5, 9) + 0.5))
                         elif pocket == "left":
-                            base_pos = vector.Vector(random.randint(0, 8) + 0.5, random.randint(-9, -1) - 0.5 if self.side else random.randint(1, 9) + 0.5) #right side
+                            base_pos = vector.Vector(random.randint(0, 8) + 0.5, (random.randint(-9, -1) - 0.5) if self.side else (random.randint(1, 9) + 0.5)) #right side
                         else:
-                            base_pos = vector.Vector(random.randint(-9, -1) + 0.5, random.randint(-9, -1) - 0.5 if self.side else random.randint(1, 9) + 0.5) #left side
+                            base_pos = vector.Vector(random.randint(-9, -1) + 0.5, (random.randint(-9, -1) - 0.5) if self.side else (random.randint(1, 9) + 0.5)) #left side
                 else:
                     base_pos = main.position
 
@@ -1095,13 +1097,13 @@ class Bot:
                     cycle(self.hand, i, self.queue, self.champion_index)
                     pos = None
                     if pocket == "none":
-                        pos = vector.Vector((-5.5 if random.random() > 0.5 else 5.5) + random.random() - 0.5, 9.5 + random.random() - 0.5 if self.side else (-9.5 + random.random() - 0.5))
+                        pos = vector.Vector((-5.5 if random.random() > 0.5 else 5.5) + random.random() - 0.5, (9.5 + random.random() - 0.5) if self.side else (-9.5 + random.random() - 0.5))
                     elif pocket == "left":
-                        pos = vector.Vector(5.5 + random.random() - 0.5, 9.5 + random.random() - 0.5 if self.side else (-9.5 + random.random() - 0.5))
+                        pos = vector.Vector(5.5 + random.random() - 0.5, (9.5 + random.random() - 0.5) if self.side else (-9.5 + random.random() - 0.5))
                     elif pocket == "right":
-                        pos = vector.Vector(-5.5 + random.random() - 0.5, 9.5 + random.random() - 0.5 if self.side else (-9.5 + random.random() - 0.5))
+                        pos = vector.Vector(-5.5 + random.random() - 0.5, (9.5 + random.random() - 0.5) if self.side else (-9.5 + random.random() - 0.5))
                     elif pocket == "all":
-                        pos = vector.Vector(random.random() - 0.5, 13 + random.random() - 0.5 if self.side else (-13 + random.random() - 0.5))
+                        pos = vector.Vector(random.random() - 0.5, (13 + random.random() - 0.5) if self.side else (-13 + random.random() - 0.5))
                     return card, pos
                 elif card.name == "graveyard":
                     pos = None

@@ -768,7 +768,7 @@ def draw(side, mode = "normal"):
                     spell_surface = pygame.Surface((size * 2, size * 2), pygame.SRCALPHA)  # Creating transparent surface
                     
                     # Fill the surface with the purple color and set transparency (alpha channel)
-                    pygame.draw.circle(spell_surface, (128, 0, 128, 128), (size, size), size)
+                    pygame.draw.circle(spell_surface, (88, 0, 168, 128) if spell.side == side else (168, 0, 88, 128), (size, size), size)
                     # Draw the surface onto the screen at the correct position
                     screen.blit(spell_surface, (spell_x - size, spell_y - size))  # Centering the spell's circle
                 else:
@@ -821,7 +821,7 @@ def draw(side, mode = "normal"):
             screen.blit(red_img, (WIDTH + 10 - 64 + OFFSET, HEIGHT / 2 - 64 - 80))
         
     card_name_font = pygame.font.Font(None, 24)  # Use a larger font for card names
-    
+
     h = hand if side else hand2
     for i, hand_i in enumerate(h):
         if hand_i == -1:
@@ -882,6 +882,65 @@ def draw(side, mode = "normal"):
         elixir_text = card_name_font.render(str(card.elixir_cost), True, WHITE)
         text_rect = elixir_text.get_rect(center=(elixir_cost_circle_x, elixir_cost_circle_y))
         screen.blit(elixir_text, text_rect)  # Display elixir text
+
+    if game_type == "2v2":
+        small_name_font = pygame.font.Font(None, 12)  # Use a larger font for card names
+
+        h = p_tm.hand if side else bot_tm.hand
+        for i, hand_i in enumerate(h):
+            if hand_i == -1:
+                continue
+            card = deck2[hand_i] if side else bot_deck2[hand_i]
+            card_name_text = small_name_font.render(card.name, True, BLACK)
+            card_name_x = WIDTH//4 + (WIDTH * (i + 1)) // 10  + offset# Positions: WIDTH/5, WIDTH*2/5, WIDTH*3/5, WIDTH*4/5
+            card_name_y = HEIGHT - 128  # Vertical position at the bottom
+            text_rect = card_name_text.get_rect(center=(card_name_x, card_name_y))
+            screen.blit(card_name_text, text_rect)
+
+            if (card.name == "mirror") and p_prev is not None:
+                mirror_text = small_name_font.render("(" + p_prev.name + ")", True, BLACK) #nono, accessing global in local function but easiest
+                text_rect = mirror_text.get_rect(center=(card_name_x, card_name_y + 15))
+                screen.blit(mirror_text, text_rect)
+
+            elixir_cost_circle_x = card_name_x + 15  # Position at the end of the elixir bar
+            elixir_cost_circle_y = card_name_y - 15  # Align with the bar
+            elixir_cost_circle_radius = 6  # Size of the circle
+
+            if card.is_evo:
+                all = card.cycles
+                full = all - card.cycles_left
+                radius = 3
+                color = (150, 0, 200)
+                background_color = (60, 60, 60)
+
+                # Circle layout setup
+                spacing = 2 * radius + 4  # Space between circles
+                total_width = (all - 1) * spacing
+                start_x = card_name_x - total_width // 2
+                y = card_name_y - 30  # 50 units above
+
+                # Calculate rectangle bounds
+                rect_padding = 2
+                rect_width = total_width + 2 * radius + rect_padding * 2
+                rect_height = 2 * radius + rect_padding * 2
+                rect_x = start_x - radius - rect_padding
+                rect_y = y - radius - rect_padding
+
+                # Draw rectangle background
+                pygame.draw.rect(screen, background_color, (rect_x, rect_y, rect_width, rect_height), border_radius=2)
+
+                # Draw evolution progress circles
+                for j in range(all):
+                    circle_color = color if j < full else BLACK
+                    x = start_x + j * spacing
+                    pygame.draw.circle(screen, circle_color, (x, y), radius)
+            pygame.draw.circle(screen, PURPLE, (elixir_cost_circle_x, elixir_cost_circle_y), elixir_cost_circle_radius)  # Draw elixir circle
+
+            # Render the elixir amount text
+            elixir_text = small_name_font.render(str(card.elixir_cost), True, WHITE)
+            text_rect = elixir_text.get_rect(center=(elixir_cost_circle_x, elixir_cost_circle_y))
+            screen.blit(elixir_text, text_rect)  # Display elixir text
+
 
     elixir_amount = game_arena.p1_elixir if side else game_arena.p2_elixir
     #draw elixir bar
@@ -1022,16 +1081,16 @@ while True:
             game_arena = touchdown_arena.TouchdownArena()
             break
         elif game_type == "2v2":
-            tup = deck_select.run_loop(screen, evo_enabled, True, True, saved_decks)
+            tup = deck_select.run_loop(screen, evo_enabled, True, False, saved_decks)
             if tup is not None:
                 KING_LEVEL, deck, TOWER_TYPE = tup
-                tup = deck_select.run_loop(screen, evo_enabled, True, True, saved_decks)
+                tup = deck_select.run_loop(screen, evo_enabled, True, False, saved_decks)
                 if tup is not None:
                     KING_LEVEL2, deck2, TOWER_TYPE2 = tup
-                    tup = deck_select.run_loop(screen, evo_enabled, False, True, saved_decks)
+                    tup = deck_select.run_loop(screen, evo_enabled, False, False, saved_decks)
                     if tup is not None:
                         BOT_K_L, bot_deck, BOT_TOWER_TYPE = tup
-                        tup = deck_select.run_loop(screen, evo_enabled, False, True, saved_decks)
+                        tup = deck_select.run_loop(screen, evo_enabled, False, False, saved_decks)
                         if tup is not None:
                             BOT_K_L2, bot_deck2, BOT_TOWER_TYPE2 = tup
                             break
@@ -1568,8 +1627,8 @@ while True:
     text = None
     if win is None:
         text = winfont.render("quit_screen_text", True, WHITE)
-    elif win == 0:
-        text = winfont.render("Tie", True, WHITE)
+    elif win == "draw":
+        text = winfont.render("Draw", True, WHITE)
     elif win:
         text = winfont.render("Player 1 Win", True, WHITE)
     else:
