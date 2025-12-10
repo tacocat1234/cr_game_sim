@@ -479,7 +479,7 @@ class Troop:
                 min_dist = float('inf')
                 tower_target = None
                 for tower in arena.towers:
-                    should_see = same_sign(tower.position.y, self.position.y) or same_sign(tower.position.x, self.position.x) or tower.position.x == 0
+                    should_see = same_sign(tower.position.y, self.position.y) or same_sign(tower.position.x, self.position.x) or tower.position.x == 0 or tower.position.x == 2 or tower.position.x == -2
                     if tower.side != self.side and should_see:
                         if true_distance(tower.position, self.position) < min_dist:
                             tower_target = tower

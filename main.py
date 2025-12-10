@@ -1029,7 +1029,11 @@ while True:
             BOT_TOWER_TYPE = "randomtower"
 
     PRINCESS_LEVEL = KING_LEVEL
+    if game_type == "2v2":
+        PRINCESS_LEVEL2 = KING_LEVEL2
     BOT_P_L = BOT_K_L
+    if game_type == "2v2":
+        BOT_P_L2 = BOT_K_L2
     p_mirror = next((each for each in deck if each.name == "mirror"), None)
     b_mirror = next((each for each in bot_deck if each.name == "mirror"), None)
     
@@ -1070,13 +1074,13 @@ while True:
 
     if game_type == "2v2":
         if TOWER_TYPE2.lower() == "princesstower":
-            player_tower_b = towers.PrincessTower(True, PRINCESS_LEVEL, False)
+            player_tower_b = towers.PrincessTower(True, PRINCESS_LEVEL2, False)
         elif TOWER_TYPE2.lower() == "cannoneer":
-            player_tower_b = towers.Cannoneer(True, PRINCESS_LEVEL, False)
+            player_tower_b = towers.Cannoneer(True, PRINCESS_LEVEL2, False)
         elif TOWER_TYPE2.lower() == "daggerduchess":
-            player_tower_b = towers.DaggerDuchess(True, PRINCESS_LEVEL, False)
+            player_tower_b = towers.DaggerDuchess(True, PRINCESS_LEVEL2, False)
         elif TOWER_TYPE2.lower() == "royalchef":
-            player_tower_b = towers.RoyalChef(True, PRINCESS_LEVEL, False)
+            player_tower_b = towers.RoyalChef(True, PRINCESS_LEVEL2, False)
             p2_k = towers.RoyalChefKingTower(True, KING_LEVEL)
             p2_k.position.x = -2
 
@@ -1115,14 +1119,14 @@ while True:
 
     if game_type == "2v2":
         if BOT_TOWER_TYPE2.lower() == "princesstower":
-            bot_tower_b = towers.PrincessTower(False, PRINCESS_LEVEL, False)
+            bot_tower_b = towers.PrincessTower(False, BOT_P_L2, False)
         elif BOT_TOWER_TYPE2.lower() == "cannoneer":
-            bot_tower_b = towers.Cannoneer(False, PRINCESS_LEVEL, False)
+            bot_tower_b = towers.Cannoneer(False, BOT_P_L2, False)
         elif BOT_TOWER_TYPE2.lower() == "daggerduchess":
-            bot_tower_b = towers.DaggerDuchess(False, PRINCESS_LEVEL, False)
+            bot_tower_b = towers.DaggerDuchess(False, BOT_P_L2, False)
         elif BOT_TOWER_TYPE2.lower() == "royalchef":
-            bot_tower_b = towers.RoyalChef(False, PRINCESS_LEVEL, False)
-            b2_k = towers.RoyalChefKingTower(False, BOT_K_L)
+            bot_tower_b = towers.RoyalChef(False, BOT_P_L2, False)
+            b2_k = towers.RoyalChefKingTower(False, BOT_K_L2)
             b2_k.position.x = -2
             
 

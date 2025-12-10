@@ -250,10 +250,8 @@ class Arena:
             if winSide is not None:
                 if winSide:
                     self.p1_t += 1
-                    print(self.p1_t)
                 else:
                     self.p2_t += 1
-                    print(self.p2_t)
 
         if self.p1_t >= 2:
             return True

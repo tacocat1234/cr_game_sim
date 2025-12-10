@@ -998,31 +998,34 @@ class Bot:
                     if compare(pos.y, 0, 'fe', self.side):
                         return None
                 else:
-                    pos = threat.position.added(vector.Vector(0, 1.5))
+                    pos = threat.position.added(vector.Vector(0, -1.5 if self.side else 1.5))
                 cycle(self.hand, i, self.queue, self.champion_index)
             elif card.type == "building":
-                cycle(self.hand, i, self.queue, self.champion_index)
-                if compare(threat.position.y, -5, 'f', self.side) and compare(threat.position.y, -1, 'ce', self.side): #if 
-                    pos = vector.Vector(0.5 + random.randint(0, 1) if threat.position.x > 0 else -0.5 - random.randint(0, 1), (round(threat.position.y - 3) - 0.5) if self.side else (round(threat.position.y + 3) + 0.5))
-                elif compare(threat.position.y, -8, 'f', self.side):
-                    pos = vector.Vector(1.5 + random.randint(0, 2) if threat.position.x > 0 else -1.5 - random.randint(0, 2), (round(threat.position.y - 2) - 0.5) if self.side else (round(threat.position.y + 2) + 0.5))
-                elif compare(threat.position.y, -8, 'ce', self.side):
-                    pos = threat.position.added(vector.Vector(0, -0.1 if self.side else 0.1))
-                else:
-                    return None
-                
-                make_legal_y(pocket, self.side, pos)
+                if compare(threat.position.y, -1, 'ce', self.side):
+                    cycle(self.hand, i, self.queue, self.champion_index)
+                    if compare(threat.position.y, -5, 'f', self.side): #if       
+                        pos = vector.Vector(0.5 + random.randint(0, 1) if threat.position.x > 0 else -0.5 - random.randint(0, 1), (round(threat.position.y - 3) - 0.5) if self.side else (round(threat.position.y + 3) + 0.5))
+                    elif compare(threat.position.y, -7, 'f', self.side):
+                        pos = vector.Vector(1.5 + random.randint(0, 2) if threat.position.x > 0 else -1.5 - random.randint(0, 2), (round(threat.position.y - 2) - 0.5) if self.side else (round(threat.position.y + 2) + 0.5))
+                    elif compare(threat.position.y, -10.5, 'f', self.side):
+                        pos = threat.position.added(vector.Vector(0, -0.1 if self.side else 0.1))
+                    else:
+                        pos = vector.Vector(1 + random.randint(0, 1) if threat.position.x > 0 else -1 - random.randint(0, 1), (round(threat.position.y - 3) - 0.5) if self.side else (round(threat.position.y + 3) + 0.5))
+                    make_legal_y(pocket, self.side, pos)
             elif card.name == "icegolem" or card.name == "wallbreakers":
                 if isinstance(threat.target, Tower):
                     return None
-                if compare(threat.position.y, -5, 'f', self.side) and compare(threat.position.y, -1, 'ce', self.side) and (threat.position.x < 5 and threat.position.x > -5): #if close enough to be kited and across the bridge (can be hit by tower)
-                    cycle(self.hand, i, self.queue, self.champion_index)
-                    pos = vector.Vector(-0.5 if threat.position.x > 0 else 0.5, round(threat.position.y - 1) - 0.5 if self.side else round(threat.position.y + 1) + 0.5) #kite
-                    make_legal_y(pocket, self.side, pos)
-                elif compare(threat.position.y, -7, 'f', self.side):
-                    cycle(self.hand, i, self.queue, self.champion_index)
-                    pos = vector.Vector(threat.position.x, threat.position.y + 2 if self.side else threat.position.y - 2)
-                    make_legal_y(pocket, self.side, pos)
+                if compare(threat.position.y, -1, 'ce', self.side):
+                    if compare(threat.position.y, -5, 'f', self.side) and (threat.position.x < 5 and threat.position.x > -5): #if close enough to be kited and across the bridge (can be hit by tower)
+                        cycle(self.hand, i, self.queue, self.champion_index)
+                        pos = vector.Vector(-0.5 if threat.position.x > 0 else 0.5, (round(threat.position.y - 1) - 0.5) if self.side else (round(threat.position.y + 1) + 0.5)) #kite
+                        make_legal_y(pocket, self.side, pos)
+                    elif compare(threat.position.y, -7, 'f', self.side):
+                        cycle(self.hand, i, self.queue, self.champion_index)
+                        pos = vector.Vector(threat.position.x, threat.position.y + 2 if self.side else threat.position.y - 2)
+                        make_legal_y(pocket, self.side, pos)
+                    else:
+                        return None
                 else:
                     return None
             elif card.name == "suspiciousbush":
