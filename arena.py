@@ -253,17 +253,37 @@ class Arena:
         for troop in self.troops:
             for building in self.buildings + self.towers:
                 dist = vector.distance(troop.position, building.position)
-                if troop.collideable and building.collideable and dist < (building.collision_radius + troop.collision_radius):
-                    vec = troop.position.subtracted(building.position)
-                    if vec.magnitude() > 0:
-                        vec.scale(((building.collision_radius + troop.collision_radius) / vec.magnitude()) - 1)
+                min_dist = building.collision_radius + troop.collision_radius
 
-                    if vec.x < 0.01 and vec.x >= 0:
-                        vec.x = 0.01
-                    elif vec.x > -0.01 and vec.x < 0:
-                        vec.x == -0.01
+                if troop.collideable and building.collideable and dist < min_dist:
 
-                    applyVelocity[troop] = applyVelocity.get(troop, vector.Vector(0, 0)).added(vec)
+                    # Vector from building to troop
+                    normal = troop.position.subtracted(building.position)
+
+                    if normal.magnitude() == 0:
+                        continue
+
+                    # Normalize normal
+                    normal.normalize()
+
+                    # Compute tangents
+                    tangent1 = vector.Vector(-normal.y, normal.x)
+                    tangent2 = vector.Vector(normal.y, -normal.x)
+
+                    # Choose tangent based on desired movement direction
+                    move_dir = troop.move_vector.normalized()
+
+                    dot1 = tangent1.x * move_dir.x + tangent1.y * move_dir.y
+                    dot2 = tangent2.x * move_dir.x + tangent2.y * move_dir.y
+
+                    tangent = tangent1 if dot1 > dot2 else tangent2
+
+                    # Slide along the tangent instead of pushing outward
+                    troop.position.add(normal.scaled(min_dist - dist)) #kick it directly back out
+
+                    slide_vec = tangent.scaled(min_dist - dist) #create the perpendicular equal same size as the amount kicked out
+                    troop.position.add(slide_vec) #change the vector pointing in to normal vector
+                    
 
         #push out of river
         for troop in self.troops:

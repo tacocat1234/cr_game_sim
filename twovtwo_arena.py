@@ -304,17 +304,43 @@ class Arena:
         for troop in self.troops:
             for building in self.buildings + self.towers:
                 dist = vector.distance(troop.position, building.position)
-                if troop.collideable and building.collideable and dist < (building.collision_radius + troop.collision_radius):
-                    vec = troop.position.subtracted(building.position)
-                    if vec.magnitude() > 0:
-                        vec.scale(((building.collision_radius + troop.collision_radius) / vec.magnitude()) - 1)
+                min_dist = building.collision_radius + troop.collision_radius
 
-                    if vec.x < 0.01 and vec.x >= 0:
-                        vec.x = 0.01
-                    elif vec.x > -0.01 and vec.x < 0:
-                        vec.x == -0.01
+                in_kt_center = ((self.p2_t == 0 and troop.position.y < -13 and troop.position.y > -14.5 - troop.collision_radius) or (self.p1_t == 0 and troop.position.y > 13 and troop.position.y < 14.5 + troop.collision_radius)) and troop.position.x > -2 and troop.position.x < 2
 
-                    applyVelocity[troop] = applyVelocity.get(troop, vector.Vector(0, 0)).added(vec)
+                if (troop.collideable and building.collideable and dist < min_dist) or in_kt_center:
+                    # Compute tangents
+                    if (in_kt_center):
+                        tangent1 = vector.Vector(1 if troop.position.x > 0 else -1, 0)
+                        tangent2 = vector.Vector(1 if troop.position.x > 0 else -1, 0)
+                    else:
+                        normal = troop.position.subtracted(building.position)
+
+                        if normal.magnitude() == 0:
+                            continue
+
+                        # Normalize normal
+                        normal.normalize()
+                        tangent1 = vector.Vector(-normal.y, normal.x)
+                        tangent2 = vector.Vector(normal.y, -normal.x)
+
+                    # Choose tangent based on desired movement direction
+                    move_dir = troop.move_vector.normalized()
+
+                    dot1 = tangent1.x * move_dir.x + tangent1.y * move_dir.y
+                    dot2 = tangent2.x * move_dir.x + tangent2.y * move_dir.y
+
+                    tangent = tangent1 if dot1 > dot2 else tangent2
+
+                    sc = min_dist - dist #create the perpendicular equal same size as the amount kicked out
+                    # Slide along the tangent instead of pushing outward
+                    if (in_kt_center):
+                        sc = ((troop.position.y + troop.collision_radius + 14.5) if troop.position.y < 0 else (14.5 - troop.position.y + troop.collision_radius))
+                        troop.position.y = -14.5 - troop.collision_radius if troop.position.y < 0 else 14.5 + troop.collision_radius #kick it out
+                    else:
+                        troop.position.add(normal.scaled(min_dist - dist)) #kick it directly back out
+                    slide_vec = tangent.scaled(sc)
+                    troop.position.add(slide_vec) #change the vector pointing in to normal vector
 
         #push out of river
         for troop in self.troops:
@@ -338,21 +364,6 @@ class Arena:
         for troop, vel in applyVelocity.items():
             troop.position.add(vel)
 
-        #push away from king tower centers
-        for troop in self.troops:
-            if troop.position.x < 2.1 and troop.position.x > -2.1:
-                if troop.side and troop.position.y + troop.collision_radius >= -14.4 and troop.position.y < -13:
-                    troop.position.y = -14.41 - troop.collision_radius
-                    if troop.position.x > 0:
-                        troop.position.x += troop.move_speed/2
-                    else:
-                        troop.position.x -= troop.move_speed/2
-                elif not troop.side and troop.position.y - troop.collision_radius <= 14.4 and troop.position.y > 13:
-                    troop.position.y = 14.41 + troop.collision_radius
-                    if troop.position.x > 0:
-                        troop.position.x += troop.move_speed/2
-                    else:
-                        troop.position.x -= troop.move_speed/2
 
         for troop in self.troops:
             if troop.position.x > 9:

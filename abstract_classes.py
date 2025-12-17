@@ -479,7 +479,7 @@ class Troop:
                 min_dist = float('inf')
                 tower_target = None
                 for tower in arena.towers:
-                    should_see = same_sign(tower.position.y, self.position.y) or same_sign(tower.position.x, self.position.x) or tower.position.x == 0 or tower.position.x == 2 or tower.position.x == -2
+                    should_see = same_sign(tower.position.y, self.position.y) or same_sign(tower.position.x, self.position.x) or (tower.position.x == 0 or tower.position.x == 2 or tower.position.x == -2)
                     if tower.side != self.side and should_see:
                         if true_distance(tower.position, self.position) < min_dist:
                             tower_target = tower
@@ -1174,7 +1174,7 @@ class Building:
         if self.preplace or self.deploy_time > 0 or self.stun_timer > 0:
             return
         self.tick_func(arena)
-        if self.target is None or self.target.cur_hp <= 0 or not self.target.targetable or (self.ground_only and not self.target.ground):
+        if self.target is None or self.target.cur_hp <= 0 or not self.target.targetable or (self.ground_only and not self.target.ground) or vector.distance(self.target.position, self.position) + self.collision_radius + self.target.collision_radius > self.hit_range:
             self.update_target(arena)
         if (not self.target is None) and self.attack_cooldown <= 0:
             atk = self.attack()

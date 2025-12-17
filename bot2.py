@@ -156,6 +156,7 @@ troop_types = {"knight" : ["minitank"],
     "royalhog" : ["swarm", "minitank"],
     "royalrecruit" : ["minitank"],
     "elitebarbarian" : ["minitank", "highdps"],
+    "elitemusketeer" : ["swarm", "minitank"],
     "wallbreaker" : ["towertargeting", "kite"],
     "rebornphoenix" : ["minitank"],
     "bushgoblin" : ["highdps", "towertargeting", "swarm"],
@@ -282,6 +283,7 @@ troop_is_air = {"knight" : "ground",
     "royalhog" : "ground",
     "royalrecruit" : "ground",
     "elitebarbarian" : "ground",
+    "elitemusketeer" : "air",
     "wallbreaker" : "ground",
     "wallbreakerrunner" : "ground",
     "rebornphoenix" : "air",
@@ -409,6 +411,7 @@ troop_attack_range = {
     "royalhog": "short",
     "royalrecruit": "short",
     "elitebarbarian": "short",
+    "elitemusketeer": "long",
     "wallbreaker": "short",
     "wallbreakerrunner": "short",
     "rebornphoenix": "short",
@@ -458,6 +461,7 @@ def calculate_effectiveness(offense, defense):
 
 
 single_elixir_map = {
+    "suspiciousbush" : 2,
     "speargoblin" : 2/3,
     "goblin" : 1/2,
     "fakegoblin" : 1/3,
@@ -478,6 +482,7 @@ single_elixir_map = {
     "royalhog" : 5/4,
     "royalrecruit" : 7/6,
     "elitebarbarian" : 3,
+    "elitemusketeer" : 3.3,
     "wallbreaker" : 1,
     "rebornphoenix" : 3,
     "bushgoblin" : 1,
@@ -887,12 +892,12 @@ class Bot:
                     cycle(self.hand, self.hand.index(i), self.queue, self.champion_index)
                     return card, pos
                 elif card.type == "building": #defensive placement
-                    return None
-                    '''
-                    pos = vector.Vector(random.randint(-3, 3), random.randint(-7, -2) if self.side else random.randint(2, 7))
-                    cycle(self.hand, self.hand.index(i), self.queue, self.champion_index)
-                    return card, pos
-                    '''
+                    if elixir > 9.9:
+                        pos = vector.Vector(random.randint(-3, 3), random.randint(-7, -2) if self.side else random.randint(2, 7))
+                        cycle(self.hand, self.hand.index(i), self.queue, self.champion_index)
+                        return card, pos
+                    else:
+                        return None
                 
                 elif card.name == "goblinbarrel" or card.name == "goblindrill": #direct on tower
                     pos = None

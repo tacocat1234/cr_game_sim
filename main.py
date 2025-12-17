@@ -1134,6 +1134,9 @@ while True:
 
     if game_type == "2v2":
         game_arena = twovtwo_arena.Arena()
+        #game_arena.p1_2_elixir = -99
+        #game_arena.p2_2_elixir = -99
+        #game_arena.p2_elixir = -99
 
     game_arena.towers = [p_k, 
                             player_tower_a,  # a
