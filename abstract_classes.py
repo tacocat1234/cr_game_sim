@@ -1174,7 +1174,7 @@ class Building:
         if self.preplace or self.deploy_time > 0 or self.stun_timer > 0:
             return
         self.tick_func(arena)
-        if self.target is None or self.target.cur_hp <= 0 or not self.target.targetable or (self.ground_only and not self.target.ground) or vector.distance(self.target.position, self.position) + self.collision_radius + self.target.collision_radius > self.hit_range:
+        if self.target is None or self.target.cur_hp <= 0 or not self.target.targetable or (self.ground_only and not self.target.ground) or vector.distance(self.target.position, self.position) > self.hit_range + self.collision_radius + self.target.collision_radius:
             self.update_target(arena)
         if (not self.target is None) and self.attack_cooldown <= 0:
             atk = self.attack()

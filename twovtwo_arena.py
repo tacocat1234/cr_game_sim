@@ -99,11 +99,13 @@ class Arena:
                                     self.p1_champion = c
                                 else:
                                     self.p1_2_champion = c
+                                    c.owned_by_main = False
                             else:
                                 if is_main:
                                     self.p2_champion = c
                                 else:
                                     self.p2_2_champion = c
+                                    c.owned_by_main = False
                                 
     
                     # deduct elixir immediately
@@ -205,7 +207,7 @@ class Arena:
         still_pending = []
         for cards, card_type, delay in self.pending_preplacements:
             delay -= TICK_TIME
-            if delay <= 0:
+            if delay <= 0: #next section "activates" troop for preplaced (gjsoted) state
                 for c in cards:
                     c.preplace = False
                     

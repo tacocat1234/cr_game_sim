@@ -219,25 +219,8 @@ loss_images = [pygame.image.load(f"sprites/elixir_loss/{i + 1}.png").convert_alp
 #game_arena.troops.append(training_camp_cards.MiniPekka(True, vector.Vector(-3, -4)
 #temp
 
-p1_c_index = None
-p2_c_index = None
-
-def cycle(hand, index, queue, side):
-    i = hand[index]
-
-    if side:
-        if deck[i] is p_champion:
-            global p1_c_index
-            p1_c_index = i
-        else:
-            queue.append(hand[index])
-    else:
-        if deck[i] is b_champion:
-            global p2_c_index
-            p2_c_index = i
-        else:
-            queue.append(hand[index])
-
+def cycle(hand, index, queue):
+    queue.append(hand[index])
     hand[index] = queue.pop(0)
 
 def four_card_cycle(hand, index, hand_delay):
@@ -1153,14 +1136,14 @@ while True:
 
         if game_type == "2v2":
             if TOWER_TYPE2.lower() == "princesstower":
-                player_tower_b = towers.PrincessTower(True, PRINCESS_LEVEL, False)
+                player_tower_b = towers.PrincessTower(True, KING_LEVEL2, False)
             elif TOWER_TYPE2.lower() == "cannoneer":
-                player_tower_b = towers.Cannoneer(True, PRINCESS_LEVEL, False)
+                player_tower_b = towers.Cannoneer(True, KING_LEVEL2, False)
             elif TOWER_TYPE2.lower() == "daggerduchess":
-                player_tower_b = towers.DaggerDuchess(True, PRINCESS_LEVEL, False)
+                player_tower_b = towers.DaggerDuchess(True, KING_LEVEL2, False)
             elif TOWER_TYPE2.lower() == "royalchef":
-                player_tower_b = towers.RoyalChef(True, PRINCESS_LEVEL, False)
-                p2_k = towers.RoyalChefKingTower(True, KING_LEVEL)
+                player_tower_b = towers.RoyalChef(True, KING_LEVEL2, False)
+                p2_k = towers.RoyalChefKingTower(True, KING_LEVEL2)
                 p2_k.position.x = -2
 
         # Initialize Bot Towers
@@ -1199,14 +1182,14 @@ while True:
 
         if game_type == "2v2":
             if BOT_TOWER_TYPE2.lower() == "princesstower":
-                bot_tower_b = towers.PrincessTower(False, PRINCESS_LEVEL, False)
+                bot_tower_b = towers.PrincessTower(False, BOT_K_L2, False)
             elif BOT_TOWER_TYPE2.lower() == "cannoneer":
-                bot_tower_b = towers.Cannoneer(False, PRINCESS_LEVEL, False)
+                bot_tower_b = towers.Cannoneer(False, BOT_K_L2, False)
             elif BOT_TOWER_TYPE2.lower() == "daggerduchess":
-                bot_tower_b = towers.DaggerDuchess(False, PRINCESS_LEVEL, False)
+                bot_tower_b = towers.DaggerDuchess(False, BOT_K_L2, False)
             elif BOT_TOWER_TYPE2.lower() == "royalchef":
-                bot_tower_b = towers.RoyalChef(False, PRINCESS_LEVEL, False)
-                b2_k = towers.RoyalChefKingTower(False, BOT_K_L)
+                bot_tower_b = towers.RoyalChef(False, BOT_K_L2, False)
+                b2_k = towers.RoyalChefKingTower(False, BOT_K_L2)
                 b2_k.position.x = -2
 
         if game_type == "2v2":
@@ -1507,7 +1490,7 @@ while True:
                                 if four_card:
                                     four_card_cycle(hand, click_quarter - 1, hand_delay)
                                 else:
-                                    cycle(hand, click_quarter - 1, cycler, True)
+                                    cycle(hand, click_quarter - 1, cycler)
                                 cur_card.cycle_evo()
 
                         # Reset drag start position after the release
@@ -1563,7 +1546,7 @@ while True:
                                 if four_card:
                                     four_card_cycle(hand2, click_quarter2 - 1, hand2_delay)
                                 else:
-                                    cycle(hand2, click_quarter2 - 1, cycler2, False)
+                                    cycle(hand2, click_quarter2 - 1, cycler2)
                                 cur_card.cycle_evo()
 
                         # Reset drag start position after the release
@@ -1581,14 +1564,14 @@ while True:
         if not touchdown:
             for each in game_arena.towers:
                 if not each.side:
-                    if each.position.x > 0: #is positive
+                    if each.position.x > 0 and each.position.x != 2: #is positive
                         false_has_right = True
-                    elif each.position.x < 0: #is negative
+                    elif each.position.x < 0 and each.position.x != -2: #is negative
                         false_has_left = True
                 else:
-                    if each.position.x > 0: #is positive
+                    if each.position.x > 0 and each.position.x != 2: #is positive
                         true_has_right = True
-                    elif each.position.x < 0: #is negative
+                    elif each.position.x < 0 and each.position.x != -2: #is negative
                         true_has_left = True
 
         if not paused:
@@ -1606,14 +1589,6 @@ while True:
                         bot_deck[card_i].elixir_cost = 3
             game_arena.tick()  # Update game logic
             fin = game_arena.cleanup()
-
-            if p1_c_index is not None and game_arena.p1_champion is None:
-                cycler.append(p1_c_index)
-                p1_c_index = None
-
-            if p2_c_index is not None and game_arena.p2_champion is None:
-                cycler.append(p2_c_index)
-                p2_c_index = None
 
             if fin is not None:
                 win = fin
@@ -1666,7 +1641,5 @@ while True:
         break
 
     game_arena = arena.Arena()
-    p1_c_index = None
-    p2_c_index = None
 
 pygame.quit()

@@ -20,21 +20,22 @@ class Champion(Troop):
         self.ability_cooldown_timer = 0
 
         self.ability_active = False
+        self.owned_by_main = True
 
         n = self.__class__.__name__.lower()
         self.ability_sprite_path = "sprites/" + n + "/" + n + "_ability.png"
 
-    def on_deploy(self, arena):
-        if self.side:
-            arena.p1_champion = self
-        else:
-            arena.p2_champion = self
-
     def die(self, arena):
         if self.side:
-            arena.p1_champion = None
+            if self.owned_by_main:
+                arena.p1_champion = None
+            else:
+                arena.p1_2champion = None
         else:
-            arena.p2_champion = None
+            if self.owned_by_main:
+                arena.p2_champion = None
+            else:
+                arena.p2_2champion = None
         return super().die(arena)
 
 

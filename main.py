@@ -216,16 +216,8 @@ red_display_img = pygame.image.load("sprites/red_display.png").convert_alpha()
 #game_arena.troops.append(training_camp_cards.MiniPekka(True, vector.Vector(-3, -4)
 #temp
 
-p1_c_index = None
-
 def cycle(hand, index, queue):
-    i = hand[index]
-    if deck[i] is p_champion:
-        global p1_c_index
-        p1_c_index = i
-    else:
-        queue.append(hand[index])
-
+    queue.append(hand[index])
     hand[index] = queue.pop(0)
 
 def four_card_cycle(hand, index, hand_delay):
@@ -360,6 +352,7 @@ def draw(mode="normal"):
     screen.blit(center_surface, center_rect)
 
     if game_arena.p1_champion is not None:
+        print(game_arena.p1_champion)
         ab_img = load_image(game_arena.p1_champion.ability_sprite_path)
         ab_rect = ab_img.get_rect(center=(WIDTH - 35, HEIGHT - 128 - 35))
         screen.blit(ab_img, ab_rect)
@@ -1415,9 +1408,9 @@ while True:
         enemy_right = False
         for each in game_arena.towers:
             if not each.side:
-                if each.position.x > 0: #is positive
+                if each.position.x > 0 and each.position.x != 2: #is positive
                     enemy_right = True
-                elif each.position.x < 0: #is negative
+                elif each.position.x < 0 and each.position.x != -2: #is negative
                     enemy_left = True
 
         if not paused:
@@ -1429,13 +1422,6 @@ while True:
                     else:
                         deck[card_i].elixir_cost = 3
             fin = game_arena.cleanup()
-
-            if p1_c_index is not None and game_arena.p1_champion is None:
-                cycler.append(p1_c_index)
-                p1_c_index = None
-
-            if len(bot.queue) < 4 and game_arena.p2_champion is None:
-                bot.queue.append(bot.champion_index)
 
             if fin is not None:
                 win = fin
@@ -1544,6 +1530,5 @@ while True:
         #count += 1
 
     game_arena = arena.Arena()
-    p1_c_index = None
 
 pygame.quit()

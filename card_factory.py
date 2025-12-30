@@ -1073,6 +1073,8 @@ def generate_random_remaining(filled, evo_enabled = True):
                 n = random_with_param("spell", 5, 9, used)
             elif i == 4 and random.randint(1, 5) == 1:
                 n = "mirror"
+            elif i == 4 and random.randint(1, 5) == 1:
+                n = random.choice(champions)
             else:
                 n = random_with_param(each[0], each[1][0], each[1][1], used)
             out[i] = [n, evo_enabled and can_evo(n)]
