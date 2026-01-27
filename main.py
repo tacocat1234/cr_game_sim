@@ -352,7 +352,6 @@ def draw(mode="normal"):
     screen.blit(center_surface, center_rect)
 
     if game_arena.p1_champion is not None:
-        print(game_arena.p1_champion)
         ab_img = load_image(game_arena.p1_champion.ability_sprite_path)
         ab_rect = ab_img.get_rect(center=(WIDTH - 35, HEIGHT - 128 - 35))
         screen.blit(ab_img, ab_rect)

@@ -351,8 +351,8 @@ class Void(Spell):
         self.medium_ctd = 16 * pow(1.1, level - 6)
         self.large_ctd = 11 * pow(1.1, level - 6)'''
 
-        self.single = 200 * pow(1.1, level - 6)
-        self.medium = 120 * pow(1.1, level - 6) #normally 100, slight buff
+        self.single = 190 * pow(1.1, level - 6)
+        self.medium = 100 * pow(1.1, level - 6) #normally 100, slight buff
         self.large = 55 * pow(1.1, level - 6)
 
         self.single_ctd = 30 * pow(1.1, level - 6)
@@ -587,7 +587,7 @@ class GoblinMachine(Troop):
     def tick_func(self, arena):
         if self.rocket_cooldown <= self.rocket_load_time and self.rocket_target is None:
             self.rocket_cooldown = self.rocket_load_time
-        else:
+        elif self.stun_timer <= 0:
             if self.rocket_cooldown <= 0:
                 self.rocket = GoblinMachineRocket(self.side, self.rocket_damage, self.rocket_ctd, self.position, self.rocket_target)
                 arena.active_attacks.append(self.rocket)

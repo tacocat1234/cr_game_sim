@@ -28,14 +28,18 @@ class Champion(Troop):
     def die(self, arena):
         if self.side:
             if self.owned_by_main:
-                arena.p1_champion = None
+                if arena.p1_champion == self:
+                    arena.p1_champion = None
             else:
-                arena.p1_2champion = None
+                if arena.p1_2champion == self:
+                    arena.p1_2champion = None
         else:
             if self.owned_by_main:
-                arena.p2_champion = None
+                if arena.p2_champion == self:
+                    arena.p2_champion = None
             else:
-                arena.p2_2champion = None
+                if arena.p2_2champion == self:
+                    arena.p2_2champion = None
         return super().die(arena)
 
 
@@ -294,6 +298,7 @@ class GoldenKnight(Champion):
         self.dash_center = None
         self.dash_count = 0
         self.max_dash_count = 10
+        self.dash_range = 5.5
 
     def update_target(self, arena):
         self.target = None 
@@ -322,7 +327,7 @@ class GoldenKnight(Champion):
                     self.target = tower #ensures only locks when activel attacking tower, so giant at bridge doesnt immediatly lock onto tower and ruin everyones day
                     min_dist = dist
 
-                if self.ability_active and dist < min_dist and dist < 5.5 + self.collision_radius + tower.collision_radius and tower not in self.dashed:
+                if self.ability_active and dist < min_dist and dist < self.dash_range + self.collision_radius and tower not in self.dashed:
                     self.target = tower
                     min_dist = dist
 

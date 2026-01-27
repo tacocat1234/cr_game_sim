@@ -83,7 +83,7 @@ class OldFurnace(Building):
         if self.stun_timer <= 0:
             if self.attack_cooldown <= 0: #attack code
                 front = vector.Vector(0, 1.5) if self.side else vector.Vector(0, -1.5)
-                newFire = FireSpirit(self.side, self.position.added(front), self.level)
+                newFire = FireSpirit(self.side, self.position.added(front), self.level, self.cloned)
                 newFire.deploy_time = 0
                 arena.troops.append(newFire)
                 self.attack_cooldown = self.hit_speed

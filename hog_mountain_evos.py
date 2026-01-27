@@ -105,7 +105,7 @@ class EvolutionFurnace(hog_mountain_cards.Furnace):
                     self.spawn_timer = 1.8
                 else:
                     self.spawn_timer = 7
-                f_s = FireSpirit(self.side, self.position.added(vector.Vector((-1.5 if self.spawn_side else 1.5) if self.hot_spawn else 0, 0 if self.hot_spawn else (0.6 if self.side else -0.6))), self.level)
+                f_s = FireSpirit(self.side, self.position.added(vector.Vector((-1.5 if self.spawn_side else 1.5) if self.hot_spawn else 0, 0 if self.hot_spawn else (0.6 if self.side else -0.6))), self.level, self.cloned)
                 f_s.deploy_time = 0
                 arena.troops.append(f_s)
                 if self.hot_spawn:

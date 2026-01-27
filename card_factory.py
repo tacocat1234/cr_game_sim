@@ -65,7 +65,7 @@ troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer",
           "barbarianbarrel", "beserker", "goblingang", "dartgoblin", "skeletonbarrel", "goblingiant",
           "furnace", "zappies", "hunter", "minionhorde", "elitebarbarians", "golem",
           "log", "miner", "princess", "electrowizard", "infernodragon", "ramrider", "sparky", "megaknight",
-          "wallbreakers", "icewizard", "royalghost", "firecracker", "phoenix", "electrodragon",
+          "wallbreakers", "icewizard", "royalghost", "firecracker", "phoenix", "goblindemolisher", "electrodragon",
           "healspirit", "suspiciousbush", "bandit", "magicarcher", "rascals", "bowler", "electrogiant", "lavahound",
           "elixirgolem", "goblindrill", "lumberjack", "nightwitch", "executioner",
           "fisherman", "motherwitch", "cannoncart", "goblinmachine", "spiritempress", "spiritempressground"]
@@ -654,6 +654,8 @@ def troop_factory(side, position, name, level):
         return spooky_town_cards.Firecracker(side, position, level)
     elif name == "phoenix":
         return spooky_town_cards.Phoenix(side, position, level)
+    elif name == "goblindemolisher":
+        return spooky_town_cards.GoblinDemolisher(side, position, level)
     elif name == "electrodragon":
         return spooky_town_cards.ElectroDragon(side, position, level)
     elif name == "healspirit":
@@ -863,6 +865,7 @@ elixir_map = {
     "icewizard" : 3,
     "earthquake" : 3,
     "phoenix" : 4,
+    "goblindemolisher" : 4,
     "electrodragon" : 5,
     "graveyard" : 5,
     "healspirit" : 1,

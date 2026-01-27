@@ -645,3 +645,136 @@ class RebornPhoenix(Troop):
     
     def attack(self):
         return PhoenixAttackEntity(self.side, self.hit_damage, self.target.position, self.target)
+    
+class GoblinDemolisherAttackEntity(RangedAttackEntity):
+    SPLASH_RADIUS = 1.5
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            side=side,
+            damage=damage,
+            velocity=400*TILES_PER_MIN,
+            position=position,
+            target=target,
+        )
+        self.exploded = False
+        self.has_hit = []        
+
+    def detect_hits(self, arena):
+        hits = []
+        if self.exploded:
+            for each in arena.towers + arena.buildings + arena.troops:
+                if each.side != self.side and not each.invulnerable: # if different side
+                    if vector.distance(self.position, each.position) < self.SPLASH_RADIUS + each.collision_radius:
+                        hits.append(each)
+        return hits
+            
+    def tick(self, arena):
+        if self.exploded:
+            hits = self.detect_hits(arena)
+            for each in hits:
+                new = not any(each is h for h in self.has_hit)
+                if (new):
+                    each.damage(self.damage)
+                    self.has_hit.append(each)
+        else:
+            direction = self.target.position.subtracted(self.position)
+            direction.normalize()
+
+            movement = direction.scaled(self.velocity)
+            self.position.add(movement)
+            
+            if vector.distance(self.position, self.target.position) < 0.25:
+                self.display_size = self.SPLASH_RADIUS
+                self.duration =  0.1
+                self.exploded = True
+
+class GoblinDemolisherDeathAttackEntity(AttackEntity):
+    SPLASH_RADIUS = 2.5
+    KB = 1
+    def __init__(self, side, damage, ctd, position):
+        super().__init__(
+            s=side,
+            d=damage,
+            v=0,
+            l=1/60 + 0.01,
+            i_p=copy.deepcopy(position)
+        )
+        self.display_size = self.SPLASH_RADIUS
+        self.ctd = ctd
+
+    def apply_effect(self, target):
+        if isinstance(target, Troop) and target.can_kb and not target.invulnerable:
+            vec = target.position.subtracted(self.position)
+            vec.normalize()
+            vec.scale(self.KB)
+            target.kb(vec)
+    
+    def detect_hits(self, arena):
+        hits = []
+        for each in arena.towers + arena.buildings + arena.troops:
+            if each.side != self.side: # if different side
+                if vector.distance(self.position, each.position) < self.SPLASH_RADIUS + each.collision_radius:
+                        hits.append(each)
+
+        return hits
+    
+    def tick(self, arena):
+        hits = self.detect_hits(arena)
+        for each in hits:
+            new = not each in self.has_hit
+            if (new):
+                if (isinstance(each, Tower)):
+                    each.damage(self.damage)
+                else:
+                    each.damage(self.damage)
+                self.apply_effect(each)
+                self.has_hit.append(each)
+
+class GoblinDemolisher(Troop):
+    def __init__(self, side, position, level, cloned=False):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 614 * pow(1.1, level - 3),         # Hit points (Example value)
+            h_d= 88 * pow(1.1, level - 3),          # Hit damage (Example value)
+            h_s=1.2,          # Hit speed (Seconds per hit)
+            l_t=0.7,            # First hit cooldown
+            h_r=5,            # Hit range
+            s_r=5.5,            # Sight Range
+            g=True,           # Ground troop
+            t_g_o=True,       # Targets ground-only
+            t_o=False,        # Not tower-only
+            m_s=60*TILES_PER_MIN,          # Movement speed 
+            d_t=1,            # Deploy time
+            m=3,            #mass
+            c_r=0.6,        #collision radius
+            p=position,               # Position (vector.Vector object)
+            cloned=cloned
+        ) 
+        self.level = level
+        self.kamikaze = False
+        self.kamikaze_hp_loss = 30.7 * pow(1.1, level - 3)
+        self.death_damage = 191 * pow(1.1, level - 3)
+
+    def tick_func(self, arena):
+        if (self.cur_hp < self.hit_points/2 and not self.kamikaze):
+            self.become_kamikaze()
+        if (self.kamikaze):
+            self.cur_hp -= self.kamikaze_hp_loss * TICK_TIME
+            if (not self.target is None) and ((vector.distance(self.target.position, self.position)) - self.target.collision_radius - self.collision_radius < self.hit_range):
+                self.die(arena)
+
+    def become_kamikaze(self):
+        self.kamikaze = True
+        self.tower_only = True
+        self.hit_range = 0.5
+        self.move_speed = 120*TILES_PER_MIN
+
+    def attack(self):
+        if not self.kamikaze:
+            return GoblinDemolisherAttackEntity(self.side, self.hit_damage, self.position, self.target)
+        else:
+            return None
+        
+    def die(self, arena):
+        arena.active_attacks.append(GoblinDemolisherDeathAttackEntity(self.side, self.death_damage, self.death_damage, self.position))
+        return super().die(arena)

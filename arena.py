@@ -291,13 +291,13 @@ class Arena:
                 x = troop.position.x
                 y = troop.position.y
                 if not on_bridge(x) and on_river(y):
-                    if x > 6.5 and x < 6.6:
+                    if x >= 6.5 and x <= 6.6:
                         troop.position.x = 6.45
-                    elif x < -6.5 and x > -6.6:
+                    elif x <= -6.5 and x >= -6.6:
                         troop.position.x = -6.45
-                    elif x > 4.4 and x < 4.5:
+                    elif x >= 4.4 and x <= 4.5:
                         troop.position.x = 4.55
-                    elif x < -4.4 and x > -4.5:
+                    elif x <= -4.4 and x >= -4.5:
                         troop.position.x = -4.55
                     else:
                         troop.position.y = 1 if troop.position.y > 0 else -1
