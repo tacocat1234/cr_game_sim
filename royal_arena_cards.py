@@ -85,7 +85,7 @@ class RoyalGiant(Troop):
             g=True,           # Ground troop
             t_g_o=True,       # Targets ground-only
             t_o=True,        # Not tower-only
-            m_s=60*TILES_PER_MIN,          # Movement speed 
+            m_s=45*TILES_PER_MIN,          # Movement speed 
             d_t=1,            # Deploy time
             m=18,            #mass
             c_r=0.75,        #collision radius

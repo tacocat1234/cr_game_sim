@@ -192,6 +192,22 @@ class ElectroWizard(Troop):
                         self.secondary_target = each
                         second_min_dist = dist
 
+        for each in arena.towers:
+            if not each.invulnerable and each.targetable and each.side != self.side:
+                dist = vector.distance(each.position, self.position)
+                if dist < self.hit_range + each.collision_radius:
+                    if dist < min_dist:
+                        # Shift current closest to secondary
+                        self.secondary_target = self.target
+                        second_min_dist = min_dist
+
+                        # Update closest
+                        self.target = each
+                        min_dist = dist
+                    elif dist < second_min_dist:
+                        self.secondary_target = each
+                        second_min_dist = dist
+
     def tick(self, arena):
         self.tick_func(arena)
         

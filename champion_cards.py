@@ -31,15 +31,15 @@ class Champion(Troop):
                 if arena.p1_champion == self:
                     arena.p1_champion = None
             else:
-                if arena.p1_2champion == self:
-                    arena.p1_2champion = None
+                if arena.p1_2_champion == self:
+                    arena.p1_2_champion = None
         else:
             if self.owned_by_main:
                 if arena.p2_champion == self:
                     arena.p2_champion = None
             else:
-                if arena.p2_2champion == self:
-                    arena.p2_2champion = None
+                if arena.p2_2_champion == self:
+                    arena.p2_2_champion = None
         return super().die(arena)
 
 

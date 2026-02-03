@@ -193,6 +193,7 @@ background_img = pygame.image.load("sprites/background.png").convert_alpha()
 td_bg_img = pygame.image.load("sprites/td_background.png") #no transparent so no need to convertalpha
 select_img = pygame.image.load("sprites/tileselect.png").convert_alpha()
 dd_symbol_img = pygame.image.load("sprites/daggerduchess/duchess_symbol.png").convert_alpha()
+sum_symbol_img = pygame.image.load("sprites/summoner/summoner_symbol.png").convert_alpha()
 rc_symbol_img = pygame.image.load("sprites/royalchefkingtower/royalchef_symbol.png").convert_alpha()
 elixir_int_img = pygame.image.load("sprites/elixir_bar.png").convert_alpha()
 blue_scores = [pygame.image.load(f"sprites/blue_score/{i}.png").convert_alpha() for i in range(4)]
@@ -442,6 +443,11 @@ def draw(side, mode = "normal"):
                 pygame.draw.rect(screen, BLACK, (tower_x + 9, tower_y + off, tower_rect_width - 12, 4))  # Background
                 pygame.draw.rect(screen, YELLOW, (tower_x + 9, tower_y + off, ((tower_rect_width - 12) * cooking_ratio), 4))  # Ammo bar
                 screen.blit(rc_symbol_img, (tower_x - 3, tower_y + off - 8))
+            elif tower.type == "sum":
+                ammo_ratio = 1 - (tower.attack_cooldown / 4 * (1.35 if tower.slow_timer > 0 else 1))
+                pygame.draw.rect(screen, BLACK, (tower_x + 4, tower_y + 5, tower_rect_width - 2, 4))  # Background
+                pygame.draw.rect(screen, GREEN, (tower_x + 4, tower_y + 5, ((tower_rect_width - 2) * ammo_ratio), 4))  # Ammo bar
+                screen.blit(sum_symbol_img, (tower_x - 7, tower_y))
     
     for building in game_arena.buildings:
         if not (building.preplace and building.side != side):
@@ -1077,6 +1083,13 @@ while True:
                         if tup is not None:
                             BOT_K_L2, bot_deck2, BOT_TOWER_TYPE2 = tup
                             break
+        elif game_type == "summoner": 
+            player_random_deck = False
+            bot_random_deck = False
+            KING_LEVEL = 11
+            BOT_K_L = 11
+            deck, TOWER_TYPE, bot_deck, BOT_TOWER_TYPE = draft_2p.run_loop(screen, evo_enabled)
+            break
         else:
             TOWER_TYPE = "randomtower"
             BOT_TOWER_TYPE = "randomtower"
@@ -1191,6 +1204,12 @@ while True:
                 bot_tower_b = towers.RoyalChef(False, BOT_K_L2, False)
                 b2_k = towers.RoyalChefKingTower(False, BOT_K_L2)
                 b2_k.position.x = -2
+
+        if game_type == "summoner":
+            bot_tower_a = towers.SummonerTower(False, BOT_P_L, True)
+            bot_tower_b = towers.SummonerTower(False, BOT_P_L, False)
+            player_tower_a = towers.SummonerTower(True, PRINCESS_LEVEL, True)
+            player_tower_b = towers.SummonerTower(True, PRINCESS_LEVEL, False)
 
         if game_type == "2v2":
             game_arena = twovtwo_arena.Arena()

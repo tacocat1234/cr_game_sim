@@ -329,3 +329,50 @@ class RoyalChefKingTower(KingTower):
             if tar is not None:
                 arena.active_attacks.append(RoyalChefPancake(self.side, self.position, tar))
                 self.cooking_timer = 21
+
+class SummonerTower(Tower):
+    def __init__(self, side, level, l_or_r):
+        x = 5.5 if l_or_r else -5.5 #right is true left is false
+        y = -9.5 if side else 9.5 #your side is true opp side is false
+        super().__init__(
+            s=side,
+            h_d=0,
+            h_r=7.5,
+            h_s=4,
+            l_t=0, #.0166... extra so it stays below 0
+            h_p=1050 * pow(1.1, level - 1),
+            c_r=1,
+            p=vector.Vector(x, y)
+        )
+        self.level = level
+        self.type = "sum"
+
+    def attack(self):
+        from card_factory import random_troop #fix circular imports
+        return random_troop(self.side, self.position.added(vector.Vector(0, 1.5 if self.side else -1.5)), self.level)
+
+    def tick(self, arena):
+        self.tick_func(arena)
+
+        if self.stun_timer <= 0:
+            if self.target is None or self.target.cur_hp <= 0 or (not self.target.targetable) or (vector.distance(self.target.position, self.position) > self.hit_range + self.target.collision_radius + self.collision_radius):
+                self.update_target(arena)
+            if not self.target is None and self.attack_cooldown <= 0:
+                troop = self.attack()
+                if isinstance(troop, list) and len(troop) > 0:
+                    for each in troop:
+                        each.on_preplace()
+                        each.on_deploy(arena)
+                    arena.troops.extend(troop)
+                elif not troop is None:
+                    arena.troops.append(troop)
+                    troop.on_preplace()
+                    troop.on_deploy(arena)
+                self.attack_cooldown = self.hit_speed
+            
+            class_name = self.__class__.__name__.lower()
+            if not self.animation_cycle_frames == 1: #more than one frame per thing
+                self.sprite_path = f"sprites/{class_name}/{class_name}_{self.animation_cycle_cur}.png"
+            else:
+                self.sprite_path = f"sprites/{class_name}/{class_name}.png"
+    

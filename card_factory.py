@@ -147,9 +147,9 @@ def get_radius(name):
     
 def can_defend(name):
     return not name in ["suspiciousbush", "wallbreakers",
-                        "elixirgolem", "goblinbarrel",
+                        "elixirgolem", "goblinbarrel", "skeletonbarrel",
                         "hogrider", "battleram", 
-                        "ramrider", "giant", "balloon", 
+                        "ramrider", "giant", "balloon", "royalhogs", 
                         "royalgiant", "goblingiant", 
                         "lavahound", "electrogiant",
                         "golem", "clone"]
@@ -1146,3 +1146,9 @@ def generate_random_remaining_4c(filled, evo_enabled = True):
         i += 1
 
     return out
+
+def random_troop(side, position, level):
+    t = random.choice(troops)
+    while t == "log" or t == "barbarianbarrel" or t == "goblindrill":
+        t = random.choice(troops)
+    return troop_factory(side, position, t, level)
