@@ -56,6 +56,9 @@ class SelectionBox:
     def __init__(self, x, y, width, height):
         self.x = x
         self.y = y
+        self.next = None
+        self.prev = None
+        self.return_detect = True
         self.height = height
         self.width = width
         self.active = False
@@ -73,10 +76,23 @@ class SelectionBox:
                 self.active = True
             else:
                 self.active = False
-
+        if (event.type == pygame.KEYUP):
+            self.return_detect = True
         if event.type == pygame.KEYDOWN and self.active:
-            if event.key == pygame.K_RETURN:
-                self.active = False  # Optionally deactivate after enter
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_RETURN] or keys[pygame.K_TAB]:
+                if (not (keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT])):
+                    if (self.return_detect):
+                        self.active = False  # Optionally deactivate after enter
+                        if (not self.next is None):
+                            self.next.active = True
+                            self.next.return_detect = False
+                else:
+                    if (self.return_detect):
+                        self.active = False  # Optionally deactivate after enter
+                        if (not self.prev is None):
+                            self.prev.active = True
+                            self.prev.return_detect = False
             elif event.key == pygame.K_BACKSPACE:
                 self.value = self.value[:-1]
             else:
@@ -232,7 +248,7 @@ def deck_list_loop(screen, evo_enabled = True, decks=None):
                 tower_type = ""
                 if len(each) > 8:
                     cards = [Card(True, fuzzy_match(c, troops + buildings + spells + champions + ["mirror"]), 11, can_evo(fuzzy_match(c, troops + buildings + spells + champions + ["mirror"]))) for c in each[:8]]
-                    tower_type = fuzzy_match(each[8], ["princesstower", "cannoneer", "daggerduchess", "royalchef"])
+                    tower_type = fuzzy_match(each[8], ["princesstower", "cannoneer", "daggerduchess", "royalchef", "summonertower"])
                 else:
                     cards = [Card(True, fuzzy_match(c, troops + buildings + spells + champions + ["mirror"]), 11, can_evo(fuzzy_match(c, troops + buildings + spells + champions + ["mirror"]))) for c in each]
                 deck_list.decks.append((name, cards, tower_type, 11))
@@ -293,7 +309,15 @@ def create_deck(screen, evo_enabled = True, default_name = "New Deck", level=Non
         SelectionBox(2*WIDTH/5, HEIGHT/2 + 70, 80, 80),
         SelectionBox(3*WIDTH/5, HEIGHT/2 + 70, 80, 80),
         SelectionBox(4*WIDTH/5, HEIGHT/2 + 70, 80, 80)]
+    for i in range(7):
+        all[i].next = all[i + 1]
+    for i in range(7):
+        all[i + 1].prev = all[i]
     tower = SelectionBox(WIDTH/2, HEIGHT/2 + 200, 80, 80)
+    all[7].next = tower
+    tower.prev = all[7]
+    tower.next = all[0]
+    all[0].prev = tower
     submit = SubmitBox(WIDTH/2, HEIGHT - 60, 100, 50)
 
     display_evo = [False,
@@ -410,6 +434,6 @@ def create_deck(screen, evo_enabled = True, default_name = "New Deck", level=Non
     for each in temp:
         out.append(Card(True, each[0], int(lev.value), each[1])) #not nesscarily full deck, side also gets rewritten later
 
-    t = "" if tower.value == "" else fuzzy_match(tower.value, ["princesstower", "cannoneer", "daggerduchess", "royalchef"])
+    t = "" if tower.value == "" else fuzzy_match(tower.value, ["princesstower", "cannoneer", "daggerduchess", "royalchef", "summonertower"])
 
     return int(lev.value), out, t, deck_name.value

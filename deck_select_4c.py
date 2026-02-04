@@ -55,6 +55,9 @@ class SelectionBox:
     def __init__(self, x, y, width, height):
         self.x = x
         self.y = y
+        self.next = None
+        self.prev = None
+        self.return_detect = True
         self.height = height
         self.width = width
         self.active = False
@@ -72,10 +75,23 @@ class SelectionBox:
                 self.active = True
             else:
                 self.active = False
-
+        if (event.type == pygame.KEYUP):
+            self.return_detect = True
         if event.type == pygame.KEYDOWN and self.active:
-            if event.key == pygame.K_RETURN:
-                self.active = False  # Optionally deactivate after enter
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_RETURN] or keys[pygame.K_TAB]:
+                if (not (keys[pygame.K_LSHIFT] or keys[pygame.K_RSHIFT])):
+                    if (self.return_detect):
+                        self.active = False  # Optionally deactivate after enter
+                        if (not self.next is None):
+                            self.next.active = True
+                            self.next.return_detect = False
+                else:
+                    if (self.return_detect):
+                        self.active = False  # Optionally deactivate after enter
+                        if (not self.prev is None):
+                            self.prev.active = True
+                            self.prev.return_detect = False
             elif event.key == pygame.K_BACKSPACE:
                 self.value = self.value[:-1]
             else:
@@ -134,7 +150,15 @@ def run_loop(screen, evo_enabled = True, side = True, against_bot=True, decks=No
         SelectionBox(2*WIDTH/5, HEIGHT/2, 80, 80),
         SelectionBox(3*WIDTH/5, HEIGHT/2, 80, 80),
         SelectionBox(4*WIDTH/5, HEIGHT/2, 80, 80),]
+    for i in range(3):
+        all[i].next = all[i + 1]
+    for i in range(3):
+        all[i + 1].prev = all[i]
     tower = SelectionBox(WIDTH/2, HEIGHT/2 + 200, 80, 80)
+    all[3].next = tower
+    tower.prev = all[3]
+    tower.next = all[0]
+    all[0].prev = tower
     submit = SubmitBox(WIDTH/2, HEIGHT - 60, 100, 50)
 
     display_evo = [False,
@@ -258,5 +282,5 @@ def run_loop(screen, evo_enabled = True, side = True, against_bot=True, decks=No
     for each in temp:
         out.append(Card(side, each[0], int(lev.value), each[1]))
 
-    t = random.choice(["princesstower", "cannoneer", "daggerduchess", "royalchef"]) if tower.value == "" else fuzzy_match(tower.value, ["princesstower", "cannoneer", "daggerduchess", "royalchef"])
+    t = random.choice(["princesstower", "cannoneer", "daggerduchess", "royalchef"]) if tower.value == "" else fuzzy_match(tower.value, ["princesstower", "cannoneer", "daggerduchess", "royalchef", "summonertower"])
     return int(lev.value), out, t

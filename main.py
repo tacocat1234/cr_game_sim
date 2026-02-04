@@ -390,7 +390,7 @@ def draw(mode="normal"):
             ammo_ratio = tower.ammo / 8
             pygame.draw.rect(screen, BLACK, (tower_x + 4, tower_y + 5, tower_rect_width - 2, 4))  # Background
             pygame.draw.rect(screen, YELLOW, (tower_x + 4, tower_y + 5, ((tower_rect_width - 2) * ammo_ratio), 4))  # Ammo bar
-            screen.blit(sum_symbol_img, (tower_x - 7, tower_y))
+            screen.blit(dd_symbol_img, (tower_x - 7, tower_y))
         elif tower.type == "rckt":
             cooking_ratio = 1 - (tower.cooking_timer / 21)
             offset = 50 if tower.side else 5
@@ -905,7 +905,7 @@ if len(preloaded) > 0:
         tower_type = ""
         if len(each) > 8:
             cards = [Card(True, fuzzy_match(c, troops + buildings + spells + champions + ["mirror"]), 11, can_evo(fuzzy_match(c, troops + buildings + spells + champions + ["mirror"]))) for c in each[:8]]
-            tower_type = fuzzy_match(each[8], ["princesstower", "cannoneer", "daggerduchess", "royalchef"])
+            tower_type = fuzzy_match(each[8], ["princesstower", "cannoneer", "daggerduchess", "royalchef", "summonertower"])
         else:
             cards = [Card(True, fuzzy_match(c, troops + buildings + spells + champions + ["mirror"]), 11, can_evo(fuzzy_match(c, troops + buildings + spells + champions + ["mirror"]))) for c in each]
         saved_decks.append((name, cards, tower_type, 11))
@@ -1022,7 +1022,7 @@ while True:
                         if tup is not None:
                             BOT_K_L2, bot_deck2, BOT_TOWER_TYPE2 = tup
                             break
-        elif game_type == "summoner":
+        elif game_type == "summonertower":
             KING_LEVEL = 11
             BOT_K_L = 12
             deck, TOWER_TYPE, bot_deck, BOT_TOWER_TYPE = draft.run_loop(screen, evo_enabled)
@@ -1067,6 +1067,10 @@ while True:
         player_tower_a = towers.DaggerDuchess(True, PRINCESS_LEVEL, True)
         if game_type != "2v2":
             player_tower_b = towers.DaggerDuchess(True, PRINCESS_LEVEL, False)
+    elif TOWER_TYPE.lower() == "summonertower":
+        player_tower_a = towers.SummonerTower(True, PRINCESS_LEVEL, True)
+        if game_type != "2v2":
+            player_tower_b = towers.SummonerTower(True, PRINCESS_LEVEL, False)
     elif TOWER_TYPE.lower() == "royalchef":
         player_tower_a = towers.RoyalChef(True, PRINCESS_LEVEL, True)
         if game_type != "2v2":
@@ -1086,6 +1090,9 @@ while True:
             player_tower_b = towers.RoyalChef(True, PRINCESS_LEVEL2, False)
             p2_k = towers.RoyalChefKingTower(True, KING_LEVEL)
             p2_k.position.x = -2
+        elif TOWER_TYPE2.lower() == "summonertower":
+            player_tower_b = towers.SummonerTower(True, PRINCESS_LEVEL2, False)
+
 
     # Initialize Bot Towers
     b_k = towers.KingTower(False, BOT_K_L)
@@ -1111,6 +1118,10 @@ while True:
         bot_tower_a = towers.DaggerDuchess(False, BOT_P_L, True)
         if game_type != "2v2":
             bot_tower_b = towers.DaggerDuchess(False, BOT_P_L, False)
+    elif BOT_TOWER_TYPE.lower() == "summonertower":
+        bot_tower_a = towers.SummonerTower(False, BOT_P_L, True)
+        if game_type != "2v2":
+            bot_tower_b = towers.SummonerTower(False, BOT_P_L, False)
     elif BOT_TOWER_TYPE.lower() == "royalchef":
         bot_tower_a = towers.RoyalChef(False, BOT_P_L, True)
         b_k = towers.RoyalChefKingTower(False, BOT_K_L)
@@ -1127,12 +1138,14 @@ while True:
             bot_tower_b = towers.Cannoneer(False, BOT_P_L2, False)
         elif BOT_TOWER_TYPE2.lower() == "daggerduchess":
             bot_tower_b = towers.DaggerDuchess(False, BOT_P_L2, False)
+        elif TOWER_TYPE2.lower() == "summonertower":
+            bot_tower_b = towers.SummonerTower(False, PRINCESS_LEVEL2, False)
         elif BOT_TOWER_TYPE2.lower() == "royalchef":
             bot_tower_b = towers.RoyalChef(False, BOT_P_L2, False)
             b2_k = towers.RoyalChefKingTower(False, BOT_K_L2)
             b2_k.position.x = -2
             
-    if game_type == "summoner":
+    if game_type == "summonertower":
         bot_tower_a = towers.SummonerTower(False, BOT_P_L, True)
         bot_tower_b = towers.SummonerTower(False, BOT_P_L, False)
         player_tower_a = towers.SummonerTower(True, PRINCESS_LEVEL, True)

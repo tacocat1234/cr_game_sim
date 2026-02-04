@@ -6,3 +6,4 @@ skeletons
 giantsnowball
 tornado
 rocket
+summonertower
