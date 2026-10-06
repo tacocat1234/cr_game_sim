@@ -19,6 +19,7 @@ class SuperMiniPekkaPancake(Troop):
     def __init__(self, position):
         super().__init__(s = 0, h_p = 1, h_d = 0, h_s = 0, l_t = 0, h_r = 0, s_r= 0 , g = True, t_g_o = True, t_o = True, m_s = 0, d_t = 0, m = float('inf'), c_r = 0.3, p=position)
         self.invulnerable = True
+        self.unaffectable = True
         self.targetable = False
         self.collideable = False
         self.can_kb = False

@@ -69,6 +69,7 @@ class Log(Troop):
         self.level = level
         self.targetable = False
         self.invulnerable = True
+        self.unaffectable = True
         self.cross_river = True
         self.collideable = False
         self.timer = 3.12
@@ -81,6 +82,7 @@ class Log(Troop):
     def on_preplace(self):
         self.targetable = False
         self.invulnerable = True
+        self.unaffectable = True
         self.collideable = False
 
     def move(self, arena):
@@ -151,7 +153,7 @@ class ElectroWizard(Troop):
         super().__init__(
             s=side,              # Side (True for one player, False for the other)
             h_p= 590 * pow(1.1, level - 9),         # Hit points (Example value)
-            h_d= 91 * pow(1.1, level - 9),          # Hit damage (Example value)
+            h_d= 95 * pow(1.1, level - 9),          # Hit damage (Example value)
             h_s=1.8,          # Hit speed (Seconds per hit)
             l_t=1.2,            # First hit cooldown
             h_r=5,            # Hit range
@@ -229,10 +231,15 @@ class ElectroWizard(Troop):
 
     def attack(self):
         attacks = []
-        if self.target is not None and vector.distance(self.position, self.target.position) < self.hit_range + self.collision_radius + self.target.collision_radius:
+        t1 = self.target is not None and vector.distance(self.position, self.target.position) < self.hit_range + self.collision_radius + self.target.collision_radius
+        t2 = self.secondary_target is not None and vector.distance(self.position, self.secondary_target.position) < self.hit_range + self.collision_radius + self.secondary_target.collision_radius
+            
+        if t1 and t2:
             attacks.append(ElectroWizardAttackEntity(self.side, self.hit_damage, self.position, self.target))
-        if self.secondary_target is not None and vector.distance(self.position, self.secondary_target.position) < self.hit_range + self.collision_radius + self.secondary_target.collision_radius:
             attacks.append(ElectroWizardAttackEntity(self.side, self.hit_damage, self.position, self.secondary_target))
+        elif t1:
+            attacks.append(ElectroWizardAttackEntity(self.side, self.hit_damage*2, self.position, self.target))
+        
         return attacks
 
 class MinerAttackEntity(MeleeAttackEntity):
@@ -278,6 +285,7 @@ class Miner(Troop):
             self.target.y = -16
         self.level = level
         self.invulnerable = True
+        self.unaffectable = True
         self.targetable = False
         self.collideable = False
         self.preplace = False
@@ -291,6 +299,7 @@ class Miner(Troop):
         if self.invulnerable and vector.distance(self.position, self.target) < 0.25:
             self.move_speed = 90 * TILES_PER_MIN
             self.invulnerable = False
+            self.unaffectable = False
             self.targetable = True
             self.collideable = True
             self.target = None
@@ -302,6 +311,7 @@ class Miner(Troop):
     
     def on_preplace(self):
         self.invulnerable = True
+        self.unaffectable = True
         self.targetable = False
         self.collideable = False
 
@@ -480,45 +490,19 @@ class Miner(Troop):
         return MinerAttackEntity(self.side, self.hit_damage * 0.25 if isinstance(self.target, Tower) else self.hit_damage, self.position, self.target)
 
 class PrincessAttackEntity(RangedAttackEntity):
+    SPLASH_RADIUS = 2
+
     def __init__(self, side, damage, position, target):
         super().__init__(
             side=side,
             damage=damage,
-            velocity=600*TILES_PER_MIN,
+            velocity=600 * TILES_PER_MIN,
             position=position,
             target=target,
+            homing=False,
+            explosive=True
         )
-        self.exploded = False
-        self.has_hit = []        
-
-    def detect_hits(self, arena):
-        hits = []
-        if self.exploded:
-            for each in arena.towers + arena.buildings + arena.troops:
-                if each.side != self.side: # if different side
-                    if vector.distance(self.position, each.position) < 2 + each.collision_radius:
-                        hits.append(each)
-        return hits
-            
-    def tick(self, arena):
-        if self.exploded:
-            hits = self.detect_hits(arena)
-            for each in hits:
-                new = not any(each is h for h in self.has_hit)
-                if (new):
-                    each.damage(self.damage)
-                    self.has_hit.append(each)
-        else:
-            direction = self.target.subtracted(self.position)
-            direction.normalize()
-
-            movement = direction.scaled(self.velocity)
-            self.position.add(movement)
-            
-            if vector.distance(self.position, self.target) < 0.25:
-                self.display_size = 2
-                self.duration =  0.1
-                self.exploded = True
+        self.splash_radius = PrincessAttackEntity.SPLASH_RADIUS
 
 class Princess(Troop):
     def __init__(self, side, position, level):
@@ -541,50 +525,26 @@ class Princess(Troop):
         )
         self.level = level
     def attack(self):
-        return PrincessAttackEntity(self.side, self.hit_damage, self.position, self.target.position)
+        return PrincessAttackEntity(self.side, self.hit_damage, self.position, copy.deepcopy(self.target.position))
 
 class SparkyAttackEntity(RangedAttackEntity):
     SPLASH_RADIUS = 1.8
+
     def __init__(self, side, damage, position, target):
         super().__init__(
             side=side,
             damage=damage,
-            velocity=1400*TILES_PER_MIN,
+            velocity=1400 * TILES_PER_MIN,
             position=position,
             target=target,
+            homing=True,
+            piercing=False,
+            explosive=True,
         )
-        self.exploded = False
+
+        self.splash_radius = SparkyAttackEntity.SPLASH_RADIUS
         self.display_size = 0.5
         self.resize = True
-
-    def detect_hits(self, arena):
-        hits = []
-        if self.exploded:
-            for each in arena.towers + arena.buildings + arena.troops:
-                if each.side != self.side and (isinstance(each, Tower) or (not each.invulnerable and each.ground)): # if different side
-                    if vector.distance(self.position, each.position) < self.SPLASH_RADIUS + each.collision_radius:
-                        hits.append(each)
-        return hits
-            
-    def tick(self, arena):
-        if self.exploded:
-            hits = self.detect_hits(arena)
-            for each in hits:
-                new = not any(each is h for h in self.has_hit)
-                if (new):
-                    each.damage(self.damage)
-                    self.has_hit.append(each)
-        else:
-            direction = self.target.position.subtracted(self.position)
-            direction.normalize()
-
-            movement = direction.scaled(self.velocity)
-            self.position.add(movement)
-            
-            if vector.distance(self.position, self.target.position) < 0.25:
-                self.display_size = self.SPLASH_RADIUS
-                self.duration =  0.1
-                self.exploded = True
     
 class Sparky(Troop):
     def __init__(self, side, position, level):

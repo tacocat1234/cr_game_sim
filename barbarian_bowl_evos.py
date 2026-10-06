@@ -164,8 +164,8 @@ class EvolutionCannon(barbarian_bowl_cards.Cannon):
     def __init__(self, side, position, level):
         super().__init__(side, position, level)
         self.evo = True
-        self.strike_damage = 138 * pow(1.1, level - 1)
-        self.strike_ctd = 35 * pow(1.1, level - 1)
+        self.strike_damage = 117 * pow(1.1, level - 1)
+        self.strike_ctd = 34 * pow(1.1, level - 1)
 
     def on_deploy(self, arena):
         arena.active_attacks.append(EvolutionCannonSpecialAttackEntity(self.side, self.strike_damage, self.strike_ctd, vector.Vector(2.5, self.position.y + (1.5 if self.side else -1.5)), 4/6))

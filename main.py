@@ -483,7 +483,8 @@ def draw(mode="normal"):
                 circle_pos = (troop_x, troop_y)
                 circle_radius = int(troop.collision_radius * SCALE)
 
-                if not troop.targetable and (not troop.invulnerable or troop.__class__.__name__ == "EvolutionSkeletonArmy"):
+                if troop.display_transparent or ((not troop.targetable) and (not troop.invulnerable)):
+                    print(f"{troop}: {troop.targetable}")
                     # Make semi-transparent circle
                     temp_surface = pygame.Surface((circle_radius * 2, circle_radius * 2), pygame.SRCALPHA)
                     
@@ -588,7 +589,23 @@ def draw(mode="normal"):
 
         # Draw troop circle
         true_color = ((255, 0, 255) if troop.rage_timer > 0 else (120, 0, 160)) if troop.evo else troop_color
-        pygame.draw.circle(screen, true_color, (troop_x, troop_y), troop.collision_radius * SCALE)
+        circle_pos = (troop_x, troop_y)
+        circle_radius = int(troop.collision_radius * SCALE)
+        if troop.display_transparent or ((not troop.targetable) and (not troop.invulnerable)):
+            # Make semi-transparent circle
+            temp_surface = pygame.Surface((circle_radius * 2, circle_radius * 2), pygame.SRCALPHA)
+            
+            # Draw circle on temp surface with 25% opacity
+            rgba_color = (*true_color, 64)  # 64/255 ≈ 25% opacity
+            
+            pygame.draw.circle(temp_surface, rgba_color, (circle_radius, circle_radius), circle_radius)
+            
+            # Blit temp surface to screen, adjust for offset
+            screen.blit(temp_surface, (troop_x - circle_radius, troop_y - circle_radius))
+        else:
+            # Draw normal opaque circle
+            pygame.draw.circle(screen, true_color, circle_pos, circle_radius)
+        
         display_y = troop_y - troop.collision_radius * SCALE  # Use circle's top for text position
         class_name = troop.__class__.__name__
         text_surface = font.render(class_name, True, (255, 255, 255))  # White color text
@@ -601,7 +618,7 @@ def draw(mode="normal"):
         hp_bar_width = 20
         hp_bar_height = 3
 
-        if not troop.invulnerable:
+        if (not troop.invulnerable) or troop.display_transparent:
             pygame.draw.rect(screen, BLACK, (hp_bar_x, hp_bar_y, hp_bar_width, hp_bar_height))
             if troop.has_shield and troop.shield_hp > 0:
                 pygame.draw.rect(screen, (250, 250, 250), (hp_bar_x, hp_bar_y, int(hp_bar_width * (troop.shield_hp / troop.shield_max_hp)), hp_bar_height))

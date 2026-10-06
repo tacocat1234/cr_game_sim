@@ -175,6 +175,7 @@ class EvolutionSkeletonBarrelDeathBarrel(Troop):
         ) 
         self.level = level
         self.invulnerable=True
+        self.unaffectable=True
         self.targetable=False
         self.target=None
         self.collidable = False
@@ -182,6 +183,7 @@ class EvolutionSkeletonBarrelDeathBarrel(Troop):
 
     def on_deploy(self, arena):
         self.invulnerable=True
+        self.unaffectable=True
         self.targetable=False
         self.target=None
         self.collidable = False

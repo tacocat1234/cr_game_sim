@@ -72,6 +72,7 @@ class Arena:
                     for c in cards:
                         c.preplace = True
                         c.invulnerable = True
+                        c.unaffectable = True
                         c.collideable = False
                         c.targetable = False
                         if card_type == "troop":
@@ -103,6 +104,7 @@ class Arena:
                         for c in cards:
                             c.preplace = True
                             c.invulnerable = True
+                            c.unaffectable = True
                             c.collideable = False
                             c.targetable = False
                             if card_type == "troop":
@@ -168,6 +170,7 @@ class Arena:
                     
                     if not isinstance(c, Spell):
                         c.invulnerable = False
+                        c.unaffectable = False
                         c.collideable = True
                         c.targetable = True
                         c.on_preplace()

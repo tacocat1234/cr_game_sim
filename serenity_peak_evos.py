@@ -55,7 +55,7 @@ class EvolutionExecutionerAttackEntity(serenity_peak_cards.ExecutionerAttackEnti
 
         if self.duration < 0.203 or self.duration > 1.297:
             self.axe_smash = True
-            self.damage = 1.75 * self.normal_damage
+            self.damage = 1.575 * self.normal_damage
         else:
             self.axe_smash = False
             self.damage = self.normal_damage
@@ -102,6 +102,7 @@ class EvolutionGoblinDrill(serenity_peak_cards.GoblinDrill):
         if self.appear: #if should appear
             self.targetable = True
             self.invulnerable = False
+            self.unaffectable = False
             self.collision_radius = 0.5
             self.appear = False
             arena.active_attacks.append(serenity_peak_cards.GoblinDrillSpawnAttackEntity(self.side, 51 * pow(1.1, self.level - 6), 16 * pow(1.1, self.level - 6), self.position))
@@ -120,6 +121,7 @@ class EvolutionGoblinDrill(serenity_peak_cards.GoblinDrill):
             arena.troops.append(Goblin(self.side, copy.deepcopy(self.position), self.level))
             self.targetable = False
             self.invulnerable = True
+            self.unaffectable = True
             self.collision_radius = 0
             self.appear = True
             self.stun_timer = 1 #time before reappearing

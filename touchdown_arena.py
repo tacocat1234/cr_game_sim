@@ -88,6 +88,7 @@ class TouchdownArena:
                     for c in cards:
                         c.preplace = True
                         c.invulnerable = True
+                        c.unaffectable = True
                         c.collideable = False
                         c.targetable = False
                         if card_type == "troop":
@@ -119,6 +120,7 @@ class TouchdownArena:
                         for c in cards:
                             c.preplace = True
                             c.invulnerable = True
+                            c.unaffectable = True
                             c.collideable = False
                             c.targetable = False
                             if card_type == "troop":
@@ -169,6 +171,7 @@ class TouchdownArena:
                     c.preplace = False
                     if not isinstance(c, Spell):
                         c.invulnerable = False
+                        c.unaffectable = False
                         c.collideable = True
                         c.targetable = True
                         c.on_preplace()

@@ -318,6 +318,7 @@ class Tesla(Building):
         
         self.targetable = True
         self.invulnerable = False
+        self.unaffectable = False
         self.switch_timer = -99
 
     def change_state(self, arena):

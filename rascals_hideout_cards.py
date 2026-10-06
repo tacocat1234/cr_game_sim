@@ -144,6 +144,7 @@ class Bandit(Troop):
                     self.collideable = False
                     self.should_dash = False
                     self.invulnerable = True
+                    self.unaffectable = True
                     self.moveable = False
                     self.move_speed = 500*TILES_PER_MIN
                     self.dash_timer = 0.72
@@ -169,6 +170,7 @@ class Bandit(Troop):
             self.collideable = True
             self.move_speed = 60*TILES_PER_MIN
             self.invulnerable = False
+            self.unaffectable = False
             self.moveable = True
             self.attack_cooldown = self.hit_speed
             if self.target is not None:
@@ -306,7 +308,7 @@ class ElectroGiant(Troop):
         return ElectroGiantAttackEntity(self.side, self.hit_damage, self.position, self.target)
 
 class BowlerAttackEntity(RangedAttackEntity):
-    SPLASH_RADIUS = 1.8
+    SPLASH_RADIUS = 1
     def __init__(self, side, damage, position, target, parent_pos):
         super().__init__(
             side=side, 
@@ -328,7 +330,7 @@ class BowlerAttackEntity(RangedAttackEntity):
         hits = []
         for each in arena.towers + arena.buildings + arena.troops:
             if each.side != self.side and (isinstance(each, Tower) or (each.ground and not each.invulnerable)) and each not in self.has_hit: # if different side
-                if vector.distance(each.position, self.position) <= each.collision_radius + (0.74 if self.duration > 2.25 else self.SPLASH_RADIUS):
+                if vector.distance(each.position, self.position) <= each.collision_radius + (0.7 if self.duration > 2.25 else self.SPLASH_RADIUS):
                     hits.append(each)
                     self.has_hit.append(each)
         return hits
@@ -337,7 +339,7 @@ class BowlerAttackEntity(RangedAttackEntity):
         if isinstance(target, Troop) and target.can_kb and not target.invulnerable:
             vec = target.position.subtracted(self.parent_pos)
             vec.normalize()
-            vec.scale(1.8)
+            vec.scale(1.7)
             target.kb(vec)
 
 

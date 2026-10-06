@@ -32,6 +32,7 @@ import jungle_arena_evos
 import hog_mountain_evos
 import electro_valley_evos
 import spooky_town_evos
+import rascals_hideout_evos
 import serenity_peak_evos
 import champion_cards
 import copy
@@ -48,9 +49,10 @@ def can_evo(n):
             n == "royalgiant" or n == "royalrecruits" or n == "royalhogs" or
             n == "icespirit" or n == "giantsnowball" or
             n == "dartgoblin" or n == "goblingiant" or n == "skeletonbarrel" or
-            n == "hunter" or n == "tesla" or n == "furnace" or 
-            n == "infernodragon" or n == "megaknight" or 
+            n == "hunter" or n == "tesla" or n == "furnace" or n == "minionhorde" or n == "elitebarbarians" or
+            n == "princess" or n == "infernodragon" or n == "megaknight" or 
             n == "wallbreakers" or n == "firecracker" or n == "electrodragon" or n == "royalghost" or
+            n == "electrogiant" or
             n == "goblindrill" or n == "lumberjack" or n == "executioner")
 
 troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer", 
@@ -262,6 +264,12 @@ def get_clone(obj):
             return hog_mountain_cards.Hunter(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionFurnace":
             return hog_mountain_cards.Furnace(obj.side, copy.deepcopy(obj.position), obj.level)
+        elif n == "EvolutionEliteBarbarian":
+            return hog_mountain_cards.EliteBarbarian(obj.side, copy.deepcopy(obj.position), obj.level)
+        elif n == "EvolutionMinionHordeMinon":
+            return training_camp_cards.Minion(obj.side, copy.deepcopy(obj.position), obj.level)
+        elif n == "EvolutionPrincess":
+            return electro_valley_cards.Princess(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionInfernoDragon":
             return electro_valley_cards.InfernoDragon(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionMegaKnight":
@@ -274,6 +282,8 @@ def get_clone(obj):
             return spooky_town_cards.WallBreaker(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionRoyalGhost":
             return spooky_town_cards.RoyalGhost(obj.side, copy.deepcopy(obj.position), obj.level)
+        elif n == "EvolutionElectroGiant":
+            return rascals_hideout_cards.ElectroGiant(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionLumberjack":
             return serenity_peak_cards.Lumberjack(obj.side, copy.deepcopy(obj.position), obj.level)
         elif n == "EvolutionExecutioner":
@@ -373,6 +383,22 @@ def evolution_troop_factory(side, position, name, level):
         return hog_mountain_evos.EvolutionHunter(side, position, level)
     elif name == "furnace":
         return hog_mountain_evos.EvolutionFurnace(side, position, level)
+    elif name == "minionhorde":
+        flip = 1 if side else -1
+        radius = 0.6
+        angles = [(2 * math.pi * k / 6) + (math.pi / 2) for k in range(6)]
+        positions = [vector.Vector(radius * math.cos(a), radius * math.sin(a) * flip) for a in angles]
+        out = []
+        for each in positions:
+            out.append(hog_mountain_evos.EvolutionMinionHordeMinion(side, position.added(each), level))
+        return out
+    elif name == "elitebarbarians":
+        pos1 = vector.Vector(0.4, 0)
+        pos2 = vector.Vector(-0.4, 0)
+        return [hog_mountain_evos.EvolutionEliteBarbarian(side, position.added(pos1), level),
+                hog_mountain_evos.EvolutionEliteBarbarian(side, position.added(pos2), level)]
+    elif name == "princess":
+        return electro_valley_evos.EvolutionPrincess(side, position, level)
     elif name == "infernodragon":
         return electro_valley_evos.EvolutionInfernoDragon(side, position, level)
     elif name == "megaknight":
@@ -388,6 +414,8 @@ def evolution_troop_factory(side, position, name, level):
                 spooky_town_evos.EvolutionWallBreaker(side, position.added(pos2), level)]
     elif name == "royalghost":
         return spooky_town_evos.EvolutionRoyalGhost(side, position, level)
+    elif name == "electrogiant":
+        return rascals_hideout_evos.EvolutionElectroGiant(side, position, level)
     elif name == "lumberjack":
         return serenity_peak_evos.EvolutionLumberjack(side, position, level)
     elif name == "goblindrill":
@@ -880,7 +908,7 @@ elixir_map = {
     "goblincurse" : 2,
     "royaldelivery" : 3,
     "elixirgolem" : 3,
-    "goblindrill" : 3,
+    "goblindrill" : 4,
     "lumberjack" : 4,
     "nightwitch" : 4,
     "executioner" : 5,

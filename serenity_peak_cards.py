@@ -484,6 +484,7 @@ class GoblinDrillMineTroop(Troop):
         self.target = position
         self.level = level
         self.invulnerable = True
+        self.unaffectable = True
         self.moveable = False
         self.targetable = False
         self.collideable = False
@@ -501,6 +502,7 @@ class GoblinDrillMineTroop(Troop):
 
     def on_preplace(self):
         self.invulnerable = True
+        self.unaffectable = True
         self.targetable = False
         self.collideable = False
 
@@ -589,7 +591,7 @@ class GoblinDrill(Building):
     def __init__(self, side, position, level):
         super().__init__(
             s=side,
-            h_p=820 * pow(1.1, level - 6),
+            h_p = 815 * pow(1.1, level - 6),
             h_d = 0,
             h_s = 3,
             l_t = 0,

@@ -144,77 +144,157 @@ class AttackEntity:
     def detect_hits(self, arena): # to be overriden in derived
         return []
     
+    def on_hit(self, arena):
+        pass
     
 class RangedAttackEntity(AttackEntity):
-    def __init__(self, side, damage, velocity, position, target):
+    def __init__(
+        self,
+        side,
+        damage,
+        velocity,
+        position,
+        target,
+        homing=True,
+        piercing=False,
+        explosive=False
+    ):
         super().__init__(
             s=side,
             d=damage,
             v=velocity,
             l=float('inf'),
-            i_p=copy.deepcopy(position)
+            i_p=copy.deepcopy(position),
+
         )
-        self.homing = True
+
+        self.homing = homing
         self.target = target
         self.should_delete = False
-        self.piercing = False
+        self.piercing = piercing
+        self.explosive = explosive
+        self.splash_radius = 0
+        self.collision_radius = self.display_size #for detecting non homing collisons, default = self.size
+        self.exploded = False
+
         self.initial_vec = None
+
+        if not self.homing:
+            self.set_move_vec()
 
     def set_initial_vec(self):
         self.initial_vec = vector.Vector(
-            self.target.x - self.position.x, 
+            self.target.x - self.position.x,
             self.target.y - self.position.y
         )
 
     def set_move_vec(self):
-        if self.initial_vec is None:
+        if self.initial_vec is None: 
             self.set_initial_vec()
-        if not self.homing:
-            self.move_vec = self.initial_vec.normalized().scaled(self.velocity)
+        self.move_vec = self.initial_vec.normalized().scaled(self.velocity)
 
-    def detect_hits(self, arena):
+    def detect_explosive_hits(self, arena):
+        hits = []
+        for each in arena.towers + arena.buildings + arena.troops:
+            if each.side != self.side:
+                if (vector.distance(self.position, each.position) < self.splash_radius + each.collision_radius):
+                    if each not in self.has_hit:
+                        self.has_hit.append(each)
+                        hits.append(each)
+        return hits
+    
+    def detect_target_hit(self, arena):
         if (vector.distance(self.target.position, self.position) < self.target.collision_radius) and self.target not in self.has_hit:
             self.has_hit.append(self.target)
-            return [self.target] # has hit
-        else:
-            return [] #hasnt hit 
+            return [self.target]
+        return []
+        
+    def detect_travel_hit(self, arena): #for bullets that travel instead of home
+        for each in arena.troops + arena.towers + arena.buildings:
+            if not each.side == self.side and not each.invulnerable and (vector.distance(each.position, self.position) < each.collision_radius + self.collision_radius):
+                return [each] # has hit
+        return [] #hasnt hit yet
 
-    def tick(self, arena):
-        self.tick_func(arena)
-        hits = self.detect_hits(arena)
-        if len(hits) > 0:
+    def detect_hits(self, arena):
+        if self.explosive:
+            if self.exploded:
+                return self.detect_explosive_hits(arena)
+            return []
+        elif not self.homing:
+            return self.detect_travel_hit(arena)
+        else: #explosives have no hb until they reach their target, where they then explode
+            return self.detect_target_hit(arena)
+    
+    def move(self):
+        if self.homing:
+            direction = vector.Vector(
+                self.target.position.x - self.position.x,
+                self.target.position.y - self.position.y
+            )
+
+            direction.normalize()
+            direction.scale(self.velocity)
+            self.position.add(direction)
+
+        elif not self.exploded:
+            self.position.add(self.move_vec)
+
+    def explode(self, arena):
+        self.exploded = True
+        self.display_size = self.splash_radius
+        self.duration = 0.1 #linger for short while
+
+    def process_hits(self, hits, arena):
+        self.on_hit(arena)
+        if self.explosive: #explosive
             for each in hits:
                 each.damage(self.damage)
                 self.apply_effect(each)
+                self.has_hit.append(each)
+        else:
+            for each in hits: #normal
+                each.damage(self.damage)
+                self.apply_effect(each)
+
             if not self.piercing:
                 self.should_delete = True
-        else:
-            direction = None
-            if self.homing:
-                direction = vector.Vector(
-                    self.target.position.x - self.position.x, 
-                    self.target.position.y - self.position.y
-                )
-                direction.normalize()
-                direction.scale(self.velocity)
-                self.position.add(direction)
 
-            else:
-                self.position.add(self.move_vec)
-            
+    def should_explode(self):
+        if self.homing:
+            return vector.distance(self.position, self.target.position) < self.collision_radius + self.target.collision_radius
+        else:
+            return vector.distance(self.position, self.target) < self.collision_radius
+
+    def tick(self, arena):
+        self.tick_func(arena)
+
+        if self.explosive and not self.exploded and self.should_explode():
+            self.explode(arena)
+
+        if self.exploded:
+            hits = self.detect_hits(arena) #detect explsoive
+            self.process_hits(hits, arena)
+            return
+
+        hits = self.detect_hits(arena) #normal proj, check if any
+        if len(hits) > 0:
+            self.process_hits(hits, arena)
+        else:
+            self.move()
+
     def cleanup(self, arena):
         self.cleanup_func(arena)
+
         self.duration -= TICK_TIME
-        if self.duration <= 0:
+
+        if self.duration <= 0 or self.should_delete:
             try:
                 arena.active_attacks.remove(self)
             except ValueError:
-                print(self.__class__.__name__ + " not in active attacks")
-        elif self.should_delete:
-            try:
-                arena.active_attacks.remove(self)
-            except ValueError:
-                print(self.__class__.__name__ + " not in active attacks")
+                print(
+                    self.__class__.__name__
+                    + " not in active attacks"
+                )
 
 class MeleeAttackEntity(AttackEntity):
     HIT_RANGE = 0
@@ -239,6 +319,7 @@ class MeleeAttackEntity(AttackEntity):
     def tick(self, arena):
         hits = self.detect_hits(arena)
         if len(hits) > 0:
+            self.on_hit(arena)
             for each in hits:
                 each.damage(self.damage)
             self.should_delete = True
@@ -299,6 +380,8 @@ class Troop:
 
         self.targetable = True
         self.invulnerable = False
+        self.unaffectable = False #freeze, stun, etc 
+        self.display_transparent = False
         self.moveable = True
         self.cross_river = False
         self.dash_river = False
@@ -327,18 +410,18 @@ class Troop:
     def rage(self):
         self.rage_timer = 2
         if self.rage_timer <= 0:
-            self.hit_speed = 0.65 * self.hit_speed
-            self.load_time = 0.65 * self.load_time
-            self.move_speed = 1.35 * self.move_speed
+            self.hit_speed = 0.6 * self.hit_speed
+            self.load_time = 0.6 * self.load_time
+            self.move_speed = 1.3 * self.move_speed
 
     def slow(self, duration, source):
-        if not self.invulnerable:
-            if self.slow_timer < duration:
-                self.slow_timer = duration
-            self.hit_speed = 1.35 * self.hit_speed
-            self.load_time = 1.35 * self.load_time
+        if not self.unaffectable:
             if source not in self.slow_sources:
-                self.move_speed = 0.65 * self.move_speed
+                if self.slow_timer < duration:
+                    self.slow_timer = duration
+                self.hit_speed = 1.3 * self.hit_speed
+                self.load_time = 1.3 * self.load_time
+                self.move_speed = 0.7 * self.move_speed
                 self.slow_sources.append(source)
 
     def move_slow(self, percent, duration, source):
@@ -355,9 +438,9 @@ class Troop:
             self.move_speed = self.normal_move_speed
             self.slow_sources = []
         else: #is raged
-            self.hit_speed = 0.65 * self.normal_hit_speed
-            self.load_time = 0.65 * self.normal_load_time
-            self.move_speed = 1.35 * self.move_speed
+            self.hit_speed = 0.6 * self.normal_hit_speed
+            self.load_time = 0.6 * self.normal_load_time
+            self.move_speed = 1.3 * self.move_speed
     
     def unrage(self):
         if self.slow_timer <= 0:
@@ -365,17 +448,17 @@ class Troop:
             self.load_time = self.normal_load_time
             self.move_speed = self.normal_move_speed
         else:
-            self.hit_speed /= 0.65
-            self.load_time /= 0.65
-            self.move_speed /= 1.35
+            self.hit_speed /= 0.6
+            self.load_time /= 0.6
+            self.move_speed /= 1.3
 
     def stun(self):
-        if not self.invulnerable:
+        if not self.unaffectable:
             self.stun_timer = 0.5
             self.target = None
 
     def freeze(self, duration):
-        if not self.invulnerable:
+        if not self.unaffectable:
             self.stun_timer = duration
             self.attack_cooldown = self.hit_speed
 
@@ -386,14 +469,37 @@ class Troop:
     def heal(self, amount):
         self.cur_hp = min(self.cur_hp + amount, self.hit_points)
 
-    def level_up(self):
-        self.level += 1
+    def level_up(self, levels: int = 1):
+        self.level += levels
+
+        multiplier = 1.1 ** levels
+
         if self.has_shield:
-            self.shield_hp *= 1.1
-            self.shield_max_hp *= 1.1
-        self.cur_hp *= 1.1
-        self.hit_points *= 1.1
-        self.hit_damage *= 1.1
+            self.shield_hp *= multiplier
+            self.shield_max_hp *= multiplier
+
+        self.cur_hp *= multiplier
+        self.hit_points *= multiplier
+        self.hit_damage *= multiplier
+
+
+    def level_down(self, levels: int = 1):
+        levels = min(levels, self.level - 1)
+
+        if levels <= 0:
+            return
+
+        self.level -= levels
+
+        multiplier = 1.1 ** levels
+
+        if self.has_shield:
+            self.shield_hp /= multiplier
+            self.shield_max_hp /= multiplier
+
+        self.cur_hp /= multiplier
+        self.hit_points /= multiplier
+        self.hit_damage /= multiplier
 
     def on_deploy(self, arena):
         pass
@@ -849,25 +955,32 @@ class Tower:
         self.animation_cycle_cur = 1
         self.targetable = True
         self.invulnerable = False
+        self.unaffectable = False
         self.ground = True
         self.type = None
         self.collideable = True
         self.can_kb = False
         self.activated = True
+        self.has_shield = False
+        self.slow_sources = []
 
     def damage(self, amount):
         if not self.invulnerable:
             self.cur_hp -= amount
     
     def slow(self, duration, source):
-        if self.slow_timer < duration:
-            self.slow_timer = duration
-        self.load_time = 1.35 * self.normal_load_time
-        self.hit_speed = 1.35 * self.normal_hit_speed
+        if not self.unaffectable:
+            if source not in self.slow_sources:
+                if self.slow_timer < duration:
+                    self.slow_timer = duration
+                self.hit_speed = 1.3 * self.hit_speed
+                self.load_time = 1.3 * self.load_time
+                self.slow_sources.append(source)
 
     def unslow(self):
         self.hit_speed = self.normal_hit_speed
         self.load_time = self.normal_load_time
+        self.slow_sources = []
 
     def rage(self):
         self.rage_timer = 2
@@ -899,6 +1012,38 @@ class Tower:
 
     def attack(self):
         return None
+    
+    def level_up(self, levels: int = 1):
+        self.level += levels
+
+        multiplier = 1.1 ** levels
+
+        if self.has_shield:
+            self.shield_hp *= multiplier
+            self.shield_max_hp *= multiplier
+
+        self.cur_hp *= multiplier
+        self.hit_points *= multiplier
+        self.hit_damage *= multiplier
+
+
+    def level_down(self, levels: int = 1):
+        levels = min(levels, self.level - 1)
+
+        if levels <= 0:
+            return
+
+        self.level -= levels
+
+        multiplier = 1.1 ** levels
+
+        if self.has_shield:
+            self.shield_hp /= multiplier
+            self.shield_max_hp /= multiplier
+
+        self.cur_hp /= multiplier
+        self.hit_points /= multiplier
+        self.hit_damage /= multiplier
 
     def update_target(self, arena):
         self.target = None
@@ -989,7 +1134,7 @@ class Spell:
     def detect_hits(self, arena): #override
         out = []
         for each in arena.troops + arena.buildings + arena.towers:
-            if (isinstance(each, Tower) or not each.invulnerable) and each.side != self.side and (vector.distance(each.position, self.position) <= self.radius + each.collision_radius):
+            if (isinstance(each, Tower) or (not each.invulnerable or not each.unaffectable)) and each.side != self.side and (vector.distance(each.position, self.position) <= self.radius + each.collision_radius):
                 out.append(each)
         return out
     
@@ -1097,9 +1242,12 @@ class Building:
         self.is_spawner = False
         self.targetable = True
         self.invulnerable = False
+        self.unaffectable = False
         self.preplace = False
         self.collideable = True
         self.evo = False
+        self.has_shield = False #futureproofin'
+        self.slow_sources = []
 
         if cloned:
             self.cur_hp = 1
@@ -1107,29 +1255,33 @@ class Building:
         self.cloned = cloned
 
     def slow(self, duration, source):
-        if self.slow_timer < duration:
-            self.slow_timer = duration
-        self.slow_timer = duration
-        self.hit_speed = 1.35 * self.normal_hit_speed
-        self.load_time = 1.35 * self.normal_load_time
+        if not self.unaffectable:
+            if source not in self.slow_sources:
+                if self.slow_timer < duration:
+                    self.slow_timer = duration
+                self.hit_speed = 1.3 * self.hit_speed
+                self.load_time = 1.3 * self.load_time
+                self.slow_sources.append(source)
+        
 
     def unslow(self):
         self.hit_speed = self.normal_hit_speed
         self.load_time = self.normal_load_time
+        self.slow_sources = []
     
     def rage(self):
         self.rage_timer = 2
         if self.rage_timer <= 0:
-            self.hit_speed = 0.65 * self.hit_speed
-            self.load_time = 0.65 * self.load_time
+            self.hit_speed = 0.7 * self.hit_speed
+            self.load_time = 0.7 * self.load_time
 
     def unrage(self):
         if self.slow_timer <= 0:
             self.hit_speed = self.normal_hit_speed
             self.load_time = self.normal_load_time
         else:
-            self.hit_speed /= 0.65
-            self.load_time /= 0.65
+            self.hit_speed /= 0.7
+            self.load_time /= 0.7
 
     def damage(self, amount):
         self.cur_hp -= amount
@@ -1138,8 +1290,40 @@ class Building:
         self.stun_timer = 0.5
         self.target = None
 
+    def level_up(self, levels: int = 1):
+        self.level += levels
+
+        multiplier = 1.1 ** levels
+
+        if self.has_shield:
+            self.shield_hp *= multiplier
+            self.shield_max_hp *= multiplier
+
+        self.cur_hp *= multiplier
+        self.hit_points *= multiplier
+        self.hit_damage *= multiplier
+
+
+    def level_down(self, levels: int = 1):
+        levels = min(levels, self.level - 1)
+
+        if levels <= 0:
+            return
+
+        self.level -= levels
+
+        multiplier = 1.1 ** levels
+
+        if self.has_shield:
+            self.shield_hp /= multiplier
+            self.shield_max_hp /= multiplier
+
+        self.cur_hp /= multiplier
+        self.hit_points /= multiplier
+        self.hit_damage /= multiplier
+
     def freeze(self, duration):
-        if not self.invulnerable:
+        if not self.unaffectable:
             self.stun_timer = duration
             self.attack_cooldown = self.hit_speed
 

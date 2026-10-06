@@ -368,6 +368,7 @@ class GoldenKnight(Champion):
                         self.target_lock = False
                         self.collideable = True
                         self.invulnerable = False
+                        self.unaffectable = False
                         self.dash_river = False
                 elif vector.distance(self.position, self.dash_center) > 5.6:
                     self.ability_duration_timer = 0 #done
@@ -375,6 +376,7 @@ class GoldenKnight(Champion):
                     self.target_lock = False
                     self.collideable = True
                     self.invulnerable = False
+                    self.unaffectable = False
                     self.dash_river = False
             
             elif d < 5.5 + self.target.collision_radius + self.collision_radius:
@@ -383,6 +385,7 @@ class GoldenKnight(Champion):
                     self.dashing = True
                     self.target_lock = True
                     self.invulnerable = True
+                    self.unaffectable = True
                     self.collideable = False
                     self.move_speed = 400 * TILES_PER_MIN * (1.35 if self.rage_timer > 0 else 1)
                     self.dash_river = True
@@ -393,6 +396,7 @@ class GoldenKnight(Champion):
             self.dashing = False
             self.target_lock = False
             self.invulnerable = False
+            self.unaffectable = False
             self.collideable = True
             self.dash_river = False
 
@@ -471,6 +475,7 @@ class MightyMinerAbilityBomb(Troop):
         ) 
         self.level = level
         self.invulnerable=True
+        self.unaffectable=True
         self.moveable=False
         self.targetable=False
         self.target=None
@@ -555,6 +560,7 @@ class MightyMiner(Champion):
     def ability(self, arena):
         self.targetable = False
         self.invulnerable = True
+        self.unaffectable = True
         self.collideable = False
         self.target_x = -self.position.x
         self.stun_timer = float('inf') #completely disable
@@ -574,6 +580,7 @@ class MightyMiner(Champion):
         self.target = None
         self.targetable = True
         self.invulnerable = False
+        self.unaffectable = False
         self.collideable = True
         self.target_x = None
 
@@ -847,6 +854,7 @@ class BossBandit(Champion):
 
                 if self.target is not None:
                     self.invulnerable = True
+                    self.unaffectable = True
                     self.collideable = False
                     self.dash_river = True
                     self.dashing = True
@@ -870,6 +878,7 @@ class BossBandit(Champion):
                     self.target_lock = False
                     self.collideable = True
                     self.invulnerable = False
+                    self.unaffectable = False
                     self.dash_river = False
                     self.move_speed = self.normal_move_speed
                 elif vector.distance(self.position, self.dash_center) > 6.1:
@@ -877,6 +886,7 @@ class BossBandit(Champion):
                     self.target_lock = False
                     self.collideable = True
                     self.invulnerable = False
+                    self.unaffectable = False
                     self.dash_river = False
                     self.move_speed = self.normal_move_speed
             
@@ -884,6 +894,7 @@ class BossBandit(Champion):
             self.dashing = False
             self.target_lock = False
             self.invulnerable = False
+            self.unaffectable = False
             self.collideable = True
             self.dash_river = False
             self.move_speed = self.normal_move_speed
@@ -896,6 +907,7 @@ class BossBandit(Champion):
             return
         self.targetable = False
         self.invulnerable = True
+        self.unaffectable = True
         self.dash_river = True
         self.stun_timer = 1 #completely disable
 
@@ -909,6 +921,7 @@ class BossBandit(Champion):
             self.targetable = True
             self.dash_river = False
             self.invulnerable = False
+            self.unaffectable = False
 
 def distance_to_segment(p, a, b):
     """
@@ -1087,6 +1100,7 @@ class GoblinsteinAntenna(Troop):
         self.level = level
         self.moveable = False
         self.invulnerable = True
+        self.unaffectable = True
         self.targetable = False
         self.parent = parent
 

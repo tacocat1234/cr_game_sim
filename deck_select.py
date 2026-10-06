@@ -51,6 +51,10 @@ def fuzzy_match(string, list):
 
     return out
 
+def fuzzy_match_box(box, choices):
+    if box.value != "":
+        box.value = fuzzy_match(box.value, choices)
+
 class SelectionBox:
     def __init__(self, x, y, width, height):
         self.x = x
@@ -94,6 +98,8 @@ class SelectionBox:
                             self.prev.return_detect = False
             elif event.key == pygame.K_BACKSPACE:
                 self.value = self.value[:-1]
+            elif event.key == pygame.K_DELETE:
+                self.value = "" #clear complete
             else:
                 self.value += event.unicode
             
@@ -241,8 +247,35 @@ def run_loop(screen, evo_enabled = True, side = True, against_bot=True, decks=No
             elif event.type == pygame.KEYDOWN:
                 if event.key == pygame.K_ESCAPE:
                     return
+
+            # Track which boxes were active before handling the event
+            all_was_active = [box.active for box in all]
+            tower_was_active = tower.active
+            lev_was_active = lev.active
+            load_was_active = load_deck_text_input.active
+
+            # Handle events
             for each in all:
                 each.handle_event(event)
+
+            tower.handle_event(event)
+            lev.handle_event(event)
+            load_deck_text_input.handle_event(event)
+
+            # Fuzzy-match a box when it becomes deselected
+            for i in range(8):
+                if all_was_active[i] and not all[i].active:
+                    fuzzy_match_box(
+                        all[i],
+                        troops + buildings + spells + champions + ["mirror"]
+                    )
+
+            if tower_was_active and not tower.active:
+                fuzzy_match_box(
+                    tower,
+                    ["princesstower", "cannoneer", "daggerduchess",
+                    "royalchef", "summonertower"]
+                )
             for i in range(8):
                 if display_evo[i] and evo_enabled:
                     evo[i].handle_event(event)

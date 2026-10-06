@@ -363,6 +363,7 @@ class EvolutionWallBreakerRunner(Troop):
             self.invincibility_timer -= TICK_TIME
         else:
             self.invulnerable = False
+            self.unaffectable = False
     
     def attack(self):
         self.should_delete = True

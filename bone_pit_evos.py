@@ -189,7 +189,9 @@ class EvolutionSkeletonArmy(bone_pit_cards.Skeleton):
         if self.general is not None and self.general.cur_hp > 0:
             self.cur_hp = float('inf')
             self.invulnerable = True
+            self.unaffectable = True
             self.targetable = False
+            self.display_transparent = True
             self.mass = 1
         else:
             super().die(arena)

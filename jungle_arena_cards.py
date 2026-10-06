@@ -171,12 +171,14 @@ class SkeletonBarrelDeathBarrel(Troop):
         ) 
         self.level = level
         self.invulnerable=True
+        self.unaffectable=True
         self.targetable=False
         self.target=None
         self.collidable = False
 
     def on_deploy(self, arena):
         self.invulnerable=True
+        self.unaffectable=True
         self.targetable=False
         self.target=None
         self.collidable = False
@@ -456,6 +458,7 @@ class BarbarianBarrel(Troop):
         self.level = level
         self.targetable = False
         self.invulnerable = True
+        self.unaffectable = True
         self.moveable = False
         self.timer = 1.35
         self.cross_river = True
@@ -467,6 +470,7 @@ class BarbarianBarrel(Troop):
     def on_deploy(self, arena):
         self.targetable = False
         self.invulnerable = True
+        self.unaffectable = True
         self.moveable = False
         self.collideable = False
 
