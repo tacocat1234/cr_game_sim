@@ -60,7 +60,7 @@ troops = ["knight", "minipekka", "giant", "minions", "archers", "musketeer",
           "skeletons", "bomber", "valkyrie",
           "barbarians", "megaminion", "battleram",
           "firespirit", "electrospirit", "skeletondragons", "wizard",
-          "bats", "hogrider", "flyingmachine",
+          "bats", "hogrider", "flyingmachine", "miniongiant",
           "skeletonarmy", "guards", "babydragon", "witch", "pekka",
           "darkprince", "royalhogs", "balloon", "prince", "royalgiant", "royalrecruits", "threemusketeers",
           "icespirit", "icegolem", "battlehealer", "giantskeleton",
@@ -547,6 +547,8 @@ def troop_factory(side, position, name, level):
         return builders_workshop_cards.HogRider(side, position, level)
     elif name == "flyingmachine":
         return builders_workshop_cards.FlyingMachine(side, position, level)
+    elif name == "miniongiant":
+        return builders_workshop_cards.MinionGiant(side, position, level)
     elif name == "skeletonarmy":
         out = []
         for _ in range(15):
@@ -841,6 +843,7 @@ elixir_map = {
     "hogrider": 4,
     "mortar" : 4,
     "flyingmachine" : 4,
+    "miniongiant" : 4,
     "rocket" : 6,
     "skeletonarmy" : 3,
     "guards" : 3,

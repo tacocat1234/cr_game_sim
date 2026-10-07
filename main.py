@@ -484,7 +484,6 @@ def draw(mode="normal"):
                 circle_radius = int(troop.collision_radius * SCALE)
 
                 if troop.display_transparent or ((not troop.targetable) and (not troop.invulnerable)):
-                    print(f"{troop}: {troop.targetable}")
                     # Make semi-transparent circle
                     temp_surface = pygame.Surface((circle_radius * 2, circle_radius * 2), pygame.SRCALPHA)
                     

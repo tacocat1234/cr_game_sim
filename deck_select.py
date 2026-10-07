@@ -251,9 +251,7 @@ def run_loop(screen, evo_enabled = True, side = True, against_bot=True, decks=No
             # Track which boxes were active before handling the event
             all_was_active = [box.active for box in all]
             tower_was_active = tower.active
-            lev_was_active = lev.active
-            load_was_active = load_deck_text_input.active
-
+            
             # Handle events
             for each in all:
                 each.handle_event(event)
@@ -279,11 +277,8 @@ def run_loop(screen, evo_enabled = True, side = True, against_bot=True, decks=No
             for i in range(8):
                 if display_evo[i] and evo_enabled:
                     evo[i].handle_event(event)
-            lev.handle_event(event)
-            tower.handle_event(event)
-            submit.handle_event(event)
 
-            load_deck_text_input.handle_event(event)
+            submit.handle_event(event)
 
             if len(deck_names) > 0 and load_deck_text_input.value != "" and load_deck.handle_event(event) is not None :
                 d_name = fuzzy_match(load_deck_text_input.value, deck_names)

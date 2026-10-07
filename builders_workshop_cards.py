@@ -236,3 +236,38 @@ class FlyingMachine(Troop):
     
     def attack(self):
         return FlyingMachineAttackEntity(self.side, self.hit_damage, self.position, self.target)
+    
+class MinionGiantAttackEntity(RangedAttackEntity):
+    def __init__(self, side, damage, position, target):
+        super().__init__(
+            side=side,
+            damage=damage,
+            velocity=600*TILES_PER_MIN,
+            position=position,
+            target=target,
+        )
+    
+class MinionGiant(Troop):
+    def __init__(self, side, position, level):
+        super().__init__(
+            s=side,              # Side (True for one player, False for the other)
+            h_p= 1817 * pow(1.1, level - 11),         # Hit points (Example value)
+            h_d= 168 * pow(1.1, level - 11),          # Hit damage (Example value)
+            h_s=1.5,          # Hit speed (Seconds per hit)
+            l_t=0.8,            # First hit cooldown
+            h_r=4,            # Hit range
+            s_r=6.5,            # Sight Range
+            g=False,           # Ground troop
+            t_g_o=False,       # Targets ground-only
+            t_o=True,        # Not tower-only
+            m_s=60*TILES_PER_MIN,          # Movement speed 
+            d_t=1,            # Deploy time
+            m=15,            #mass
+            c_r=0.75,        #collision radius
+            p=position          # Position (vector.Vector object)
+        ) 
+        self.level = level
+        self.can_kb = False
+
+    def attack(self):
+        return MinionGiantAttackEntity(self.side, self.hit_damage, self.position, self.target)

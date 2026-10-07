@@ -1,4 +1,4 @@
-from abstract_classes import AttackEntity
+from abstract_classes import RangedAttackEntity
 from abstract_classes import MeleeAttackEntity
 from abstract_classes import Troop
 from abstract_classes import Building
@@ -51,47 +51,21 @@ class Skeleton(Troop):
     def attack(self):
         return SkeletonAttackEntity(self.side, self.hit_damage, self.position, self.target)
     
-class BomberAttackEntity(AttackEntity):
-    def __init__(self, side, damage, position, target_pos):
+class BomberAttackEntity(RangedAttackEntity):
+    SPLASH_RADIUS = 1.5
+
+    def __init__(self, side, damage, position, target):
         super().__init__(
-            s=side,
-            d=damage,
-            v=400*TILES_PER_MIN,
-            l=float('inf'),
-            i_p=copy.deepcopy(position)
+            side=side,
+            damage=damage,
+            velocity=400 * TILES_PER_MIN,
+            position=position,
+            target=target,
+            homing=False,
+            explosive=True
         )
-        self.target_pos = target_pos
-        self.exploded = False
-        self.has_hit = []
 
-    def detect_hits(self, arena):
-        hits = []
-        if self.exploded:
-            for each in arena.towers + arena.buildings + arena.troops:
-                if each.side != self.side and (isinstance(each, Tower) or (each.ground and not each.invulnerable)): # if different side
-                    if vector.distance(self.position, each.position) < 1.5 + each.collision_radius:
-                        hits.append(each)
-        return hits
-            
-    def tick(self, arena):
-        if self.exploded:
-            hits = self.detect_hits(arena)
-            for each in hits:
-                new = not any(each is h for h in self.has_hit)
-                if (new):
-                    each.damage(self.damage)
-                    self.has_hit.append(each)
-        else:
-            direction = self.target_pos.subtracted(self.position)
-            direction.normalize()
-
-            movement = direction.scaled(self.velocity)
-            self.position.add(movement)
-            
-            if vector.distance(self.position, self.target_pos) < 0.25:
-                self.display_size = 1.5
-                self.duration =  0.1
-                self.exploded = True
+        self.splash_radius = self.SPLASH_RADIUS
     
 class Bomber(Troop):
     def __init__(self, side, position, level):
@@ -177,45 +151,35 @@ class Tombstone(Building):
                 self.next_spawn = None #no more
                 self.remaining_spawn_count = 0 #no more
 
-class ValkyrieAttackEntity(AttackEntity):
+class ValkyrieAttackEntity(MeleeAttackEntity):
     HIT_RANGE = 2.0
     COLLISION_RADIUS = 0.5
+
     def __init__(self, side, damage, position, target):
         super().__init__(
-            s=side,
-            d=damage,
-            v=0,
-            l=0.25,
-            i_p=position
-            )
-        self.target = target
-        self.has_hit = []
-        self.display_size = ValkyrieAttackEntity.HIT_RANGE
-    
+            side=side,
+            damage=damage,
+            position=position,
+            target=target
+        )
+
+        self.display_size = self.HIT_RANGE
+
     def detect_hits(self, arena):
         hits = []
-        for each in arena.towers + arena.buildings + arena.troops:
-            if each.side != self.side and (isinstance(each, Tower) or (each.ground and not each.invulnerable)): # if different side
-                if vector.distance(self.position, each.position) < ValkyrieAttackEntity.HIT_RANGE + ValkyrieAttackEntity.COLLISION_RADIUS + each.collision_radius:
-                    hits.append(each)
-        return hits
-        
-    def tick(self, arena):
-        hits = self.detect_hits(arena)
-        for each in hits:
-            new = True
-            for h in self.has_hit:
-                if each is h:
-                    new = False
-                    break
-            if (new):
-                each.damage(self.damage)
-                self.has_hit.append(each)
 
-    def cleanup(self, arena):
-        self.duration -= TICK_TIME
-        if self.duration <= 0:
-            arena.active_attacks.remove(self)
+        for each in arena.towers + arena.buildings + arena.troops:
+            if each.side != self.side and (
+                isinstance(each, Tower) or
+                (each.ground and not each.invulnerable)
+            ):
+                if vector.distance(
+                    self.position,
+                    each.position
+                ) <= self.HIT_RANGE + self.COLLISION_RADIUS + each.collision_radius:
+                    hits.append(each)
+
+        return hits
         
             
 class Valkyrie(Troop):

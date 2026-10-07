@@ -101,6 +101,8 @@ class BanditDashAttackEntity(MeleeAttackEntity):
             )
     
 class Bandit(Troop):
+    DASH_MIN_RANGE = 3.5
+    DASH_MAX_RANGE = 6
     def __init__(self, side, position, level):
         super().__init__(
             s=side,              # Side (True for one player, False for the other)
@@ -128,6 +130,32 @@ class Bandit(Troop):
         class_name = self.__class__.__name__.lower()
         self.sprite_path = f"sprites/{class_name}/{class_name}_dash.png"
 
+    def finish_dash(self, arena):
+        self.dash_timer = 0
+        self.dash_river = False
+        self.target_lock = False
+        self.ground = True
+        self.collideable = True
+        self.move_speed = 60*TILES_PER_MIN
+        self.invulnerable = False
+        self.unaffectable = False
+        self.moveable = True
+        self.attack_cooldown = self.hit_speed
+        if self.target is not None:
+            arena.active_attacks.append(BanditDashAttackEntity(self.side, self.hit_damage * 2, self.position, self.target))
+
+    def start_dash(self):
+        self.ground = False #allow cross river
+        self.collideable = False
+        self.should_dash = False
+        self.invulnerable = True
+        self.unaffectable = True
+        self.moveable = False
+        self.move_speed = 500*TILES_PER_MIN
+        self.dash_timer = 0.72
+        self.dash_river = True
+        self.target_lock = True
+
     def tick_func(self, arena):
         if self.stun_timer <= 0:
             if self.deploy_time <= 0:                    
@@ -140,43 +168,23 @@ class Bandit(Troop):
                             if tower.side != self.side and (m is None or dist < vector.distance(m.position, self.position)):
                                 m = tower
                         self.target = m
-                    self.ground = False #allow cross river
-                    self.collideable = False
-                    self.should_dash = False
-                    self.invulnerable = True
-                    self.unaffectable = True
-                    self.moveable = False
-                    self.move_speed = 500*TILES_PER_MIN
-                    self.dash_timer = 0.72
-                    self.dash_river = True
-                    self.target_lock = True
+                    self.start_dash()
                 elif self.target is not None:
                     d = vector.distance(self.position, self.target.position)
-                    if d > 3.5 + self.target.collision_radius and d < 6 + self.target.collision_radius and self.dash_timer == 0:
+                    if d > Bandit.DASH_MIN_RANGE + self.target.collision_radius and d < Bandit.DASH_MAX_RANGE + self.target.collision_radius and self.dash_timer == 0:
                         self.should_dash = True
                 else:
                     for tower in arena.towers:
                         dist = vector.distance(tower.position, self.position)
-                        if tower.side != self.side and dist > 3.5 + tower.collision_radius and dist < 6 + tower.collision_radius:
+                        if (tower.side != self.side) and (dist > Bandit.DASH_MIN_RANGE + tower.collision_radius) and (dist < Bandit.DASH_MAX_RANGE + tower.collision_radius):
                             self.stun_timer = 0.8
                             self.should_dash = True
                             break 
         
         if self.dash_timer < 0: #done dashing
-            self.dash_timer = 0
-            self.dash_river = False
-            self.target_lock = False
-            self.ground = True
-            self.collideable = True
-            self.move_speed = 60*TILES_PER_MIN
-            self.invulnerable = False
-            self.unaffectable = False
-            self.moveable = True
-            self.attack_cooldown = self.hit_speed
-            if self.target is not None:
-                arena.active_attacks.append(BanditDashAttackEntity(self.side, self.hit_damage * 2, self.position, self.target))
+            self.finish_dash(arena)
         if self.dash_timer > 0:
-            if not self.target is None and vector.distance(self.target.position, self.position) < self.hit_range:
+            if (not self.target is None) and vector.distance(self.target.position, self.position) < self.hit_range:
                 self.dash_timer = 0
             self.dash_timer -= TICK_TIME
     

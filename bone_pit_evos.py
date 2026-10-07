@@ -1,6 +1,7 @@
 from abstract_classes import TICK_TIME
 from abstract_classes import TILES_PER_MIN
-from abstract_classes import AttackEntity
+from abstract_classes import AOEAttackEntity
+from abstract_classes import RangedAttackEntity
 from abstract_classes import Tower
 from abstract_classes import Troop
 import bone_pit_cards
@@ -41,51 +42,111 @@ class EvolutionSkeleton(bone_pit_cards.Skeleton):
             s.deploy_time = 0
             arena.troops.append(s)
 
-class EvolutionBomberAttackEntity(AttackEntity):
-    def __init__(self, side, damage, position, target_pos, dir, remaining=2):
+class EvolutionBomberAttackEntity(RangedAttackEntity):
+    SPLASH_RADIUS = bone_pit_cards.BomberAttackEntity.SPLASH_RADIUS
+    def __init__(
+        self,
+        side,
+        damage,
+        position,
+        target_pos,
+        dir,
+        remaining=2
+    ):
+        # We aren't actually using RangedAttackEntity's normal
+        # target system, but we still inherit its projectile behavior.
         super().__init__(
-            s=side,
-            d=damage,
-            v=400*TILES_PER_MIN,
-            l=float('inf'),
-            i_p=copy.deepcopy(position)
+            side=side,
+            damage=damage,
+            velocity=400 * TILES_PER_MIN,
+            position=position,
+            target=target_pos,
+            homing=False,
+            piercing=True,
+            explosive=True
         )
+
         self.target_pos = target_pos
-        self.exploded = False
         self.dir = dir
         self.remaining = remaining
+
+        self.exploded = False
         self.has_hit = []
 
     def detect_hits(self, arena):
+        if not self.exploded:
+            return []
+
         hits = []
-        if self.exploded:
-            for each in arena.towers + arena.buildings + arena.troops:
-                if each.side != self.side and (isinstance(each, Tower) or (each.ground and not each.invulnerable)): # if different side
-                    if vector.distance(self.position, each.position) < 1.5 + each.collision_radius:
-                        hits.append(each)
+
+        for each in arena.towers + arena.buildings + arena.troops:
+            if (
+                each.side != self.side
+                and (
+                    isinstance(each, Tower)
+                    or (
+                        each.ground
+                        and not each.invulnerable
+                    )
+                )
+                and vector.distance(
+                    self.position,
+                    each.position
+                ) < EvolutionBomberAttackEntity.SPLASH_RADIUS + each.collision_radius
+            ):
+                hits.append(each)
+
         return hits
-            
-    def tick(self, arena):
+
+    def move(self):
         if self.exploded:
+            return
+
+        direction = self.target_pos.subtracted(self.position)
+        direction.normalize()
+
+        movement = direction.scaled(self.velocity)
+        self.position.add(movement)
+
+    def should_explode(self):
+        return (
+            vector.distance(
+                self.position,
+                self.target_pos
+            ) < 0.25
+        )
+
+    def explode(self, arena):
+        self.display_size = 1.5
+        self.duration = 0.1
+        self.exploded = True
+
+        if self.remaining > 0:
+            arena.active_attacks.append(
+                EvolutionBomberAttackEntity(
+                    self.side,
+                    self.damage,
+                    self.position,
+                    self.position.added(self.dir),
+                    self.dir,
+                    self.remaining - 1
+                )
+            )
+
+    def tick(self, arena):
+        if not self.exploded:
+            if self.should_explode():
+                self.explode(arena)
+            else:
+                self.move()
+
+        else:
             hits = self.detect_hits(arena)
+
             for each in hits:
-                new = not any(each is h for h in self.has_hit)
-                if (new):
+                if each not in self.has_hit:
                     each.damage(self.damage)
                     self.has_hit.append(each)
-        else:
-            direction = self.target_pos.subtracted(self.position)
-            direction.normalize()
-
-            movement = direction.scaled(self.velocity)
-            self.position.add(movement)
-            
-            if vector.distance(self.position, self.target_pos) < 0.25:
-                self.display_size = 1.5
-                self.duration =  0.1
-                self.exploded = True
-                if self.remaining > 0:
-                    arena.active_attacks.append(EvolutionBomberAttackEntity(self.side, self.damage, self.position, self.position.added(self.dir), self.dir, self.remaining - 1))
 
 class EvolutionBomber(bone_pit_cards.Bomber):
     def __init__(self, side, position, level):
@@ -98,48 +159,52 @@ class EvolutionBomber(bone_pit_cards.Bomber):
         dir.scale(2.5)
         return EvolutionBomberAttackEntity(self.side, self.hit_damage, self.position, copy.deepcopy(self.target.position), dir)
 
-class EvolutionValkyrieSpecialAttackEntity(AttackEntity):
+class EvolutionValkyrieSpecialAttackEntity(AOEAttackEntity):
     SPLASH_RADIUS = 5.5
     COLLISION_RADIUS = 0.5
+
     def __init__(self, side, damage, ctd, position):
         super().__init__(
-            s=side,
-            d=damage,
-            v=0,
-            l=0.5,
-            i_p=position
+            side=side,
+            damage=damage,
+            lifespan=0.5,
+            position=position,
+            splash_radius=self.SPLASH_RADIUS
         )
-        self.ctd = ctd
-        self.display_size = self.SPLASH_RADIUS
 
-    def detect_hits(self, arena):
-        hits = []
-        for each in arena.towers + arena.buildings + arena.troops:
-            if each.side != self.side and not each.invulnerable: # if different side
-                if vector.distance(self.position, each.position) < self.SPLASH_RADIUS + each.collision_radius:
-                    hits.append(each)
-        return hits
-    
+        self.ctd = ctd
+
     def tick(self, arena):
-        self.tick_func(arena)
         hits = self.detect_hits(arena)
+
         for each in hits:
-            new = not each in self.has_hit
-            if (new):
-                if isinstance(each, Tower):
-                    each.damage(self.ctd)
-                else:
-                    each.damage(self.damage)
-                    self.apply_effect(each)
-                self.has_hit.append(each)
+            if isinstance(each, Tower):
+                each.damage(self.ctd)
+            else:
+                each.damage(self.damage)
+                self.apply_effect(each)
+
+            self.has_hit.append(each)
 
     def apply_effect(self, target):
         if isinstance(target, Troop) and not target.invulnerable:
-            mag = (-1/5 * target.mass + 5.7)/2
-            to_self = self.position.subtracted(target.position)
-            mag = min(mag, to_self.magnitude() - self.COLLISION_RADIUS - target.collision_radius)
+            mag = (-1 / 5 * target.mass + 5.7) / 2
 
-            target.kb(to_self.normalized().scaled(mag), 0.5)
+            to_self = self.position.subtracted(
+                target.position
+            )
+
+            mag = min(
+                mag,
+                to_self.magnitude()
+                - self.COLLISION_RADIUS
+                - target.collision_radius
+            )
+
+            target.kb(
+                to_self.normalized().scaled(mag),
+                0.5
+            )
     
 
 class EvolutionValkyrie(bone_pit_cards.Valkyrie):
@@ -192,6 +257,6 @@ class EvolutionSkeletonArmy(bone_pit_cards.Skeleton):
             self.unaffectable = True
             self.targetable = False
             self.display_transparent = True
-            self.mass = 1
+            self.mass = 0
         else:
             super().die(arena)

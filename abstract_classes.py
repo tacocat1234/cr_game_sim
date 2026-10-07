@@ -100,6 +100,7 @@ class AttackEntity:
     def __init__(self, s, d, v, l, i_p):
         self.side = s
         self.damage = d
+        self.ctd = self.damage
         self.velocity = v #vector.Vector object if not single target, i.e. firecracker, bomber, hunter, scalar otherwise, sparky, archers, etc.
         self.lifespan = l
         self.position = i_p
@@ -110,6 +111,7 @@ class AttackEntity:
         self.display_size = 0.25
         self.resize = False
         self.reflectable = False
+        self.type = "other"
     
     def apply_effect(self, target):
         pass
@@ -128,8 +130,7 @@ class AttackEntity:
         for each in hits:
             new = not each in self.has_hit
             if (new):
-                each.damage(self.damage)
-                self.apply_effect(each)
+                each.process_attack(self)
                 self.has_hit.append(each)
         
         
@@ -146,6 +147,42 @@ class AttackEntity:
     
     def on_hit(self, arena):
         pass
+
+class AOEAttackEntity(AttackEntity):
+    def __init__(self, side, damage, lifespan, position, splash_radius, is_ticking=False, tick_rate=0):
+        super().__init__(s=side, 
+                         d=damage, 
+                         v=0, 
+                         l=lifespan, 
+                         i_p=position)
+        self.splash_radius = splash_radius
+        self.display_size = self.splash_radius
+        self.is_ticking = is_ticking
+        self.tick_rate = tick_rate
+        self.tick_timer = 0
+
+    def detect_hits(self, arena): #override
+        out = []
+        for each in arena.troops + arena.buildings + arena.towers:
+            if (self.is_ticking or not each in self.has_hit) and not each.invulnerable and each.side != self.side and (vector.distance(each.position, self.position) <= self.splash_radius + each.collision_radius):
+                    out.append(each)
+        return out
+
+    def tick(self, arena):
+        if self.is_ticking:
+            if self.tick_timer <= 0:
+                hits = self.detect_hits(arena)
+                for each in hits:
+                    each.process_attack(self)
+                self.tick_timer = 0.25
+            else:
+                self.tick_timer -= TICK_TIME
+        else:
+            hits = self.detect_hits(arena)
+            for each in hits:
+                each.process_attack(self)
+                self.has_hit.append(each)
+
     
 class RangedAttackEntity(AttackEntity):
     def __init__(
@@ -167,14 +204,14 @@ class RangedAttackEntity(AttackEntity):
             i_p=copy.deepcopy(position),
 
         )
-
+        self.type="ranged"
         self.homing = homing
         self.target = target
         self.should_delete = False
         self.piercing = piercing
         self.explosive = explosive
         self.splash_radius = 0
-        self.collision_radius = self.display_size #for detecting non homing collisons, default = self.size
+        self.collision_radius = self.display_size * 2 #for detecting non homing collisons, default = self.size
         self.exploded = False
 
         self.initial_vec = None
@@ -248,13 +285,11 @@ class RangedAttackEntity(AttackEntity):
         self.on_hit(arena)
         if self.explosive: #explosive
             for each in hits:
-                each.damage(self.damage)
-                self.apply_effect(each)
+                each.process_attack(self)
                 self.has_hit.append(each)
         else:
             for each in hits: #normal
-                each.damage(self.damage)
-                self.apply_effect(each)
+                each.process_attack(self)
 
             if not self.piercing:
                 self.should_delete = True
@@ -309,6 +344,7 @@ class MeleeAttackEntity(AttackEntity):
             )
         self.target = target
         self.should_delete = False
+        self.type = "melee"
     
     def detect_hits(self, arena):
         if (vector.distance(self.target.position, self.position) <= self.HIT_RANGE + self.COLLISION_RADIUS + self.target.collision_radius): #within hitrange of knight
@@ -321,7 +357,7 @@ class MeleeAttackEntity(AttackEntity):
         if len(hits) > 0:
             self.on_hit(arena)
             for each in hits:
-                each.damage(self.damage)
+                each.process_attack(self)
             self.should_delete = True
 
     def cleanup(self, arena): #also delete self if single target here in derived classes
@@ -465,6 +501,11 @@ class Troop:
     def damage(self, amount):
         if not self.invulnerable:
             self.cur_hp -= amount*self.damage_amplification
+
+    def process_attack(self, atk):
+        if not self.invulnerable:
+            self.damage(atk.ctd)
+            atk.apply_effect(self)
 
     def heal(self, amount):
         self.cur_hp = min(self.cur_hp + amount, self.hit_points)
@@ -967,6 +1008,11 @@ class Tower:
     def damage(self, amount):
         if not self.invulnerable:
             self.cur_hp -= amount
+
+    def process_attack(self, atk):
+        if not self.invulnerable:
+            self.damage(atk.ctd)
+            atk.apply_effect(self)
     
     def slow(self, duration, source):
         if not self.unaffectable:
@@ -1285,6 +1331,11 @@ class Building:
 
     def damage(self, amount):
         self.cur_hp -= amount
+
+    def process_attack(self, atk):
+        if not self.invulnerable:
+            self.damage(atk.ctd)
+            atk.apply_effect(self)
 
     def stun(self):
         self.stun_timer = 0.5
