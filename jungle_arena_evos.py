@@ -32,7 +32,7 @@ class EvolutionGoblinGiant(jungle_arena_cards.GoblinGiant):
             self.backpack_goblins[0].tick(arena)
             self.backpack_goblins[1].tick(arena)
 
-class EvolutionDartGoblinPoisonAttackEntity(AttackEntity):
+class EvolutionDartGoblinPoisonAttackEntity(AttackEntity): #aoeattackentity
     SPLASH_RADIUS = 1.5
     def __init__(self, side, level, position):
         super().__init__(s=side, 

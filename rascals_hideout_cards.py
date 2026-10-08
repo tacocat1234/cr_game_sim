@@ -545,7 +545,7 @@ class LavaHoundAttackEntity(RangedAttackEntity):
             target=target
         )
 
-class LavaHoundDeathAttackEntity(AttackEntity):
+class LavaHoundDeathAttackEntity(AttackEntity): #aoe
     SPLASH_RADIUS = 2.5
     def __init__(self, side, position):
         super().__init__(
@@ -609,7 +609,7 @@ class LavaHound(Troop):
     def attack(self):
         return LavaHoundAttackEntity(self.side, self.hit_damage, self.position, self.target)
     
-class HealSpiritAttackEntity(AttackEntity):
+class HealSpiritAttackEntity(AttackEntity): #aoe
     DAMAGE_RADIUS = 1.5
     HEALING_RADIUS = 2.5
     def __init__(self, side, damage, healing, position, target):

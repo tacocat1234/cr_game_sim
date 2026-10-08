@@ -97,6 +97,7 @@ def true_distance(position1, position2): #only for towers
     return min(d1, d2)
 
 class AttackEntity:
+    TYPE = "other"
     def __init__(self, s, d, v, l, i_p):
         self.side = s
         self.damage = d
@@ -111,7 +112,6 @@ class AttackEntity:
         self.display_size = 0.25
         self.resize = False
         self.reflectable = False
-        self.type = "other"
     
     def apply_effect(self, target):
         pass
@@ -149,14 +149,14 @@ class AttackEntity:
         pass
 
 class AOEAttackEntity(AttackEntity):
-    def __init__(self, side, damage, lifespan, position, splash_radius, is_ticking=False, tick_rate=0):
+    SPLASH_RADIUS = 0
+    def __init__(self, side, damage, lifespan, position, is_ticking=False, tick_rate=0):
         super().__init__(s=side, 
                          d=damage, 
                          v=0, 
                          l=lifespan, 
                          i_p=position)
-        self.splash_radius = splash_radius
-        self.display_size = self.splash_radius
+        self.display_size = self.SPLASH_RADIUS
         self.is_ticking = is_ticking
         self.tick_rate = tick_rate
         self.tick_timer = 0
@@ -164,7 +164,7 @@ class AOEAttackEntity(AttackEntity):
     def detect_hits(self, arena): #override
         out = []
         for each in arena.troops + arena.buildings + arena.towers:
-            if (self.is_ticking or not each in self.has_hit) and not each.invulnerable and each.side != self.side and (vector.distance(each.position, self.position) <= self.splash_radius + each.collision_radius):
+            if (self.is_ticking or not each in self.has_hit) and not each.invulnerable and each.side != self.side and (vector.distance(each.position, self.position) <= self.SPLASH_RADIUS + each.collision_radius):
                     out.append(each)
         return out
 
@@ -185,6 +185,9 @@ class AOEAttackEntity(AttackEntity):
 
     
 class RangedAttackEntity(AttackEntity):
+    SPLASH_RADIUS = 0
+    LINGER_DURATION = 0.1 #how much after explosio
+    TYPE = "ranged"
     def __init__(
         self,
         side,
@@ -204,13 +207,11 @@ class RangedAttackEntity(AttackEntity):
             i_p=copy.deepcopy(position),
 
         )
-        self.type="ranged"
         self.homing = homing
         self.target = target
         self.should_delete = False
         self.piercing = piercing
         self.explosive = explosive
-        self.splash_radius = 0
         self.collision_radius = self.display_size * 2 #for detecting non homing collisons, default = self.size
         self.exploded = False
 
@@ -234,7 +235,7 @@ class RangedAttackEntity(AttackEntity):
         hits = []
         for each in arena.towers + arena.buildings + arena.troops:
             if each.side != self.side:
-                if (vector.distance(self.position, each.position) < self.splash_radius + each.collision_radius):
+                if (vector.distance(self.position, each.position) < self.SPLASH_RADIUS + each.collision_radius):
                     if each not in self.has_hit:
                         self.has_hit.append(each)
                         hits.append(each)
@@ -278,8 +279,8 @@ class RangedAttackEntity(AttackEntity):
 
     def explode(self, arena):
         self.exploded = True
-        self.display_size = self.splash_radius
-        self.duration = 0.1 #linger for short while
+        self.display_size = self.SPLASH_RADIUS
+        self.duration = self.LINGER_DURATION #linger for short while
 
     def process_hits(self, hits, arena):
         self.on_hit(arena)
@@ -334,6 +335,7 @@ class RangedAttackEntity(AttackEntity):
 class MeleeAttackEntity(AttackEntity):
     HIT_RANGE = 0
     COLLISION_RADIUS = 0
+    TYPE = "melee"
     def __init__(self, side, damage, position, target):
         super().__init__(
             s=side,
@@ -344,7 +346,6 @@ class MeleeAttackEntity(AttackEntity):
             )
         self.target = target
         self.should_delete = False
-        self.type = "melee"
     
     def detect_hits(self, arena):
         if (vector.distance(self.target.position, self.position) <= self.HIT_RANGE + self.COLLISION_RADIUS + self.target.collision_radius): #within hitrange of knight

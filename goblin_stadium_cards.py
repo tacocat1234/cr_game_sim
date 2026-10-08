@@ -1,4 +1,4 @@
-from abstract_classes import AttackEntity
+from abstract_classes import RangedAttackEntity, MeleeAttackEntity
 from abstract_classes import Troop
 from abstract_classes import Building
 from abstract_classes import TILES_PER_MIN
@@ -7,43 +7,19 @@ import vector
 import copy
 import random
 
-class SpearGoblinAttackEntity(AttackEntity):
+class SpearGoblinAttackEntity(RangedAttackEntity):
     def __init__(self, side, damage, position, target):
         super().__init__(
-            s=side,
-            d=damage,
-            v=500*TILES_PER_MIN,
-            l=float('inf'),
-            i_p=copy.deepcopy(position)
+            side=side,
+            damage=damage,
+            velocity=500 * TILES_PER_MIN,
+            position=position,
+            target=target,
+            homing=True,
+            piercing=False,
+            explosive=False
         )
-        self.target = target
-        self.should_delete = False
 
-    def detect_hits(self, arena):
-        if (vector.distance(self.target.position, self.position) < self.target.collision_radius):
-            return [self.target] # has hit
-        else:
-            return [] #hasnt hit yet
-            
-    def tick(self, arena):
-        hits = self.detect_hits(arena)
-        if len(hits) > 0:
-            hits[0].damage(self.damage)
-            self.should_delete = True
-        else:
-            direction = vector.Vector(
-                self.target.position.x - self.position.x, 
-                self.target.position.y - self.position.y
-            )
-            direction.normalize()
-
-            movement = direction.scaled(self.velocity)
-            self.position.add(movement)
-
-    def cleanup(self, arena):
-        if self.should_delete:
-            arena.active_attacks.remove(self)
-    
 class SpearGoblin(Troop):
     def __init__(self, side, position, level, cloned=False):
         super().__init__(
@@ -72,40 +48,9 @@ class SpearGoblin(Troop):
     def attack(self):
         return SpearGoblinAttackEntity(self.side, self.hit_damage, self.position, self.target)
 
-class GoblinAttackEntity(AttackEntity):
+class GoblinAttackEntity(MeleeAttackEntity):
     HIT_RANGE = 0.5
-    COLLISION_RADIUS = 0.5
-    def __init__(self, side, damage, position, target):
-        super().__init__(
-            s=side,
-            d=damage,
-            v=0,
-            l=0.5,
-            i_p=position
-            )
-        self.target = target
-        self.should_delete = False
-    
-    def detect_hits(self, arena):
-        
-        if (vector.distance(self.target.position, self.position) <= GoblinAttackEntity.HIT_RANGE + GoblinAttackEntity.COLLISION_RADIUS + self.target.collision_radius): #within hitrange of knight
-            return [self.target]
-        else:
-            return [] #theoretically should never trigger, when attack, should always be in range unless very strange circumstances
-        
-    def tick(self, arena):
-        hits = self.detect_hits(arena)
-        if len(hits) > 0:
-            hits[0].damage(self.damage)
-            self.should_delete = True
-
-    def cleanup(self, arena): #also delete self if single target here in derived classes
-        self.duration -= TICK_TIME
-        if self.duration <= 0:
-            arena.active_attacks.remove(self)
-        if self.should_delete:
-            arena.active_attacks.remove(self)
-        
+    COLLISION_RADIUS = 0.5        
             
 class Goblin(Troop):
     def __init__(self, side, position, level, cloned=False):
@@ -131,41 +76,10 @@ class Goblin(Troop):
     def attack(self):
         return GoblinAttackEntity(self.side, self.hit_damage, self.position, self.target)
 
-class GoblinBrawlerAttackEntity(AttackEntity):
+class GoblinBrawlerAttackEntity(MeleeAttackEntity):
     HIT_RANGE = 0.8
     COLLISION_RADIUS = 0.5
-    def __init__(self, side, damage, position, target):
-        super().__init__(
-            s=side,
-            d=damage,
-            v=0,
-            l=0.5,
-            i_p=position
-            )
-        self.target = target
-        self.should_delete = False
-    
-    def detect_hits(self, arena):
         
-        if (vector.distance(self.target.position, self.position) <= GoblinBrawlerAttackEntity.HIT_RANGE + GoblinBrawlerAttackEntity.COLLISION_RADIUS + self.target.collision_radius): #within hitrange of knight
-            return [self.target]
-        else:
-            return [] #theoretically should never trigger, when attack, should always be in range unless very strange circumstances
-        
-    def tick(self, arena):
-        hits = self.detect_hits(arena)
-        if len(hits) > 0:
-            hits[0].damage(self.damage)
-            self.should_delete = True
-
-    def cleanup(self, arena): #also delete self if single target here in derived classes
-        self.duration -= TICK_TIME
-        if self.duration <= 0:
-            arena.active_attacks.remove(self)
-        if self.should_delete:
-            arena.active_attacks.remove(self)
-        
-            
 class GoblinBrawler(Troop):
     def __init__(self, side, position, level):
         super().__init__(

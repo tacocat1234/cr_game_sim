@@ -1,6 +1,6 @@
 from abstract_classes import RangedAttackEntity
 from abstract_classes import MeleeAttackEntity
-from abstract_classes import AttackEntity
+from abstract_classes import AOEAttackEntity
 from abstract_classes import Troop
 from abstract_classes import Tower
 from abstract_classes import Building
@@ -279,6 +279,7 @@ class Hunter(Troop):
         return attacks
     
 class TeslaAttackEntity(RangedAttackEntity):
+    TYPE = "beam"
     def __init__(self, side, damage, position, target):
         super().__init__(
             side=side, 
@@ -353,34 +354,26 @@ class GolemAttackEntity(MeleeAttackEntity):
             target=target
             )
 
-class GolemDeathAttackEntity(AttackEntity):
+class GolemDeathAttackEntity(AOEAttackEntity):
     SPLASH_RADIUS = 2
-    def __init__(self, side, damage, position, tar):
+
+    def __init__(self, side, damage, position):
         super().__init__(
-            s=side,
-            d=damage,
-            v=0,
-            l=0.25,
-            i_p=copy.deepcopy(position)
+            side=side,
+            damage=damage,
+            lifespan=0.25,
+            position=copy.deepcopy(position),
+            splash_radius=self.SPLASH_RADIUS
         )
-        self.display_size = self.SPLASH_RADIUS
 
     def apply_effect(self, target):
         if isinstance(target, Troop):
             vec = target.position.subtracted(self.position)
             vec.normalize()
             vec.scale(1.8)
+
             if target.can_kb and not target.invulnerable:
                 target.kb(vec)
-    
-    def detect_hits(self, arena):
-        hits = []
-        for each in arena.towers + arena.buildings + arena.troops:
-            if each.side != self.side and (isinstance(each, Tower) or (each.ground and not each.invulnerable)): # if different side
-                if vector.distance(self.position, each.position) < self.SPLASH_RADIUS + each.collision_radius:
-                        hits.append(each)
-
-        return hits
 
 class Golem(Troop):
     def __init__(self, side, position, level):
@@ -414,7 +407,7 @@ class Golem(Troop):
         return GolemAttackEntity(self.side, self.hit_damage, self.position, self.target)
     
     def die(self, arena):
-        arena.active_attacks.append(GolemDeathAttackEntity(self.side, self.death_damage, self.position, self.target))
+        arena.active_attacks.append(GolemDeathAttackEntity(self.side, self.death_damage, self.position))
         arena.troops.append(Golemite(self.side, self.position.added(vector.Vector(1.5, 0)), self.level, self.cloned))
         arena.troops.append(Golemite(self.side, self.position.added(vector.Vector(-1.5, 0)), self.level, self.cloned))
         super().die(arena)
@@ -430,34 +423,26 @@ class GolemiteAttackEntity(MeleeAttackEntity):
             target=target
             )
 
-class GolemiteDeathAttackEntity(AttackEntity):
+class GolemiteDeathAttackEntity(AOEAttackEntity):
     SPLASH_RADIUS = 2
-    def __init__(self, side, damage, position, target_pos):
+
+    def __init__(self, side, damage, position):
         super().__init__(
-            s=side,
-            d=damage,
-            v=0,
-            l=0.25,
-            i_p=copy.deepcopy(position)
+            side=side,
+            damage=damage,
+            lifespan=0.25,
+            position=copy.deepcopy(position),
+            splash_radius=self.SPLASH_RADIUS
         )
-        self.display_size = self.SPLASH_RADIUS
 
     def apply_effect(self, target):
         if isinstance(target, Troop):
             vec = target.position.subtracted(self.position)
             vec.normalize()
             vec.scale(0.9)
+
             if target.can_kb and not target.invulnerable:
                 target.kb(vec)
-    
-    def detect_hits(self, arena):
-        hits = []
-        for each in arena.towers + arena.buildings + arena.troops:
-            if each.side != self.side and (isinstance(each, Tower) or (each.ground and not each.invulnerable)): # if different side
-                if vector.distance(self.position, each.position) < self.SPLASH_RADIUS + each.collision_radius:
-                        hits.append(each)
-
-        return hits
 
 class Golemite(Troop):
     def __init__(self, side, position, level, cloned=False):
@@ -492,5 +477,5 @@ class Golemite(Troop):
         return GolemAttackEntity(self.side, self.hit_damage, self.position, self.target)
     
     def die(self, arena):
-        arena.active_attacks.append(GolemiteDeathAttackEntity(self.side, self.death_damage, self.position, self.target))
+        arena.active_attacks.append(GolemiteDeathAttackEntity(self.side, self.death_damage, self.position))
         super().die(arena)

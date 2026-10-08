@@ -113,7 +113,7 @@ class SkeletonBarrel(Troop):
         arena.troops.remove(self)
         self.cur_hp = -1
 
-class SkeletonBarrelDeathBarrelAttackEntity(AttackEntity):
+class SkeletonBarrelDeathBarrelAttackEntity(AttackEntity): #aoeattackentity
     DAMAGE_RADIUS = 2
     def __init__(self, side, damage, position):
         super().__init__(

@@ -124,7 +124,7 @@ class ElectroWizardAttackEntity(RangedAttackEntity):
     def apply_effect(self, target):
         target.stun()
 
-class ElectroWizardSpawnAttackEntity(AttackEntity):
+class ElectroWizardSpawnAttackEntity(AttackEntity): #aoe attackentity 
     SPLASH_RADIUS = 2.5
     def __init__(self, side, damage, position, target_pos):
         super().__init__(
@@ -502,7 +502,6 @@ class PrincessAttackEntity(RangedAttackEntity):
             homing=False,
             explosive=True
         )
-        self.splash_radius = PrincessAttackEntity.SPLASH_RADIUS
 
 class Princess(Troop):
     def __init__(self, side, position, level):
@@ -542,7 +541,6 @@ class SparkyAttackEntity(RangedAttackEntity):
             explosive=True,
         )
 
-        self.splash_radius = SparkyAttackEntity.SPLASH_RADIUS
         self.display_size = 0.5
         self.resize = True
     

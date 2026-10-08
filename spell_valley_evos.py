@@ -1,31 +1,29 @@
 import spell_valley_cards
-from abstract_classes import AttackEntity
+from abstract_classes import AOEAttackEntity
 from abstract_classes import Troop
 import vector
 
-class EvolutionWizardSpecialAttackEntity(AttackEntity):
+class EvolutionWizardSpecialAttackEntity(AOEAttackEntity):
     SPLASH_RADIUS = 3
+
     def __init__(self, side, damage, position):
         super().__init__(
-            s=side,
-            d=damage,
-            v=0,
-            l=0.2,
-            i_p=position
+            side=side,
+            damage=damage,
+            lifespan=0.2,
+            position=position
         )
-        self.display_size = self.SPLASH_RADIUS
 
-    def detect_hits(self, arena):
-        hits = []
-        for each in arena.towers + arena.buildings + arena.troops:
-            if each.side != self.side and not each.invulnerable: # if different side
-                if vector.distance(self.position, each.position) < self.SPLASH_RADIUS + each.collision_radius:
-                    hits.append(each)
-        return hits
+        self.display_size = self.SPLASH_RADIUS
 
     def apply_effect(self, target):
         if isinstance(target, Troop) and target.can_kb and not target.invulnerable:
-            target.kb(target.position.subtracted(self.position).normalized().scaled(3))
+            target.kb(
+                target.position
+                .subtracted(self.position)
+                .normalized()
+                .scaled(3)
+            )
     
 
 class EvolutionWizard(spell_valley_cards.Wizard):

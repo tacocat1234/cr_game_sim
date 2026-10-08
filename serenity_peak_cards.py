@@ -421,7 +421,7 @@ class GoblinCurse(Spell):
             if each.cursed_timer <= 0.1:
                 each.cursed_timer = 0.1
 
-class GoblinDrillSpawnAttackEntity(AttackEntity):
+class GoblinDrillSpawnAttackEntity(AttackEntity): #aoeattackentity
     SPLASH_RADIUS = 2
     def __init__(self, side, damage, ctd, position):
         super().__init__(

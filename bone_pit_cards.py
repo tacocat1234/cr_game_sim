@@ -64,8 +64,6 @@ class BomberAttackEntity(RangedAttackEntity):
             homing=False,
             explosive=True
         )
-
-        self.splash_radius = self.SPLASH_RADIUS
     
 class Bomber(Troop):
     def __init__(self, side, position, level):

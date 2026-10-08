@@ -179,7 +179,7 @@ class Balloon(Troop):
         arena.troops.append(BalloonDeathBomb(self.side, copy.deepcopy(self.position), self.level))
         super().die(arena)
     
-class BalloonDeathBombAttackEntity(AttackEntity):
+class BalloonDeathBombAttackEntity(AttackEntity): #aoeattackentity
     DAMAGE_RADIUS = 3
     def __init__(self, side, damage, position):
         super().__init__(

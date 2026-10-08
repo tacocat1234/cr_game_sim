@@ -4,7 +4,7 @@ from abstract_classes import Troop
 from abstract_classes import TILES_PER_MIN
 import vector
 
-class EvolutionRoyalGiantSpecialAttackEntity(AttackEntity):
+class EvolutionRoyalGiantSpecialAttackEntity(AttackEntity): #aoeattakcentity
     SPLASH_RADIUS = 2.5
     def __init__(self, side, damage, position):
         super().__init__(
@@ -89,7 +89,7 @@ class EvolutionRoyalRecruit(royal_arena_cards.RoyalRecruit):
         else:
             return super().attack()
         
-class EvolutionRoyalHogDropAttackEntity(AttackEntity):
+class EvolutionRoyalHogDropAttackEntity(AttackEntity): #aoeattackentity
     SPLASH_RADIUS = 1.4
     def __init__(self, side, damage, position):
         super().__init__(
