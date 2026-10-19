@@ -363,7 +363,6 @@ class GolemDeathAttackEntity(AOEAttackEntity):
             damage=damage,
             lifespan=0.25,
             position=copy.deepcopy(position),
-            splash_radius=self.SPLASH_RADIUS
         )
 
     def apply_effect(self, target):
@@ -432,7 +431,6 @@ class GolemiteDeathAttackEntity(AOEAttackEntity):
             damage=damage,
             lifespan=0.25,
             position=copy.deepcopy(position),
-            splash_radius=self.SPLASH_RADIUS
         )
 
     def apply_effect(self, target):

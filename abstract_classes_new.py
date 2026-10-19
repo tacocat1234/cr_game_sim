@@ -6,9 +6,7 @@ import copy
 from abc import ABC, abstractmethod
 from enum import Enum
 
-from serenity_peak_cards import GoblinCurse
-from goblin_stadium_cards import Goblin
-from miners_mine_cards import CursedHog
+from __future__ import annotations
 from typing import Optional
 
 class Side(Enum):
@@ -197,7 +195,7 @@ class AttackEntity(Entity): #very little should inheriet directly from this mos 
     def true_damage(self) -> float:
         total_damage = self.damage
         multiplier = 1
-        for modifier_type, (value) in self._damage_modfiers.items():
+        for _, (modifier_type, value) in self._damage_modfiers.items():
             if modifier_type == "additive":
                 total_damage += value
             elif modifier_type == "multiplicative":
@@ -258,6 +256,7 @@ class Unit(Entity):
         # source (str) : (hit speed modifier (float), timer (float)) for nonmobile units
 
         self._damage_vulnerability_modifiers = dict() # source (str) : (additive/multiplicative, value, timer (float))
+        self._stat_modifiers = dict() # source (str) : ()
 
         self._special_effects = dict() # modifier type (str), (modifier data (any), timer (float))), for goblin curse or hog curse or enchantment or etc
 
@@ -288,14 +287,24 @@ class Unit(Entity):
 
     def is_alive(self) -> bool:
         return self.current_hp > 0
+    
+    def _scaled_damage(self, damage) -> float:
+        total_damage = damage
+        multiplier = 1
+        for _, (modifier_type, value, _) in self._damage_vulnerability_modifiers.items():
+            if modifier_type == "additive":
+                total_damage += value
+            elif modifier_type == "multiplicative":
+                multiplier *= value
+        return total_damage * multiplier #assume add first always
 
     def damage(self, amount: float) -> None:
         if self.has_shield():
-            self.shield_current_hp -= amount
+            self.shield_current_hp -= self._scaled_damage(amount)
             if self.shield_current_hp < 0:
                 self.shield_current_hp = 0
         else:
-            self.current_hp -= amount
+            self.current_hp -= self._scaled_damage(amount)
             if self.current_hp < 0:
                 self.current_hp = 0
 

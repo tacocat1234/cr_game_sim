@@ -396,11 +396,33 @@ def draw(mode="normal"):
             offset = 50 if tower.side else 5
             pygame.draw.rect(screen, BLACK, (tower_x + 9, tower_y + offset, tower_rect_width - 12, 4))  # Background
             pygame.draw.rect(screen, YELLOW, (tower_x + 9, tower_y + offset, ((tower_rect_width - 12) * cooking_ratio), 4))  # Ammo bar
-            screen.blit(rc_symbol_img, (tower_x - 3, tower_y + offset - 8))
+            screen.blit(rc_symbol_img, (tower_x - 3, tower_y + offset - 8))   
         elif tower.type == "sum":
-            ammo_ratio = 1 - (tower.attack_cooldown / 4 * (1.35 if tower.slow_timer > 0 else 1))
-            pygame.draw.rect(screen, BLACK, (tower_x + 4, tower_y + 5, tower_rect_width - 2, 4))  # Background
-            pygame.draw.rect(screen, GREEN, (tower_x + 4, tower_y + 5, ((tower_rect_width - 2) * ammo_ratio), 4))  # Ammo bar
+            charge_ratio = min(tower.charge_timer / 600, 1)
+            elixir_ratio = tower.elixir_count / 9
+
+            pygame.draw.rect(
+                screen, BLACK,
+                (tower_x + 4, tower_y + 5, tower_rect_width - 2, 4)
+            )
+
+            pygame.draw.rect(
+                screen, GREEN,
+                (tower_x + 4, tower_y + 5,
+                (tower_rect_width - 2) * charge_ratio, 4)
+            )
+
+            pygame.draw.rect(
+                screen, BLACK,
+                (tower_x + 4, tower_y + 10, tower_rect_width - 2, 4)
+            )
+
+            pygame.draw.rect(
+                screen, PURPLE,
+                (tower_x + 4, tower_y + 10,
+                (tower_rect_width - 2) * elixir_ratio, 4)
+            )
+
             screen.blit(sum_symbol_img, (tower_x - 7, tower_y))
     
     for building in game_arena.buildings:
