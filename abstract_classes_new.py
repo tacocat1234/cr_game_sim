@@ -16,7 +16,7 @@ class Side(Enum):
 def opposite_side(side: Side) -> Side:
     return Side.PLAYER2 if side == Side.PLAYER1 else Side.PLAYER1
 
-class Effect(ABC):
+class Effect(ABC): #stun, freeze, rage, etc. or effects like being hog cursed or goblin cursed
     def __init__(
         self,
         duration: Optional[float] = None,
@@ -62,8 +62,6 @@ class EffectManager:
         effect.on_apply(self.owner)
 
     def dispatch(self, event: str, *args, **kwargs) -> None: #braodcast event happening down to all effects in this manager, ex. self.effects.dispatch('on_tick', dt)
-        # Snapshot so effects can safely remove themselves
-        # or add other effects while an event is running.
         for effect in tuple(self.effects):
             if not effect.expired:
                 getattr(effect, event)(self.owner, *args, **kwargs)
@@ -103,6 +101,10 @@ class Target(ABC):
     def is_valid_target(self, require_grounded: bool = False) -> bool:
         pass
 
+    @abstractmethod
+    def get_type(self) -> str:
+        pass
+
 class PositionTarget(Target):
     def __init__(self, position: Vector2):
         self._position = position
@@ -112,6 +114,9 @@ class PositionTarget(Target):
 
     def is_valid_target(self, require_grounded: bool =False) -> bool:
         return True #should always be valid, since entity can always walk to position
+    
+    def get_type(self) -> str:
+        return "position"
 
 class EntityTarget(Target):
     def __init__(self, entity: Entity):
@@ -122,19 +127,48 @@ class EntityTarget(Target):
 
     def is_valid_target(self, require_grounded: bool = False) -> bool:
         return self._entity.targetable and self._entity.is_alive() and (not require_grounded or self._entity.ground)
+    
+    def get_type(self) -> str:
+        return "entity"
 
 class Entity:
-    TYPE = "other"
-    SUBTYPE = "other"
+    TYPE = None #not defined
+    SUBTYPE = None #not defined
+    BASE_PROPERTIES = {}
     def __init__(self, arena: Arena, position: Vector2, target: Target):
         self._position = position #objects, so are private with accessors, as to prevnt modifying
         self._target = target
         self._arena = arena #also object, def don't want to mod
 
-        self.targetable = False #defualt not targetable
+        self._base_property_modifiers = {} # property (str) > {source (str) > (function: func, priority:int, timer:float)} 
+
+        self.properties = {}
+
+        self._property_modifiers = {}
+
+        self.timers = {}
+
         self.should_delete = False
 
         self.type = self.TYPE
+
+    def add_base_property_modifier(self, property_name: str, source: str, func, priority: int, timer: float = None) -> None:
+        if property_name not in self._base_property_modifiers:
+            self._base_property_modifiers[property_name] = {}
+        elif self._base_property_modifiers[property_name].get(source) and self._base_property_modifiers[property_name][source][2] < timer: #if has source and new timer longer
+            self._base_property_modifiers[property_name][source][2] = timer #update to the longer timer
+            return
+        
+        self._base_property_modifiers[property_name][source] = (func, priority, timer) #set new
+
+    def add_property_modifier(self, property_name: str, source: str, func, priority: int, timer: float = None) -> None:
+        if property_name not in self._property_modifiers:
+            self._property_modifiers[property_name] = {}
+        elif self._property_modifiers[property_name].get(source) and self._property_modifiers[property_name][source][2] < timer: #if has source and new timer longer
+            self._property_modifiers[property_name][source][2] = timer
+            return
+        
+        self._property_modifiers[property_name][source] = (func, priority, timer)
 
     def get_arena(self) -> Arena:
         return self._arena
@@ -150,6 +184,29 @@ class Entity:
 
     def get_target_copy(self) -> Target:
         return self._target.copy()
+    
+    def get_base_property(self, property: str): #raw value
+        return self.BASE_PROPERTIES.get(property, None)
+    
+    def get_property(self, property: str):
+        return self.properties.get(property, None)
+    
+    def get_timer(self, timer: str) -> float:
+        return self.timers.get(timer, 0)
+    
+    def get_true_base_property_value(self, property_name: str):
+        base = self.BASE_PROPERTIES.get(property_name, None)
+        if base is None:
+            return None
+
+        mods = self._base_property_modifiers.get(property_name, {}).items()
+        mods = sorted(mods, key=lambda x: x[1][1]) #sort by priority        
+
+        for _, (func, _, _) in mods:
+            base = func(base) #apply that func
+
+        return base
+            
 
     def tick_func(self, dt: float) -> None: #for subclasses that want to run things in the tick step without needint to completely override tick behaviro
         pass
@@ -165,69 +222,77 @@ class Entity:
         if self.should_delete:
             self._arena.remove_entity(self)
 
-class AttackEntity(Entity): #very little should inheriet directly from this mos tattacks should inheriet from one of this cihld clases
-    DISPLAY_SIZE = 0.25
-    LIFESPAN = 0.1 
-    SPLASH = False
-    SPLASH_RADIUS = 0
+class AttackEntity(Entity): #very little should inheriet directly from this most attacks should inhereit from one of this child classes
+    BASE_PROPERTIES = {
+        "display_size" : 0.25,
+        "lifespan" : 0.1,
+        "splash" : False,
+        "splash_radius" : 0,
+        "damage" : 0,
+        "crown_tower_damage" : 0,
+        "reflectable" : False,
+        "parryable" : False
+    }
     TYPE = "attack"
     def __init__(self, arena: Arena, owner: Entity, position: Vector2, target: Target, damage: float, crown_tower_damage: float = None):
         super().__init__(arena, position, target)
 
         self.owner = owner
 
-        self.damage = damage
-        self.crown_tower_damage = crown_tower_damage if crown_tower_damage is not None else damage
-
-        self._damage_modfiers = dict() #map source (str) : ("additive"/"multiplicative", val)
+        self.timers = {
+            "lifespan" : self.get_base_property("lifespan")
+        }
 
         self.has_hit = []
 
-    def add_modifier(self, source: str, modifier_type: str, value: float):
-        self._damage_modfiers[source] = (modifier_type, value)
 
     def detect_hits(self, arena: Arena):
         pass
 
-    def apply_effects(self, target: Entity):
+    def apply_effects(self, target: Entity) -> None:
         pass
 
     def true_damage(self) -> float:
-        total_damage = self.damage
-        multiplier = 1
-        for _, (modifier_type, value) in self._damage_modfiers.items():
-            if modifier_type == "additive":
-                total_damage += value
-            elif modifier_type == "multiplicative":
-                multiplier *= value
-        return total_damage * multiplier #assume add first always
+        return self.get_true_base_property_value("damage")
+    
+    def true_crown_tower_damage(self) -> float:
+        return self.get_true_base_property_value("crown_tower_damage")
 
 
 class MeleeAttackEntity(AttackEntity):
-    SUBTYPE = "melee"
+    pass
 
 class RangedAttackEntity(AttackEntity):
-    SUBTYPE = "ranged"
+    pass
 
 class AOEAttackEntity(AttackEntity):
-    SUBTYPE = "aoe"
+    pass
 
 class Unit(Entity):
     TYPE = "unit"
-    HIT_POINTS = 0 #all these values will get overriden by subclasses with their values at tournament standard (level 11)
-    HIT_DAMAGE = 0
-    SHIELD_HIT_POINTS = 0
-    HIT_SPEED = 0
-    LOAD_TIME = 0
-    HIT_RANGE = 0
-    SIGHT_RANGE = 0
-    GROUND = True
-    GROUND_ONLY = True
-    TOWER_ONLY = False
-    MOVE_SPEED = 0
-    DEPLOY_TIME = 1
-    MASS = 0
-    COLLISION_RADIUS = 0
+    BASE_PROPERTIES = { #overwritten by child classes with class specific constants at level 11
+        "hit_points": 0,
+        "hit_damage": 0,
+        "shield_hit_points": 0,
+        "hit_speed": 0,
+        "load_time": 0,
+        "hit_range": 0,
+        "sight_range": 0,
+        "ground": True,
+        "ground_only": True,
+        "tower_only": False,
+        "move_speed": 0,
+        "deploy_time": 1,
+        "mass": 0,
+        "collision_radius": 0,
+        "targetable" : True, #can be targeted
+        "movable" : True, #can be moved
+        "damageable" : True, #can be damaged
+        "affectable" : True, #can be affected by effects (freeze, stun, rage, etc, log knockback)
+        "knockbackable" : True, #can be knocked back by non-log sources (log kb is controlled by affectable since it ignroes all other times of knocback immunity)
+        "no_ai" : False,
+        "damage_vulnerability" : 1
+    }
 
     def __init__(self, 
             arena,
@@ -237,50 +302,42 @@ class Unit(Entity):
         ):
         super().__init__(arena, position, None) #unit is spawned with no target, that is determined by its own logic
 
+        self.side = side #fundamental
+        self.level = level
+
         self.current_hp = self.get_max_hp()
 
         self.shield_current_hp = self.get_shield_max_hp()
 
-        self.attack_cooldown = self.LOAD_TIME #attack cooldown before attacks, LOAD_TIME is the minimum time cooldown can be witout a target, can only finish the rest of the LOAD_TIME cooldown if the entity has a target
+        self.attack_cooldown = self.get_base_property("hit_speed") #attack cooldown before attacks, LOAD_TIME is the minimum time cooldown can be witout a target, can only finish the rest of the LOAD_TIME cooldown if the entity has a target
 
-        self.side = side
-        self.level = level
+        self.timers = {
+            "deploy_timer": self.get_base_property("deploy_time"),
+            "attack_cooldown": self.get_base_property("hit_speed"),
+            "no_ai_timer": 0
+        }
 
-        self.targetable = True #can be targeted
-        self.movable = True #can be moved
-        self.damageable = True #can be damaged
-        self.affectable = True #can be affected by effects (freeze, stun, rage, etc, log knockback)
-        self.knockbackable = True #can be knocked back by non-log sources (log kb is controlled by affectable since it ignroes all other times of knocback immunity)
-
-        self._speed_modifiers = dict() # source (str) : (move speed modifier (float), hit speed modifier (float), timer (float)) for troops
-        # source (str) : (hit speed modifier (float), timer (float)) for nonmobile units
-
-        self._damage_vulnerability_modifiers = dict() # source (str) : (additive/multiplicative, value, timer (float))
-        self._stat_modifiers = dict() # source (str) : ()
-
-        self._special_effects = dict() # modifier type (str), (modifier data (any), timer (float))), for goblin curse or hog curse or enchantment or etc
-
-        self.stun_timer = 0 #timer for no_ai, used for stuns, freezes, other periods of no_ai
-        self.no_ai = False #used for disabling AI, such as with goblin cage
+    def is_no_ai(self) -> bool:
+        return self.get_property("no_ai") or self.get_timer("no_ai_timer") > 0
 
     def get_level_modifier(self) -> float:
         return pow(1.1, self.level - 11)
 
     def get_max_hp(self) -> float:
-        return self.HIT_POINTS * self.get_level_modifier() #scales by 1.1 per level, class constant is value at level 11
+        return self.get_base_property("hit_points") * self.get_level_modifier() #scales by 1.1 per level, class constant is value at level 11
 
     def get_shield_max_hp(self) -> float:
-        return self.SHIELD_HIT_POINTS * self.get_level_modifier()
+        return self.get_base_property("shield_hit_points") * self.get_level_modifier()
 
     def get_attack_damage(self) -> float:
-        return self.HIT_DAMAGE * self.get_level_modifier()
+        return self.get_base_property("hit_damage") * self.get_level_modifier()
 
-    def set_attributes(self, targetable=True, movable=True, damageable=True, affectable=True, knockbackable=True) -> None:
-        self.targetable = targetable
-        self.movable = movable
-        self.damageable = damageable
-        self.affectable = affectable
-        self.knockbackable = knockbackable
+    def set_interaction_properties(self, targetable=True, movable=True, damageable=True, affectable=True, knockbackable=True) -> None: #basic 
+        self.properties["targetable"] = targetable
+        self.properties["movable"] = movable
+        self.properties["damageable"] = damageable
+        self.properties["affectable"] = affectable
+        self.properties["knockbackable"] = knockbackable
 
     def has_shield(self) -> bool: #false if shield is broken or never had shield in first place
         return self.shield_current_hp > 0
@@ -301,12 +358,8 @@ class Unit(Entity):
     def damage(self, amount: float) -> None:
         if self.has_shield():
             self.shield_current_hp -= self._scaled_damage(amount)
-            if self.shield_current_hp < 0:
-                self.shield_current_hp = 0
         else:
             self.current_hp -= self._scaled_damage(amount)
-            if self.current_hp < 0:
-                self.current_hp = 0
 
     def heal(self, amount: float) -> None:
         self.current_hp = min(self.get_max_hp(), self.current_hp + amount)
@@ -323,83 +376,12 @@ class Unit(Entity):
     def attack_func(self) -> None: #runs when attacks, for overloading
         pass
 
-    def _rune_giant_enchantment_callback(self, atk: AttackEntity) -> AttackEntity:
-        cnt, bns = self._special_effects['runegiantenchantment'][0]
-        if cnt == 2: #third attack, since zero one two
-            self._special_effects['runegiantenchantment'][0][0] = 0
-        else:
-            self._special_effects['runegiantenchantment'][0][0] += 1
-        atk.add_modifier('runegiantenchantment', 'additive', bns)
-
-        return atk
-
     def attack(self): #method for unit to attack
         atk = self.get_attack_entity()
-
-        if self.has_special_effect('runegiantenchantment'): # runegiantenchantment : ((bonus_counter, dmg_bonus), timer)
-            atk = self._rune_giant_enchantment_callback(atk)
         
         self.arena.add_entity(atk)
 
         self.attack_func()
-        
-    def stun(self) -> None: #standard stun of 0.5 seconds
-        if self.affectable:
-            if self.stun_timer < 0.5:
-                self.stun_timer = 0.5
-            self.target = None
-
-    def freeze(self, duration: float) -> None:
-        if self.affectable:
-            if self.stun_timer < duration:
-                self.stun_timer = duration
-            self.attack_cooldown = self.HIT_SPEED #freeze resets
-
-    def _apply_speed_modifier(self, modifier_type: str, speed_modifier: float, hit_modifier: float, duration: float) -> None: #this is private that does not check for overwriting, will always overwrite
-        self._speed_modifiers[modifier_type] = (hit_modifier, duration) #speed modifier is dropped for units that don't move since obviously they have no speed
-    
-    def rage(self, duration: float) -> None:
-        if self.affectable:
-            if self._is_speed_modifier_longer('rage', duration):
-                self._apply_speed_modifier('rage', 1.3, 0.7, duration) #30% less time between attacks, +30% attack rate
-
-    def ice_slow(self, duration: float) -> None: #standard ice slow effect of 30% slower movement and attakc
-        if self.affectable:
-            if self._is_speed_modifier_longer('ice_slow', duration):
-                self._apply_speed_modifier('ice_slow', 1.3, 0.7, duration) #30% slower movement, 30% more time between attacks
-
-    def modify_speed(self, slow_type: str, speed_modifier: float, hit_modifier: float, duration: float) -> None: #for ramrider, eq, poison
-        if self.affectable:
-            if self._is_speed_modifier_longer(slow_type, duration):
-                self._apply_speed_modifier(slow_type, speed_modifier, hit_modifier, duration)
-
-    def _net_speed_modifiers(self) -> tuple[float, float]:
-        total_speed_modifier = 1.0
-        total_hit_modifier = 1.0
-        for speed_modifier, hit_modifier in self._speed_modifiers.values():
-            total_speed_modifier *= speed_modifier
-            total_hit_modifier *= hit_modifier
-        return total_speed_modifier, total_hit_modifier
-
-    def net_movemment_speed_modifiers(self) -> float:
-        return self._net_speed_modifiers()[0]
-
-    def net_hit_speed_modifiers(self) -> float:
-        return self._net_speed_modifiers()[1]
-
-    def special_effect(self, effect_type: str, duration: float) -> None:
-        if self.affectable:
-            if self._is_special_effect_longer(effect_type, duration):
-                self._special_effects[effect_type] = (effect_type, duration)
-
-    def has_special_effect(self, effect_type: str) -> bool:
-        return effect_type in self._special_effects and self._special_effects[effect_type][1] > 0
-
-    def _is_special_effect_longer(self, effect_type: str, duration: float) -> bool:
-        return effect_type in self._special_effects and self._special_effects[effect_type][1] < duration
-
-    def _is_speed_modifier_longer(self, modifier_type: str, duration: float) -> bool:
-        return modifier_type in self._speed_modifiers and self._speed_modifiers[modifier_type][1] < duration
 
     def level_up(self, levels: int = 1) -> None:
         self.level += levels
@@ -417,28 +399,22 @@ class Unit(Entity):
         self.should_delete = True
 
 class Troop(Unit):
-    SUBTYPE = "troop"
-    MOVE_SPEED = 0
+    TYPE = "troop"
+    BASE_PROPERTIES = { #overwritten by child classes with class specific constants at level 11
+        "hit_points": 0,
+        "hit_damage": 0,
+        "shield_hit_points": 0,
+        "hit_speed": 0,
+        "load_time": 0,
+        "hit_range": 0,
+        "sight_range": 0,
+        "ground": True,
+        "ground_only": True,
+        "tower_only": False,
+        "move_speed": 0,
+        "deploy_time": 1,
+        "mass": 0,
+        "collision_radius": 0,
+        "move_speed" : 0
+    }
 
-    def damage(self, amount: float) -> None:
-        multiplier = GoblinCurse.damage_amplification if self.has_special_effect('goblin_curse') else 1.0
-        super().damage(amount * multiplier)
-
-    def _apply_speed_modifier(self, modifier_type: str, speed_modifier: float, hit_modifier: float, duration: float) -> None: #this is private that does not check for overwriting, will always overwrite
-        self._speed_modifiers[modifier_type] = (speed_modifier, hit_modifier, duration)
-
-    def _is_speed_modifier_longer(self, modifier_type: str, duration: float) -> bool:
-            return modifier_type in self._speed_modifiers and self._speed_modifiers[modifier_type][2] < duration
-
-    def _goblin_curse_die_callback(self) -> None:
-        self.arena.add_entity(Goblin(self.arena, self.position, opposite_side(self.side), self._special_effects['goblin_curse'][0])) #know must exist since callback only calls when exists
-
-    def _hog_curse_die_callback(self) -> None:
-        self.arena.add_entity(CursedHog(self.arena, self.position, opposite_side(self.side), self._special_effects['hog_curse'][0]))
-
-    def die(self) -> None:
-        if self.has_special_effect('goblin_curse'):
-            self._goblin_curse_die_callback()
-        if self.has_special_effect('hog_curse'):
-            self._hog_curse_die_callback()
-        super().die()
